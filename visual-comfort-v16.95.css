@@ -1,0 +1,100 @@
+/* v16.95 — Visual Comfort Polish
+   Lapisan visual saja: keterbacaan, ritme jarak, kontras, dan kenyamanan layar.
+   Tidak mengubah alur journal, autentikasi, penyimpanan, atau struktur data. */
+:root {
+  --vc-text: #ececf0;
+  --vc-muted: #a4a6af;
+  --vc-line: rgba(255,255,255,.085);
+  --vc-panel: rgba(24,25,29,.78);
+  --vc-panel-strong: rgba(27,28,32,.94);
+  --vc-gold: #d9b85f;
+  --vc-reading-width: 1180px;
+}
+html { scroll-behavior: smooth; }
+body {
+  color: var(--vc-text);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+  line-height: 1.52;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+/* Kurangi kabut visual di belakang konten supaya mata fokus ke data. */
+body:not(.light) {
+  background-image:
+    radial-gradient(ellipse 900px 420px at 50% -12%, rgba(255,255,255,.035), transparent 68%),
+    radial-gradient(ellipse 700px 380px at 8% 0%, rgba(201,164,92,.025), transparent 70%),
+    linear-gradient(180deg,#111215 0%,#0e0f11 52%,#0c0d0f 100%);
+  background-attachment: scroll;
+}
+/* Batas baca yang nyaman, tanpa memaksa layout lama berubah struktur. */
+main, #app, .app-container, .page-container, .max-w-7xl, .max-w-6xl {
+  scroll-margin-top: 84px;
+}
+main { text-wrap: pretty; }
+h1,h2,h3,h4 { text-wrap: balance; line-height: 1.24; letter-spacing: -.025em; }
+p, .text-sm, .text-xs { line-height: 1.55; }
+.text-xs { letter-spacing: .005em; }
+/* Panel kaca lebih tenang: border halus, isi tetap cukup solid untuk membaca angka. */
+.glass, .stat-card, .glass-card, .premium-card, .dashboard-card,
+[class*="rounded-2xl"], [class*="rounded-3xl"] {
+  border-color: var(--vc-line);
+}
+.stat-card {
+  background: linear-gradient(150deg,rgba(255,255,255,.045),rgba(255,255,255,.012) 58%,rgba(10,10,12,.36));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.075), 0 8px 24px -20px rgba(0,0,0,.75);
+}
+.glass { box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 8px 26px -20px rgba(0,0,0,.7); }
+/* Hindari seluruh elemen terasa sama penting; data sekunder dibuat lebih kalem. */
+.text-gray-400, .text-zinc-400, .text-neutral-400 { color: #a6a8b1 !important; }
+.text-gray-500, .text-zinc-500, .text-neutral-500 { color: #858892 !important; }
+input, select, textarea {
+  line-height: 1.45;
+  color: var(--vc-text);
+}
+input:not([type="checkbox"]):not([type="radio"]), select, textarea {
+  min-height: 44px;
+  border-color: rgba(255,255,255,.13);
+}
+input:focus-visible, select:focus-visible, textarea:focus-visible,
+button:focus-visible, a:focus-visible, [role="button"]:focus-visible {
+  outline: 2px solid rgba(217,184,95,.82);
+  outline-offset: 3px;
+}
+button, a[href], select, input, textarea { touch-action: manipulation; }
+/* Gerakan pendek dan lembut, tanpa efek membesar berlebihan ketika disentuh. */
+button, a[href], .nav-pill-btn, .tap-target {
+  transition-duration: .18s !important;
+}
+button:active:not(:disabled), a[href]:active, .nav-pill-btn:active,
+[role="button"]:active, .tap-target:active {
+  transform: scale(.985) !important;
+}
+/* Bagan tetap terbaca saat layar sempit dan saat perangkat memakai safe-area. */
+canvas, svg { max-width: 100%; }
+@media (max-width: 640px) {
+  :root { --page-gutter: 16px; --section-gap: 28px; }
+  body { font-size: 14px; }
+  h1 { letter-spacing: -.03em; }
+  .stat-card { border-radius: 18px; }
+  .glass { backdrop-filter: blur(16px) saturate(130%); -webkit-backdrop-filter: blur(16px) saturate(130%); }
+  .toast { max-width: calc(100vw - 32px); padding: 12px 16px; bottom: calc(18px + env(safe-area-inset-bottom)); }
+  button, a[href], select { -webkit-tap-highlight-color: transparent; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glass, .glass-pill, .stat-card {
+    backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+    background: rgba(27,28,32,.97) !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+body.light, [data-ds-theme="light"] {
+  --vc-text: #242424; --vc-muted: #666873; --vc-line: rgba(25,25,25,.09);
+  --vc-panel: rgba(255,255,255,.82); --vc-panel-strong: #fff;
+}
+body.light .stat-card, [data-ds-theme="light"] .stat-card {
+  background: linear-gradient(150deg,rgba(255,255,255,.96),rgba(248,247,243,.9));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 8px 22px -20px rgba(40,35,20,.5);
+}
