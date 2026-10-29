@@ -1,0 +1,468 @@
+rules_version = '2';
+
+// ===============================================================
+// Assumed Data Model — Doa Ibu Trading Journal
+// ===============================================================
+//
+// Seluruh data pengguna disimpan secara eksklusif dan terisolasi
+// di bawah hirarki dokumen masing-masing: users/{userId}/...
+//
+// 1. users/{userId}
+//    Dokumen profil & preferensi pengguna (id = Auth UID).
+//    Fields:
+//      - name: string (opsional, 0-100 karakter)
+//      - email: string (opsional, format email valid, 0-120 karakter)
+//      - currency: string (opsional, 1-10 karakter, misal "USD", "IDR")
+//      - reminder: map (opsional, pengaturan pengingat harian)
+//      - dashLayout: map (opsional, konfigurasi tata letak widget dashboard)
+//      - ccPrefs: map (opsional, pengaturan target profit & batas drawdown)
+//      - coachFocus: map (opsional, fokus latihan AI Coach {ts, picked})
+//      - galleryTags: list (opsional, maksimal 100 item tag chart)
+//      - activeAccountId: string (opsional, 1-64 karakter)
+//      - settings: map (opsional, preferensi umum aplikasi)
+//      - photoURL: string (opsional, URL foto hingga 500 karakter)
+//      - tier: string (opsional, 0-50 karakter)
+//      - bio: string (opsional, 0-500 karakter)
+//      - createdAt: timestamp / string (opsional, immutable)
+//      - updatedAt: timestamp / string (opsional)
+//
+// 2. users/{userId}/journals/{date}
+//    Dokumen catatan trading harian (id = YYYY-MM-DD).
+//    Fields:
+//      - date: string (opsional/identik dengan id dokumen, maks 20 karakter)
+//      - entries: list (opsional, maks 150 entri transaksi trade)
+//      - pl: number (opsional, agregat profit/loss hari tersebut)
+//      - trades: number (opsional, total transaksi)
+//      - wins: number (opsional, total transaksi menang)
+//      - be: number (opsional, total break-even)
+//      - rMultiple: number / null (opsional, agregat R-Multiple)
+//      - fees: number / null (opsional, agregat komisi & biaya)
+//      - riskPct: number / null (opsional, persentase risiko)
+//      - rating: number / null (opsional, rating hari/trade 1-5)
+//      - pair: string / null (opsional, daftar pair/instrumen, maks 100 karakter)
+//      - tags: list / null (opsional, maks 50 tag string)
+//      - emotions: list / null (opsional, maks 50 emosi string)
+//      - session: string / null (opsional, sesi trading, maks 100 karakter)
+//      - notes: string / null (opsional, catatan trading harian, maks 10000 karakter)
+//      - charts: list / null (opsional, maks 50 URL screenshot chart)
+//      - accountType: string / null (opsional, maks 50 karakter)
+//      - accountId: string / null (opsional, id akun trading terhubung, maks 64 karakter)
+//      - source: string / null (opsional, asal data: manual/mt4/mt5/tradingview/import, maks 50 karakter)
+//      - externalId: string / null (opsional, ticket / order ID eksternal, maks 128 karakter)
+//      - syncedAt: string / timestamp / null (opsional, waktu sinkronisasi)
+//      - needsReflection: bool / null (opsional, penanda butuh evaluasi ulang)
+//      - bias: string / null (opsional, bias pasar, maks 50 karakter)
+//      - strategyLog: list / null (opsional, log checklist strategi, maks 50 item)
+//      - strategyId: string / null (opsional, maks 64 karakter)
+//      - strategyName: string / null (opsional, maks 100 karakter)
+//      - submitIds: list / null (opsional, idempotency tokens, maks 50 item)
+//      - importedIds: list / null (opsional, ticket import terdaftar, maks 500 item)
+//      - t360: list / null (opsional, trade 360 array, maks 150 item)
+//      - t360Hist: list / null (opsional, trade 360 history, maks 150 item)
+//      - t360UpdatedAt: timestamp / number / null (opsional)
+//      - createdAt: timestamp / string / null (opsional, immutable)
+//      - updatedAt: timestamp / string / null (opsional)
+//
+// 3. users/{userId}/accounts/{accountId}
+//    Dokumen akun trading pengguna (id = acc_... atau string unik, maks 64 karakter).
+//    Fields:
+//      - id: string (wajib, 1-64 karakter, identik dengan id dokumen)
+//      - name: string (wajib, 1-80 karakter)
+//      - type: string (wajib, 'manual' | 'mt4' | 'mt5' | 'tradingview')
+//      - status: string (wajib, 'connected' | 'disconnected')
+//      - isActive: bool / null (opsional)
+//      - isDefault: bool / null (opsional)
+//      - syncToken: string / null (opsional, token rahasia webhook/EA, maks 128 karakter)
+//      - lastSyncedAt: string / timestamp / null (opsional)
+//      - tradeCount: number / null (opsional, jumlah transaksi di akun ini, >= 0)
+//      - accountNumber: string / number / null (opsional, nomor akun MT4/MT5)
+//      - broker: string / null (opsional, nama broker, maks 80 karakter)
+//      - server: string / null (opsional, nama server broker, maks 80 karakter)
+//      - balance: number / null (opsional, saldo akun)
+//      - equity: number / null (opsional, equity akun)
+//      - currency: string / null (opsional, mata uang akun, maks 10 karakter)
+//      - createdAt: string / timestamp / null (opsional, immutable)
+//      - updatedAt: string / timestamp / null (opsional)
+//
+// 4. users/{userId}/reviews/{reviewId}
+//    Dokumen evaluasi berkala (id = d_..., w_..., m_..., focus_..., maks 64 karakter).
+//    Fields:
+//      - period: string (wajib, 'd' | 'w' | 'm' | 'daily' | 'weekly' | 'monthly' | 'focus')
+//      - start: string / null (opsional, tanggal awal periode YYYY-MM-DD, maks 30 karakter)
+//      - end: string / null (opsional, tanggal akhir periode YYYY-MM-DD, maks 30 karakter)
+//      - month: string / null (opsional, YYYY-MM, maks 20 karakter)
+//      - focus: string / null (opsional, fokus bulanan, maks 5000 karakter)
+//      - w: string / null (opsional, apa yang berjalan baik, maks 5000 karakter)
+//      - x: string / null (opsional, kesalahan trading terbesar, maks 5000 karakter)
+//      - i: string / null (opsional, langkah perbaikan ke depan, maks 5000 karakter)
+//      - createdAt: timestamp / string / null (opsional, immutable)
+//      - updatedAt: timestamp / string / null (opsional)
+//
+// 5. users/{userId}/strategies/{strategyId}
+//    Dokumen manajemen strategi/setup trading (id = string auto/kustom, maks 64 karakter).
+//    Fields:
+//      - name: string (wajib, nama strategi, 1-60 karakter)
+//      - description: string / null (opsional, deskripsi strategi, maks 1000 karakter)
+//      - checklist: list / null (opsional, daftar aturan/rule checklist, maks 50 item)
+//      - invalidation: string / null (opsional, skenario invalidasi setup, maks 1000 karakter)
+//      - exit: string / null (opsional, aturan exit / cut manual, maks 1000 karakter)
+//      - stopLoss: string / null (opsional, aturan penempatan stop loss, maks 500 karakter)
+//      - target: string / null (opsional, target TP / liquidity pool, maks 500 karakter)
+//      - minRR: number / null (opsional, batas risk-reward minimal, 0-100)
+//      - maxRisk: number / null (opsional, batas risiko maksimal %, 0-100)
+//      - targetComp: number / null (opsional, target compliance checklist %, 0-100)
+//      - examples: list / null (opsional, contoh screenshot chart setup valid/invalid, maks 20 item)
+//      - archived: bool / null (opsional, status arsip strategi)
+//      - createdAt: timestamp / string / null (opsional, immutable)
+//      - updatedAt: timestamp / string / null (opsional)
+//
+// 6. users/{userId}/outlooks/{date}
+//    Dokumen catatan market outlook / pra-pasar (id = YYYY-MM-DD, maks 20 karakter).
+//    Fields:
+//      - date: string / null (opsional, tanggal analisis, maks 20 karakter)
+//      - bias: string / null (opsional, sentimen/arah bias: Bullish/Bearish/Sideways, maks 50 karakter)
+//      - reason: string / null (opsional, alasan teknikal/fundamental, maks 5000 karakter)
+//      - charts: list / null (opsional, daftar link chart analisis, maks 30 URL)
+//      - after: map / null (opsional, evaluasi after market: actual, happened, change, reflect)
+//      - afterUpdatedAt: timestamp / string / null (opsional)
+//      - createdAt: timestamp / string / null (opsional, immutable)
+//      - updatedAt: timestamp / string / null (opsional)
+//
+// 7. users/{userId}/diaries/{diaryId}
+//    Dokumen diary & rencana aktivitas trading harian (id = YYYY-MM-DD, maks 20 karakter).
+//    Fields:
+//      - date: string (wajib, tanggal diary YYYY-MM-DD, 1-20 karakter)
+//      - tasks: list / null (opsional, checklist tugas/rencana hari ini, maks 50 item)
+//      - notes: string / null (opsional, catatan refleksi psikologis harian, maks 5000 karakter)
+//      - mood: number / null (opsional, indikator mood 0-5)
+//      - createdAt: timestamp / string / null (opsional, immutable)
+//      - updatedAt: timestamp / string / null (opsional)
+//
+// ===============================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    // Memverifikasi bahwa request berasal dari pengguna yang terotentikasi
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Memverifikasi bahwa user hanya mengakses jalurnya sendiri
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Memastikan dokumen hanya berisi field yang didefinisikan (mencegah schema pollution)
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // Helper validasi tipe string opsional atau bernilai null dengan batas panjang
+    function isOptionalString(data, field, maxLen) {
+      return !(field in data) || data[field] == null ||
+        (data[field] is string && data[field].size() <= maxLen);
+    }
+
+    // Helper validasi tipe angka opsional atau bernilai null dengan batas nilai
+    function isOptionalNumber(data, field, minVal, maxVal) {
+      return !(field in data) || data[field] == null ||
+        (data[field] is number && data[field] >= minVal && data[field] <= maxVal);
+    }
+
+    // Helper validasi tipe boolean opsional atau bernilai null
+    function isOptionalBool(data, field) {
+      return !(field in data) || data[field] == null || (data[field] is bool);
+    }
+
+    // Helper validasi tipe list opsional atau bernilai null dengan batas jumlah item
+    function isOptionalList(data, field, maxSize) {
+      return !(field in data) || data[field] == null ||
+        (data[field] is list && data[field].size() <= maxSize);
+    }
+
+    // Helper validasi tipe map opsional atau bernilai null
+    function isOptionalMap(data, field) {
+      return !(field in data) || data[field] == null || (data[field] is map);
+    }
+
+    // Helper validasi format alamat email
+    function isValidEmail(email) {
+      return email is string &&
+        email.size() <= 120 &&
+        email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$');
+    }
+
+    // ===============================================================
+    // Domain Validators (Validator Function Pattern)
+    // ===============================================================
+
+    // 1. Validator Dokumen Profil Pengguna (users/{userId})
+    function isValidUser(data) {
+      return hasOnlyAllowedFields([
+        'name', 'email', 'currency', 'reminder', 'dashLayout', 'ccPrefs',
+        'coachFocus', 'galleryTags', 'activeAccountId', 'settings', 'photoURL',
+        'tier', 'bio', 'createdAt', 'updatedAt'
+      ]) &&
+      isOptionalString(data, 'name', 100) &&
+      (!( 'email' in data ) || data.email == null || isValidEmail(data.email)) &&
+      isOptionalString(data, 'currency', 10) &&
+      isOptionalString(data, 'activeAccountId', 64) &&
+      isOptionalString(data, 'photoURL', 500) &&
+      isOptionalString(data, 'tier', 50) &&
+      isOptionalString(data, 'bio', 500) &&
+      isOptionalMap(data, 'reminder') &&
+      isOptionalMap(data, 'dashLayout') &&
+      isOptionalMap(data, 'ccPrefs') &&
+      isOptionalMap(data, 'coachFocus') &&
+      isOptionalMap(data, 'settings') &&
+      isOptionalList(data, 'galleryTags', 100);
+    }
+
+    function isUserUpdateValid() {
+      return isValidUser(request.resource.data) &&
+        (!('createdAt' in resource.data) || !('createdAt' in request.resource.data) || request.resource.data.createdAt == resource.data.createdAt);
+    }
+
+    // 2. Validator Catatan Jurnal Harian (users/{userId}/journals/{date})
+    function isValidJournal(data) {
+      return hasOnlyAllowedFields([
+        'date', 'entries', 'pl', 'trades', 'wins', 'be', 'rMultiple', 'fees',
+        'riskPct', 'rating', 'pair', 'tags', 'emotions', 'session', 'notes',
+        'charts', 'accountType', 'accountId', 'source', 'externalId', 'syncedAt',
+        'needsReflection', 'bias', 'strategyLog', 'strategyId', 'strategyName',
+        'submitIds', 'importedIds', 't360', 't360Hist', 't360UpdatedAt',
+        'createdAt', 'updatedAt'
+      ]) &&
+      isOptionalString(data, 'date', 20) &&
+      isOptionalList(data, 'entries', 150) &&
+      isOptionalNumber(data, 'pl', -1000000000, 1000000000) &&
+      isOptionalNumber(data, 'trades', 0, 10000) &&
+      isOptionalNumber(data, 'wins', 0, 10000) &&
+      isOptionalNumber(data, 'be', 0, 10000) &&
+      isOptionalNumber(data, 'rMultiple', -10000, 10000) &&
+      isOptionalNumber(data, 'fees', 0, 100000000) &&
+      isOptionalNumber(data, 'riskPct', 0, 100) &&
+      isOptionalNumber(data, 'rating', 1, 5) &&
+      isOptionalString(data, 'pair', 100) &&
+      isOptionalList(data, 'tags', 50) &&
+      isOptionalList(data, 'emotions', 50) &&
+      isOptionalString(data, 'session', 100) &&
+      isOptionalString(data, 'notes', 10000) &&
+      isOptionalList(data, 'charts', 50) &&
+      isOptionalString(data, 'accountType', 50) &&
+      isOptionalString(data, 'accountId', 64) &&
+      isOptionalString(data, 'source', 50) &&
+      isOptionalString(data, 'externalId', 128) &&
+      isOptionalBool(data, 'needsReflection') &&
+      isOptionalString(data, 'bias', 50) &&
+      isOptionalList(data, 'strategyLog', 50) &&
+      isOptionalString(data, 'strategyId', 64) &&
+      isOptionalString(data, 'strategyName', 100) &&
+      isOptionalList(data, 'submitIds', 50) &&
+      isOptionalList(data, 'importedIds', 500) &&
+      isOptionalList(data, 't360', 150) &&
+      isOptionalList(data, 't360Hist', 150);
+    }
+
+    function isJournalUpdateValid() {
+      return isValidJournal(request.resource.data) &&
+        (!('date' in resource.data) || !('date' in request.resource.data) || request.resource.data.date == resource.data.date) &&
+        (!('createdAt' in resource.data) || !('createdAt' in request.resource.data) || request.resource.data.createdAt == resource.data.createdAt);
+    }
+
+    // 3. Validator Akun Trading (users/{userId}/accounts/{accountId})
+    function isValidAccount(data) {
+      return hasOnlyAllowedFields([
+        'id', 'name', 'type', 'status', 'isActive', 'isDefault', 'syncToken',
+        'lastSyncedAt', 'tradeCount', 'accountNumber', 'broker', 'server',
+        'balance', 'equity', 'currency', 'createdAt', 'updatedAt'
+      ]) &&
+      data.id is string && data.id.size() >= 1 && data.id.size() <= 64 &&
+      data.name is string && data.name.size() >= 1 && data.name.size() <= 80 &&
+      data.type in ['manual', 'mt4', 'mt5', 'tradingview'] &&
+      data.status in ['connected', 'disconnected'] &&
+      isOptionalBool(data, 'isActive') &&
+      isOptionalBool(data, 'isDefault') &&
+      isOptionalString(data, 'syncToken', 128) &&
+      isOptionalNumber(data, 'tradeCount', 0, 1000000) &&
+      isOptionalString(data, 'broker', 80) &&
+      isOptionalString(data, 'server', 80) &&
+      isOptionalString(data, 'currency', 10) &&
+      isOptionalNumber(data, 'balance', -1000000000, 1000000000) &&
+      isOptionalNumber(data, 'equity', -1000000000, 1000000000);
+    }
+
+    function isAccountUpdateValid() {
+      return isValidAccount(request.resource.data) &&
+        (!('id' in resource.data) || !('id' in request.resource.data) || request.resource.data.id == resource.data.id) &&
+        (!('createdAt' in resource.data) || !('createdAt' in request.resource.data) || request.resource.data.createdAt == resource.data.createdAt);
+    }
+
+    // 4. Validator Evaluasi Review (users/{userId}/reviews/{reviewId})
+    function isValidReview(data) {
+      return hasOnlyAllowedFields([
+        'period', 'start', 'end', 'month', 'focus', 'w', 'x', 'i', 'createdAt', 'updatedAt'
+      ]) &&
+      data.period in ['d', 'w', 'm', 'daily', 'weekly', 'monthly', 'focus'] &&
+      isOptionalString(data, 'start', 30) &&
+      isOptionalString(data, 'end', 30) &&
+      isOptionalString(data, 'month', 20) &&
+      isOptionalString(data, 'focus', 5000) &&
+      isOptionalString(data, 'w', 5000) &&
+      isOptionalString(data, 'x', 5000) &&
+      isOptionalString(data, 'i', 5000);
+    }
+
+    function isReviewUpdateValid() {
+      return isValidReview(request.resource.data) &&
+        (!('period' in resource.data) || !('period' in request.resource.data) || request.resource.data.period == resource.data.period) &&
+        (!('createdAt' in resource.data) || !('createdAt' in request.resource.data) || request.resource.data.createdAt == resource.data.createdAt);
+    }
+
+    // 5. Validator Strategi Trading (users/{userId}/strategies/{strategyId})
+    function isValidStrategy(data) {
+      return hasOnlyAllowedFields([
+        'name', 'description', 'checklist', 'invalidation', 'exit', 'stopLoss',
+        'target', 'minRR', 'maxRisk', 'targetComp', 'examples', 'archived',
+        'createdAt', 'updatedAt'
+      ]) &&
+      data.name is string && data.name.size() >= 1 && data.name.size() <= 60 &&
+      isOptionalString(data, 'description', 1000) &&
+      isOptionalList(data, 'checklist', 50) &&
+      isOptionalString(data, 'invalidation', 1000) &&
+      isOptionalString(data, 'exit', 1000) &&
+      isOptionalString(data, 'stopLoss', 500) &&
+      isOptionalString(data, 'target', 500) &&
+      isOptionalNumber(data, 'minRR', 0, 100) &&
+      isOptionalNumber(data, 'maxRisk', 0, 100) &&
+      isOptionalNumber(data, 'targetComp', 0, 100) &&
+      isOptionalList(data, 'examples', 20) &&
+      isOptionalBool(data, 'archived');
+    }
+
+    function isStrategyUpdateValid() {
+      return isValidStrategy(request.resource.data) &&
+        (!('createdAt' in resource.data) || !('createdAt' in request.resource.data) || request.resource.data.createdAt == resource.data.createdAt);
+    }
+
+    // 6. Validator Market Outlook (users/{userId}/outlooks/{date})
+    function isValidOutlook(data) {
+      return hasOnlyAllowedFields([
+        'date', 'bias', 'reason', 'charts', 'after', 'afterUpdatedAt', 'createdAt', 'updatedAt'
+      ]) &&
+      isOptionalString(data, 'date', 20) &&
+      isOptionalString(data, 'bias', 50) &&
+      isOptionalString(data, 'reason', 5000) &&
+      isOptionalList(data, 'charts', 30) &&
+      isOptionalMap(data, 'after');
+    }
+
+    function isOutlookUpdateValid() {
+      return isValidOutlook(request.resource.data) &&
+        (!('createdAt' in resource.data) || !('createdAt' in request.resource.data) || request.resource.data.createdAt == resource.data.createdAt);
+    }
+
+    // 7. Validator Catatan Diary (users/{userId}/diaries/{diaryId})
+    function isValidDiary(data) {
+      return hasOnlyAllowedFields([
+        'date', 'tasks', 'notes', 'mood', 'createdAt', 'updatedAt'
+      ]) &&
+      data.date is string && data.date.size() >= 1 && data.date.size() <= 20 &&
+      isOptionalList(data, 'tasks', 50) &&
+      isOptionalString(data, 'notes', 5000) &&
+      isOptionalNumber(data, 'mood', 0, 5);
+    }
+
+    function isDiaryUpdateValid() {
+      return isValidDiary(request.resource.data) &&
+        (!('date' in resource.data) || !('date' in request.resource.data) || request.resource.data.date == resource.data.date) &&
+        (!('createdAt' in resource.data) || !('createdAt' in request.resource.data) || request.resource.data.createdAt == resource.data.createdAt);
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
+    // -------------------------------------------------------------
+    // 1. Dokumen Profil & Preferensi Pengguna
+    // -------------------------------------------------------------
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isOwner(userId) && isUserUpdateValid();
+      allow delete: if isOwner(userId);
+
+      // -----------------------------------------------------------
+      // 2. Jurnal Trading Harian
+      // -----------------------------------------------------------
+      match /journals/{date} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidJournal(request.resource.data);
+        allow update: if isOwner(userId) && isJournalUpdateValid();
+        allow delete: if isOwner(userId);
+      }
+
+      // -----------------------------------------------------------
+      // 3. Manajemen Akun Trading (MT4/MT5/Manual/TradingView)
+      // -----------------------------------------------------------
+      match /accounts/{accountId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidAccount(request.resource.data);
+        allow update: if isOwner(userId) && isAccountUpdateValid();
+        allow delete: if isOwner(userId);
+      }
+
+      // -----------------------------------------------------------
+      // 4. Evaluasi & Review Berkala
+      // -----------------------------------------------------------
+      match /reviews/{reviewId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidReview(request.resource.data);
+        allow update: if isOwner(userId) && isReviewUpdateValid();
+        allow delete: if isOwner(userId);
+      }
+
+      // -----------------------------------------------------------
+      // 5. Library Strategi Trading
+      // -----------------------------------------------------------
+      match /strategies/{strategyId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidStrategy(request.resource.data);
+        allow update: if isOwner(userId) && isStrategyUpdateValid();
+        allow delete: if isOwner(userId);
+      }
+
+      // -----------------------------------------------------------
+      // 6. Market Outlook & Evaluasi Before/After
+      // -----------------------------------------------------------
+      match /outlooks/{date} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidOutlook(request.resource.data);
+        allow update: if isOwner(userId) && isOutlookUpdateValid();
+        allow delete: if isOwner(userId);
+      }
+
+      // -----------------------------------------------------------
+      // 7. Diary & Checklist Harian
+      // -----------------------------------------------------------
+      match /diaries/{diaryId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidDiary(request.resource.data);
+        allow update: if isOwner(userId) && isDiaryUpdateValid();
+        allow delete: if isOwner(userId);
+      }
+    }
+
+    // -------------------------------------------------------------
+    // Default Deny Root: Tolak semua akses ke koleksi/dokumen di luar skema
+    // -------------------------------------------------------------
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,259 @@
+/* ==========================================================================
+   DOA IBU — v16.82  LIQUID GLASS MODAL
+   --------------------------------------------------------------------------
+   Modal utama (Journal Baru, Profil, Pengingat, Entri Kalender, Strategy picker)
+   sebelumnya terbaca padat dan kecokelatan. Penyebabnya bertumpuk di beberapa berkas:
+
+     1. alpha form .88–.96 (smart-glass.css §3)        → hampir padat, latar tidak tembus
+     2. saturate(140–170%) pada backdrop               → cahaya ambient emas ikut diperkuat
+                                                          menjadi semburat cokelat di balik kaca
+     3. sorot champagne di sudut + gradasi (optical-glass.css / prismatic-edge.css)
+                                                       → menambah rona hangat ke seluruh panel
+     4. bayangan satu tingkat e3 (glass-depth.css)      → modal kurang "terangkat"
+
+   Sekarang: kaca grafit (charcoal) transparan, blur latar lembut, garis tepi putih-keemasan
+   beropasitas rendah, satu garis sorot tipis di tepi atas, dan bayangan berlapis empat.
+
+   Cara kerja (aditif, dimuat paling akhir, setelah contextual-ambient.css)
+     • Hanya mengganti TOKEN yang sudah dibaca lapisan lama pada elemen modal itu sendiri:
+       --amb-glass-rgb, --amb-float-a, --amb-rim, --amb-drop  (ambient-glass.css, glass-depth.css)
+       --sgt-float-bf, --sgt-form-bf                          (smart-glass.css)
+       --pe-stack                                             (prismatic-edge.css)
+     • Satu aturan langsung: background-image (pantulan netral menggantikan sorot champagne).
+     • Tidak ada markup / JS / logika data baru.
+
+   Fallback — dua lapis, tanpa mengandalkan media query yang tidak dikenal semua browser
+     • html.mo-lite, data-ui-effects="low", browser tanpa backdrop-filter: aturan di berkas ini tidak
+       berlaku sama sekali (pemilih :not() / @supports), jadi modal tetap padat persis v16.81.
+     • prefers-reduced-transparency, prefers-contrast: more, forced-colors: blok §2 mengembalikan
+       alpha/blur ke token fallback smart-glass.css (--sgt-form-a, --sgt-*-bf). Browser yang tidak
+       mengenal fitur itu mengabaikan blok tersebut, dan memang tidak punya preferensinya.
+       (Gerbang "@media (…: no-preference)" sengaja TIDAK dipakai: di browser yang tidak mengenal
+       fiturnya seluruh blok bernilai salah, sehingga gaya baru tidak akan pernah tampil.)
+
+   Tema terang tidak disentuh (hanya body:not(.light)).
+   v16.83: #v22-recap (Rekap Evaluasi) kini ikut, lewat §3 di bawah. Bedanya dengan modal lain: latar
+   dialog-nya ditulis `background: … !important` (index.html, .rc-dlg), jadi token tidak cukup dan §3
+   memakai aturan langsung dengan spesifisitas lebih tinggi.
+   Membatalkan: hapus <link href="liquid-modal.css">. Tampilan kembali persis v16.81.
+   ========================================================================== */
+
+
+/* ==========================================================================
+   0. TOKEN — nilai yang bisa disetel dari satu tempat
+   ========================================================================== */
+html body.authed {
+  /* warna kaca: grafit netral-dingin. B > G > R, jadi tidak pernah condong ke cokelat */
+  --lm-rgb: 25, 27, 32;
+  /* alpha mengikuti slider "Transparansi kaca" (--lg): .62 – .76 (default .55 → ±.70).
+     Sebelumnya .88–.96 (hampir padat). Lantai .62 dihitung agar teks redup tetap ≥ 4,4:1 di atas latar terang. */
+  --lm-a: calc(.62 + var(--lg, .55) * .14);
+
+  /* blur lembut; saturate DITURUNKAN (<100%) agar cahaya ambient emas di belakang kaca teredam menjadi abu-grafit, bukan cokelat;
+     brightness < 1 meredupkan latar supaya teks tetap kontras di atas kaca yang lebih tipis */
+  --lm-blur: 26px;
+  --lm-sat: 78%;
+  --lm-dim: .80;
+  --lm-bf: blur(var(--lm-blur)) saturate(var(--lm-sat)) brightness(var(--lm-dim));
+
+  /* putih keemasan (bukan champagne jenuh): dipakai untuk tepi & sorot, opacity rendah */
+  --lm-edge: 255, 241, 208;
+
+  /* tepi dalam: garis 1px putih-emas · sorot tipis di tepi atas · cahaya jatuh lembut dari atas · dasar sedikit lebih gelap */
+  --lm-rim:
+    inset 0 0 0 1px rgba(var(--lm-edge), .24),
+    inset 0 1px 0 rgba(var(--lm-edge), .55),
+    inset 0 24px 28px -24px rgba(255, 255, 255, .20),
+    inset 0 -16px 22px -18px rgba(0, 0, 0, .34);
+
+  /* bayangan berlapis: kontak → dekat → menengah → jauh (modal = lapisan tertinggi) */
+  --lm-drop:
+    0 1px 1px rgba(0, 0, 0, .34),
+    0 4px 10px -2px rgba(0, 0, 0, .30),
+    0 18px 36px -10px rgba(0, 0, 0, .46),
+    0 44px 84px -28px rgba(0, 0, 0, .66);
+
+  /* tepi atas yang menangkap cahaya: titik sorot + serat tipis + kilap netral di sisi jauh.
+     Sama susunannya dengan prismatic-edge.css, hanya lebih redup (alpha .08–.52) dan tanpa semburat rose. */
+  --lm-stack:
+    linear-gradient(90deg, transparent 0, rgba(var(--lm-edge), .72) 50%, transparent 100%),
+    linear-gradient(90deg, transparent 2%, rgba(176, 204, 236, .08) 9%, rgba(var(--lm-edge), .30) 24%, rgba(var(--lm-edge), .30) 40%, rgba(var(--lm-edge), .06) 58%, transparent 70%),
+    linear-gradient(90deg, transparent 74%, rgba(255, 255, 255, .08) 90%, transparent 99%);
+}
+@media (max-width: 640px) {
+  html body.authed {
+    --lm-blur: 22px;            /* sejalan dengan pengurangan blur HP di liquid-depth.css */
+    --lm-drop:                  /* lapisan jatuh terjauh dibuang: bottom sheet menempel di dasar layar */
+      0 1px 1px rgba(0, 0, 0, .34),
+      0 6px 14px -4px rgba(0, 0, 0, .34),
+      0 -14px 40px -12px rgba(0, 0, 0, .50);
+  }
+}
+
+
+/* ==========================================================================
+   1. KACA — token ke lapisan lama + pantulan netral
+      Selektor memakai [data-amb] berulang (konvensi proyek) supaya menang atas
+      smart-glass.css §3 (form: --amb-float-a, ±(1,10,3)) tanpa !important.
+   ========================================================================== */
+/* a) TEPI, SOROT, BAYANGAN — murah (tanpa blur), jadi juga berlaku di html.mo-lite / efek rendah,
+      supaya garis tepi putih-emas, highlight atas, dan bayangan berlapis tetap terlihat di perangkat hemat.
+      Token dibaca glass-depth.css (rim, drop; !important) dan prismatic-edge.css (tepi atas). */
+html body.authed:not(.light)[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] :is(
+    .modal-overlay:not(#image-zoom-modal) > .glass,
+    #sp-modal .sp-sheet
+  ) {
+  --amb-rim:  var(--lm-rim);
+  --amb-drop: var(--lm-drop);
+  --pe-stack: var(--lm-stack);
+}
+
+/* b) KACA — warna, alpha, blur, pantulan. Hanya mode efek penuh. */
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+
+  html:not(.mo-lite):not([data-ui-effects="low"]) body.authed:not(.light)[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] :is(
+    .modal-overlay:not(#image-zoom-modal) > .glass,
+    #sp-modal .sp-sheet
+  ) {
+    --amb-glass-rgb: var(--lm-rgb);
+    --amb-float-a:   var(--lm-a);
+    --sgt-float-bf:  var(--lm-bf);
+    --sgt-form-bf:   var(--lm-bf);
+
+    /* panel di dalam modal (kotak form, kartu, footer) memakai --di-surface-1/2 (liquid-glass-v1634.css,
+       alpha .88 / .72). Itu yang membuat modal tampak padat walau kaca luarnya sudah bening.
+       Di sini keduanya menjadi inset tipis: putih netral beralpha rendah di atas kaca. */
+    --di-surface-1: rgba(255, 255, 255, .040);
+    --di-surface-2: rgba(255, 255, 255, .060);
+  }
+
+  /* pantulan: tiga lapis netral menggantikan sorot champagne (optical-glass / prismatic-edge §1).
+     1) pita diagonal sangat tipis, seperti kilau kaca tertangkap cahaya dari kiri-atas
+     2) sorot lembut di sudut kiri-atas
+     3) atas sedikit lebih terang, bawah sedikit lebih gelap (kedalaman)
+     Di mode reduced-transparency, "background: … !important" milik ambient-glass.css dan index.html
+     tetap menang atas aturan ini, jadi panel tetap padat. */
+  html:not(.mo-lite):not([data-ui-effects="low"]) body.authed:not(.light)[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] :is(
+    .modal-overlay:not(#image-zoom-modal) > .glass,
+    #sp-modal .sp-sheet
+  ) {
+    background-image:
+      linear-gradient(118deg, transparent 28%, rgba(255, 255, 255, .040) 42%, rgba(255, 255, 255, .012) 52%, transparent 64%),
+      radial-gradient(72% 48% at 8% -8%, rgba(255, 255, 255, .090), transparent 68%),
+      linear-gradient(180deg, rgba(255, 255, 255, .055), rgba(255, 255, 255, .006) 30%, rgba(0, 0, 0, .12) 100%);
+    background-size: 100% 100%, 100% 100%, 100% 100%;
+    background-position: 0 0, 0 0, 0 0;
+    background-repeat: no-repeat;
+  }
+
+  /* footer lengket form: harus tetap menutup isi yang tergulir di bawah tombol, jadi tidak ikut
+     menjadi inset tipis; memakai warna kaca yang sama (grafit) pada alpha lebih tinggi. */
+  html:not(.mo-lite):not([data-ui-effects="low"]) body.authed:not(.light)[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #jw-card .jw-foot {
+    background: rgba(var(--lm-rgb), .82);
+    box-shadow: 0 -14px 14px -8px rgba(var(--lm-rgb), .82);
+  }
+}
+
+
+/* ==========================================================================
+   2. PREFERENSI PENGGUNA — kembali ke token fallback v16.76 (alpha ≥ .92–.99)
+      Daftar media dipisah koma: fitur yang tidak dikenal browser hanya menggugurkan item itu.
+   ========================================================================== */
+/* transparansi dikurangi / warna paksa: alpha tinggi, tanpa blur */
+@media (prefers-reduced-transparency: reduce), (forced-colors: active) {
+  html:not(.mo-lite):not([data-ui-effects="low"]) body.authed:not(.light)[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] :is(
+    .modal-overlay:not(#image-zoom-modal) > .glass,
+    #sp-modal .sp-sheet
+  ) {
+    --amb-float-a:  var(--sgt-form-a);
+    --sgt-float-bf: none;
+    --sgt-form-bf:  none;
+    --di-surface-1: rgba(26, 27, 31, .96);
+    --di-surface-2: rgba(31, 32, 36, .92);
+  }
+}
+/* kontras tinggi: blur tetap, lantai alpha dinaikkan */
+@media (prefers-contrast: more) {
+  html:not(.mo-lite):not([data-ui-effects="low"]) body.authed:not(.light)[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] :is(
+    .modal-overlay:not(#image-zoom-modal) > .glass,
+    #sp-modal .sp-sheet
+  ) {
+    --amb-float-a:  var(--sgt-form-a);
+    --di-surface-1: rgba(26, 27, 31, .92);
+    --di-surface-2: rgba(31, 32, 36, .86);
+  }
+}
+
+
+/* ==========================================================================
+   3. REKAP EVALUASI (#v22-recap) — v16.83
+      Penyebab "padat dan kecokelatan" khusus modal ini (index.html, blok .rc-dlg):
+        1. background: radial-gradient(emas .16), rgba(24,22,16,.92) !important
+           → dasar cokelat-hitam (R > G > B) pada alpha .92, hampir padat
+        2. box-shadow !important berganti-ganti (emas jenuh .38–.45, lalu 200,169,106 .24)
+        3. kartu dalam (.rc-trend, .rc-hero) memakai wash emas, jadi seluruh isi ikut menghangat
+      Token tidak bisa dipakai di sini karena latar sudah !important. Aturan di bawah memakai
+      !important juga, dengan spesifisitas lebih tinggi (id + [data-amb] ×4 + .rc-dlg).
+      Tema terang tidak disentuh (body:not(.light)).
+   ========================================================================== */
+
+/* a) DASAR + TEPI + BAYANGAN — murah, selalu berlaku (termasuk html.mo-lite).
+      Latar dasar di sini padat grafit (bukan cokelat); §3b menggantinya dengan kaca transparan
+      bila perangkat mampu blur. Garis tepi putih-emas 1px, sorot tepi atas, bayangan empat lapis. */
+html body.authed:not(.light)[data-amb][data-amb][data-amb][data-amb] #v22-recap > [role="dialog"].rc-dlg {
+  background: rgba(var(--lm-rgb), .97) !important;
+  box-shadow: var(--lm-rim), var(--lm-drop) !important;
+}
+
+/* b) KACA — grafit transparan, blur lembut, pantulan netral. Hanya mode efek penuh. */
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  html:not(.mo-lite):not([data-ui-effects="low"]) body.authed:not(.light)[data-amb][data-amb][data-amb][data-amb] #v22-recap > [role="dialog"].rc-dlg {
+    background:
+      /* sorot 1px di tepi atas: putih-emas, terang di tengah, hilang di sudut membulat */
+      linear-gradient(90deg, transparent 0, rgba(var(--lm-edge), .62) 50%, transparent 100%) top / 100% 1px no-repeat,
+      /* pita diagonal tipis: kilau kaca tertangkap cahaya dari kiri-atas */
+      linear-gradient(118deg, transparent 28%, rgba(255, 255, 255, .040) 42%, rgba(255, 255, 255, .012) 52%, transparent 64%),
+      /* sorot lembut di sudut kiri-atas */
+      radial-gradient(72% 48% at 8% -8%, rgba(255, 255, 255, .090), transparent 68%),
+      /* atas sedikit lebih terang, bawah sedikit lebih gelap */
+      linear-gradient(180deg, rgba(255, 255, 255, .055), rgba(255, 255, 255, .006) 30%, rgba(0, 0, 0, .12) 100%),
+      /* kaca grafit: alpha mengikuti slider "Transparansi kaca" (.62 – .76) */
+      rgba(var(--lm-rgb), var(--lm-a)) !important;
+    -webkit-backdrop-filter: var(--lm-bf) !important;
+            backdrop-filter: var(--lm-bf) !important;
+  }
+}
+
+/* c) PANEL DALAM — netral, bukan wash emas. Aksen emas tetap ada, hanya lebih tipis.
+      Tanpa !important: pemilih ber-id sudah menang atas .rc-* di index.html. */
+html body.authed:not(.light) #v22-recap .rc-trend {
+  background: linear-gradient(150deg, rgba(255, 255, 255, .060), rgba(255, 255, 255, .022) 55%, rgba(255, 255, 255, .012));
+  border-color: rgba(var(--lm-edge), .14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 14px 30px -26px rgba(0, 0, 0, .70);
+}
+html body.authed:not(.light) #v22-recap .rc-hero {
+  background: linear-gradient(135deg, rgba(var(--gr), .15), rgba(var(--gr), .04) 62%, rgba(255, 255, 255, .02));
+  border-color: rgba(var(--gr), .34);
+}
+html body.authed:not(.light) #v22-recap .rc-chart-filter select {
+  background: rgba(var(--lm-rgb), .55);   /* sebelumnya rgba(20,19,15,.65): hitam hangat */
+}
+html body.authed:not(.light) #v22-recap .rc-f {
+  border-top-color: rgba(var(--lm-edge), .10);
+  background: linear-gradient(180deg, rgba(255, 255, 255, .015), rgba(0, 0, 0, .10));
+}
+
+/* d) PREFERENSI PENGGUNA — kembali padat tanpa blur (grafit, bukan cokelat #1d1b14 lama).
+      Rantai pemilih sama dengan §3b, ditaruh sesudahnya, supaya menang. */
+@media (prefers-reduced-transparency: reduce), (forced-colors: active) {
+  html:not(.mo-lite):not([data-ui-effects="low"]) body.authed:not(.light)[data-amb][data-amb][data-amb][data-amb] #v22-recap > [role="dialog"].rc-dlg {
+    background: rgba(var(--lm-rgb), .97) !important;
+    -webkit-backdrop-filter: none !important;
+            backdrop-filter: none !important;
+  }
+}
+@media (prefers-contrast: more) {
+  html:not(.mo-lite):not([data-ui-effects="low"]) body.authed:not(.light)[data-amb][data-amb][data-amb][data-amb] #v22-recap > [role="dialog"].rc-dlg {
+    background: rgba(var(--lm-rgb), .94) !important;
+  }
+}

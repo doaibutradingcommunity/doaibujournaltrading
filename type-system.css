@@ -1,0 +1,166 @@
+/* =========================================================================
+   v16.73 — Tipografi & ritme
+   Satu font, satu skala ukuran, satu skala jarak, satu skala radius, di semua halaman.
+   Lapisan terakhir (setelah editorial.css). Hanya tampilan: tidak menyentuh data atau logika.
+   Membatalkan sebagian: hapus <link href="type-system.css">. (Normalisasi nilai di file CSS lain bersifat permanen.)
+
+   FONT      Inter (variabel, 400–700) untuk semua teks dan angka. Tidak ada serif, tidak ada campuran SF/Inter.
+   UKURAN    12 caption · 13 label · 15 isi · 17 sub-judul · 20/22 judul · 28 judul besar · 34+ angka hero
+   BOBOT     400 isi · 500 label · 600 judul, angka, tombol. 700 hanya untuk tekanan khusus. 800/900 tidak dipakai.
+   ANGKA     tabular + lining di seluruh aplikasi, supaya P/L dan statistik sejajar di tiap baris.
+   JARAK     kelipatan 4px (4 8 12 16 20 24 32 40 48)
+   RADIUS    8 · 12 · 16 · 20 · 24 · 28 · pill
+   LABEL     tanpa huruf kapital penuh, tanpa jarak huruf lebar. Minimum 12px.
+   ========================================================================= */
+
+:root {
+  /* ---- font ---- */
+  --font-family: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, system-ui, sans-serif;
+  --font-sans: var(--font-family);
+  --font-display: var(--font-family);
+  --font-text: var(--font-family);
+
+  /* ---- skala ukuran ---- */
+  --ts-caption: 12px;     /* keterangan, badge, sumbu grafik */
+  --ts-label:   13px;     /* label field, nama statistik, teks pendukung */
+  --ts-body:    15px;     /* isi, nilai dalam daftar */
+  --ts-head:    17px;     /* sub-judul kartu */
+  --ts-title:   20px;     /* judul bagian */
+  --ts-title-2: 22px;     /* judul halaman / sheet */
+  --ts-large:   28px;     /* angka statistik utama */
+  --ts-hero:    clamp(44px, 12vw, 72px);   /* P/L hari ini */
+
+  /* ---- bobot ---- */
+  --tw-body: 400; --tw-label: 500; --tw-strong: 600; --tw-emph: 700;
+
+  /* ---- jarak ---- */
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px; --sp-5: 20px;
+  --sp-6: 24px; --sp-8: 32px; --sp-10: 40px; --sp-12: 48px;
+
+  /* ---- radius ---- */
+  --r-sm: 8px;  --r-md: 12px; --r-lg: 16px; --r-xl: 20px; --r-2xl: 24px; --r-3xl: 28px; --r-pill: 999px;
+  --radius-xs: 8px;
+}
+
+/* ---------- dasar ---------- */
+html, body, button, input, select, textarea {
+  font-family: var(--font-family) !important;
+}
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body {
+  font-size: var(--ts-body);
+  line-height: 1.5;
+  font-weight: var(--tw-body);
+  letter-spacing: -.006em;
+  font-optical-sizing: auto;
+  font-kerning: normal;
+  font-variant-numeric: lining-nums;   /* tabular hanya di elemen angka (lihat bawah): tnum melebarkan tanda hubung di teks biasa */
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+button, input, select, textarea { letter-spacing: inherit; font-variant-numeric: inherit; }
+code, kbd, pre, samp, .font-mono { font-family: var(--font-mono, ui-monospace, "SF Mono", Menlo, Consolas, monospace) !important; }
+
+/* ---------- judul: tegas tapi tidak berat ---------- */
+html body h1, html body h2, html body h3, html body h4 {
+  font-weight: var(--tw-strong);
+  letter-spacing: -.02em;
+  line-height: 1.2;
+  text-wrap: balance;
+}
+html body h1 { font-size: var(--ts-large); line-height: 1.15; letter-spacing: -.026em; }
+html body h2 { font-size: var(--ts-title-2); }
+html body h3 { font-size: var(--ts-title); }
+html body h4 { font-size: var(--ts-head); }
+html body p, html body li { text-wrap: pretty; }
+/* judul dan paragraf: lebar proporsional (container lama memaksa tabular, yang membuat tanda hubung terlihat bolong) */
+html body h1, html body h2, html body h3, html body h4, html body p { font-variant-numeric: lining-nums proportional-nums; }
+
+/* ---------- peran bobot (mengalahkan aturan 400/700 lama) ---------- */
+html body .font-light, html body .font-normal { font-weight: var(--tw-body); }
+html body .font-medium { font-weight: var(--tw-label); }
+html body .font-semibold, html body .font-bold, html body b, html body strong, html body th { font-weight: var(--tw-strong); }
+html body .font-extrabold, html body .font-black { font-weight: var(--tw-emph); }
+html body button { font-weight: var(--tw-label); }
+html body .btn-gold, html body button.font-bold, html body button.font-semibold, html body .nav-pill-btn.active { font-weight: var(--tw-strong); }
+
+/* ---------- Tailwind: tangga ukuran sama dengan skala ---------- */
+html body .text-xs   { font-size: var(--ts-caption); line-height: 1.4; }
+html body .text-sm   { font-size: var(--ts-body);    line-height: 1.45; }
+html body .text-base { font-size: var(--ts-body);    line-height: 1.5; }
+html body .text-lg   { font-size: var(--ts-head);    line-height: 1.35; }
+html body .text-xl   { font-size: var(--ts-title);   line-height: 1.3; }
+html body .text-2xl  { font-size: var(--ts-title-2); line-height: 1.25; }
+html body .text-3xl  { font-size: var(--ts-large);   line-height: 1.2; }
+html body .text-4xl  { font-size: 34px;              line-height: 1.12; letter-spacing: -.03em; }
+html body .tracking-tight { letter-spacing: -.02em; }
+html body .tracking-wide, html body .tracking-wider, html body .tracking-widest { letter-spacing: 0; }
+html body .uppercase { text-transform: none; }
+
+/* ---------- label & teks pendukung ---------- */
+html body .label { font-size: var(--ts-label); font-weight: var(--tw-label); line-height: 1.4; letter-spacing: 0; }
+html body small, html body .text-muted { line-height: 1.45; }
+html body th { font-size: var(--ts-caption); letter-spacing: 0; text-transform: none; }
+
+/* ---------- angka finansial ---------- */
+/* Angka besar: semibold, rapat, sejajar. Satu keluarga font dengan teks (tanpa serif). */
+html body .ed-fig, html body .v5-t-pl, html body .tcc-big, html body .tcc-hv, html body .stx-big,
+html body .stx-val, html body .v5-kpi .v, html body .sp-net, html body .mag-big, html body .mag-chg .d,
+html body .hm-pl, html body .calx-amt, html body .t3-score b {
+  font-family: var(--font-family) !important;
+  font-weight: var(--tw-strong);
+  font-variant-numeric: lining-nums tabular-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+/* Angka hero berdiri sendiri (tidak ditumpuk dalam kolom): lebar proporsional supaya tanda minus/plus dan $ tidak berjarak lebar.
+   Angka di daftar, tabel, kalender, dan KPI tetap tabular. */
+html body .ed-fig, html body .v5-t-pl, html body .tcc-big, html body .tcc-hv, html body .stx-big,
+html body .mag-big, html body .mag-chg .d {
+  font-variant-numeric: lining-nums proportional-nums !important;
+  font-feature-settings: "lnum" 1, "pnum" 1 !important;
+}
+html.ed-on .ed-fig { font-weight: var(--tw-strong); letter-spacing: -.035em; line-height: 1.04; }
+html.ed-on .ed-lead { font-size: var(--ts-hero); }
+html.ed-on .ed-second { font-size: clamp(28px, 8vw, 40px); }
+html.ed-on .ed-greet { font-weight: var(--tw-strong); letter-spacing: -.02em; font-size: clamp(20px, 4.6vw, 24px); }
+html.ed-on .ed-date, html.ed-on .ed-label { font-size: var(--ts-label); font-weight: var(--tw-label); letter-spacing: 0; }
+html.ed-on .ed-meta { font-size: var(--ts-label); }
+html.ed-on .ed-sec dt { font-size: var(--ts-caption); font-weight: var(--tw-label); }
+html.ed-on .ed-sec dd { font-size: var(--ts-head); font-weight: var(--tw-strong); }
+
+/* nilai P/L di daftar, tabel, kalender: lebar angka tetap */
+[class*="pnl"], [class*="-pl"], [class*="pl-"], [class*="amt"], [class*="money"], [class*="profit"],
+.hm-pos, .hm-neg, .hm-b, .tnum, .pos, .neg, .ac-pos, td, th, time, output,
+.calx-num, .calx-meta, .v2day-num, .v2day-value, .jr-n, .jr-day-t small, .v2row span, .sp-row span,
+.rc-chip i, .text-emerald-400, .text-rose-400, .text-red-400, .text-green-400 {
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+/* ---------- input: 16px di layar sentuh supaya iOS tidak memperbesar halaman ---------- */
+@media (pointer: coarse) {
+  html body input:not([type=checkbox]):not([type=radio]):not([type=range]),
+  html body select, html body textarea { font-size: 16px !important; }
+}
+
+/* ---------- jarak antar bagian: ritme tetap ---------- */
+:root { --page-gutter: 20px; }
+@media (min-width: 640px)  { :root { --page-gutter: 28px; } }
+@media (min-width: 1024px) { :root { --page-gutter: 36px; } }
+
+/* ---------- aksesibilitas ---------- */
+@media (prefers-contrast: more) {
+  html body .label { font-weight: var(--tw-strong); }
+}
+
+/* ---------- pengecualian padat: sel kalender 7 kolom di layar sempit ----------
+   Lebar sel ±40px di 390px; 12px tidak muat tanpa bertabrakan. Satu-satunya tempat yang boleh di bawah 12px. */
+@media (max-width: 639px) {
+  html body #calendar-section .calx-cell .calx-amt { font-size: 11px; letter-spacing: -.02em; }
+  html body #calendar-section .calx-cell .calx-meta { font-size: 10px; }
+}
+
+/* ---------- pengecualian padat: label tab bawah (5 tab) di layar sempit ---------- */
+@media (min-width: 351px) and (max-width: 420px) {
+  html body .npv-item { font-size: 11px; }
+}

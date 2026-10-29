@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pre-Trade · Doa Ibu</title>
+<link rel="manifest" href="pretrade.webmanifest">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Pre-Trade">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/favicon-96.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#000;--card:#14130e;--card2:#1b1a13;--line:rgba(255,255,255,.10);--text:#eee8d6;--muted:#a8a18f;
+  --gold:#d7b44a;--gold2:#f0d477;--ok:#2dd4bf;--bad:#ff7a68;--on-gold:#1a1405;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme:light){
+  :root{--bg:#faf7ee;--card:#fffdf6;--card2:#f3eedd;--line:rgba(0,0,0,.12);--text:#27272a;--muted:#6b6b72;
+    --gold:#8a6a10;--gold2:#7a5a0c;--ok:#0f766e;--bad:#b83526;--on-gold:#fff;color-scheme:light}
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:"Inter",-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,system-ui,sans-serif}
+body{min-height:100vh;font-variant-numeric:lining-nums tabular-nums;-webkit-font-smoothing:antialiased;font-optical-sizing:auto;padding:calc(env(safe-area-inset-top,0px) + 16px) 16px calc(env(safe-area-inset-bottom,0px) + 28px)}
+main{max-width:520px;margin:0 auto}
+header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+header.top h1{font-size:20px;margin:0;color:var(--gold2);letter-spacing:.01em}
+header.top small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.open-app{font-size:13px;color:var(--muted);text-decoration:none;border:1px solid var(--line);padding:8px 12px;border-radius:999px;white-space:nowrap}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;margin-bottom:16px}
+.card h2{font-size:13px;letter-spacing:0;text-transform:none;color:var(--muted);margin:0 0 12px;font-weight:600}
+/* recap */
+.focus{background:linear-gradient(135deg,rgba(215,180,74,.16),rgba(215,180,74,.04));border-color:rgba(215,180,74,.45)}
+.flag{display:inline-block;font-size:12px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--gold2);margin-bottom:8px}
+.focus p{margin:0;font-size:17px;line-height:1.5;font-weight:600}
+.src{display:block;margin-top:8px;font-size:12px;color:var(--muted)}
+.duo{display:grid;gap:12px}
+.mini{border:1px solid var(--line);border-radius:16px;padding:12px 16px;background:var(--card2)}
+.mini b{display:block;font-size:12px;margin-bottom:4px}
+.mini.x b{color:var(--bad)}.mini.w b{color:var(--ok)}
+.mini p{margin:0;font-size:15px;line-height:1.5}
+details.more{margin-top:12px}
+details.more summary{cursor:pointer;color:var(--gold2);font-size:15px;font-weight:600;padding:8px 0;list-style:none}
+details.more summary::-webkit-details-marker{display:none}
+.tl{margin:8px 0 0;padding:0;list-style:none;display:grid;gap:12px}
+.tl li{border-left:2px solid var(--line);padding-left:12px}
+.tl .h{font-size:12px;color:var(--muted);font-weight:600;margin-bottom:2px}
+.tl p{margin:0;font-size:15px;line-height:1.5;white-space:pre-wrap}
+.empty{color:var(--muted);font-size:15px;line-height:1.6;margin:0}
+/* checklist */
+.ck-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.ck-head h2{margin:0}
+.pct{font-weight:700;color:var(--gold2);font-size:15px;font-variant-numeric:tabular-nums}
+.bar{height:6px;border-radius:999px;background:var(--line);overflow:hidden;margin-bottom:12px}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--gold),var(--gold2));transition:width .25s ease}
+.items{display:grid;gap:8px}
+.item{display:flex;align-items:center;gap:16px;width:100%;min-height:58px;padding:12px 16px;border-radius:16px;border:1px solid var(--line);background:var(--card2);color:var(--text);font:inherit;font-size:17px;text-align:left;cursor:pointer;transition:background .15s,border-color .15s,transform .08s}
+.item:active{transform:scale(.985)}
+.box{flex:none;width:28px;height:28px;border-radius:8px;border:2px solid var(--muted);display:grid;place-items:center;transition:.15s}
+.box svg{width:18px;height:18px;stroke:var(--on-gold);stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round;opacity:0;transform:scale(.6);transition:.15s}
+.item[aria-checked="true"]{border-color:rgba(215,180,74,.55);background:rgba(215,180,74,.10)}
+.item[aria-checked="true"] .box{background:var(--gold);border-color:var(--gold)}
+.item[aria-checked="true"] .box svg{opacity:1;transform:scale(1)}
+.item[aria-checked="true"] .lbl{color:var(--muted);text-decoration:line-through;text-decoration-color:rgba(168,161,143,.5)}
+.ready{display:none;margin-top:12px;padding:16px;border-radius:16px;text-align:center;font-weight:700;color:var(--on-gold);background:linear-gradient(135deg,var(--gold),var(--gold2))}
+.ready small{display:block;font-weight:600;opacity:.85;margin-top:4px;font-size:13px}
+.ready.on{display:block}
+.foot{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:12px}
+.link{background:none;border:0;color:var(--muted);font:inherit;font-size:13px;text-decoration:underline;cursor:pointer;padding:8px 0}
+.install{display:none;width:100%;min-height:50px;border-radius:16px;border:1px solid rgba(215,180,74,.5);background:rgba(215,180,74,.1);color:var(--gold2);font:inherit;font-weight:700;font-size:15px;cursor:pointer}
+.install.on{display:block}
+.hint{font-size:13px;color:var(--muted);line-height:1.6;margin:12px 2px 0}
+.stale{font-size:12px;color:var(--muted);margin:2px 2px 12px}
+.setup{display:none;border-color:rgba(215,180,74,.45)}
+.setup.on{display:block}
+.setup h2{color:var(--gold2)}
+.setup ol{margin:8px 0 0;padding-left:20px;font-size:15px;line-height:1.7}
+.setup li b{color:var(--gold2)}
+.setup .tip{margin:12px 0 0;font-size:13px;color:var(--muted);line-height:1.6}
+.setup .x{float:right;background:none;border:0;color:var(--muted);font:inherit;font-size:13px;cursor:pointer;padding:0 0 8px 12px}
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <div><h1>Pre-Trade</h1><small id="date"></small></div>
+    <a class="open-app" href="./">Buka aplikasi</a>
+  </header>
+
+  <section class="card" aria-labelledby="ck-t">
+    <div class="ck-head"><h2 id="ck-t">Checklist sebelum entry</h2><span class="pct" id="pct" aria-live="polite"></span></div>
+    <div class="bar" aria-hidden="true"><i id="bar"></i></div>
+    <div class="items" id="items" role="group" aria-labelledby="ck-t"></div>
+    <div class="ready" id="ready" role="status">Siap trade<small id="ready-sub"></small></div>
+    <div class="foot">
+      <button class="link" id="reset" type="button">Kosongkan centang hari ini</button>
+      <a class="link" href="./">Atur poin checklist</a>
+    </div>
+  </section>
+
+  <div id="recap"></div>
+  <div class="stale" id="stale"></div>
+
+  <button class="install" id="install" type="button">Pasang sebagai ikon di layar utama</button>
+  <section class="card setup" id="setup" aria-labelledby="setup-t">
+    <button class="x" id="setup-x" type="button">Tutup</button>
+    <h2 id="setup-t">Pasang ke beranda HP / tablet</h2>
+    <ol id="setup-steps"></ol>
+    <p class="tip">Setelah terpasang, ikon “Pre-Trade” muncul di beranda dan terbuka layar penuh seperti aplikasi, tanpa membuka jurnal lengkap. Tekan lama ikon aplikasi utama juga menampilkan pintasan Pre-Trade (Android).</p>
+  </section>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-app-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-auth-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore-compat.js" defer></script>
+<script>
+(function(){
+'use strict';
+/* Storage yang SAMA dengan aplikasi utama (origin sama), jadi tidak ada data ganda:
+   v22ckitems = daftar poin, v21ck:<tanggal> = poin tercentang hari ini,
+   v22ckuid = uid terakhir, v22recapdata:<uid> = cache rekap evaluasi. */
+var K=function(k){try{return localStorage.getItem(k)}catch(e){return null}};
+var W=function(k,v){try{localStorage.setItem(k,v)}catch(e){}};
+var $=function(i){return document.getElementById(i)};
+var pad=function(n){return String(n).padStart(2,'0')};
+var ymd=function(d){return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
+var today=function(){return ymd(new Date())};
+var MON=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+var DAY=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+var fmt=function(s){
+  if(s===today())return 'Hari ini';
+  var y=new Date();y.setDate(y.getDate()-1);if(s===ymd(y))return 'Kemarin';
+  var m=String(s||'').split('-');return m.length===3?(+m[2])+' '+MON[+m[1]-1]:String(s||'');
+};
+var DEF=['Market bias jelas','Liquidity teridentifikasi','Setup valid','Konfirmasi entry ada','Stop Loss sudah ditentukan','Risk sesuai aturan','Tidak sedang FOMO'].map(function(t,i){return{id:'d'+i,t:t}});
+var nid=function(){return 'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)};
+function clean(a){
+  var o=[],seen={};
+  (Array.isArray(a)?a:[]).forEach(function(x){
+    if(!x||typeof x.t!=='string')return;
+    var t=x.t.trim().slice(0,60);if(!t)return;
+    var id=String(x.id||'');if(!id||seen[id])id=nid();seen[id]=1;o.push({id:id,t:t});
+  });
+  return o.slice(0,15);
+}
+var CK=(function(){
+  try{var a=JSON.parse(K('v22ckitems')||'null');if(Array.isArray(a))return clean(a)}catch(e){}
+  return DEF.slice();
+})();
+function state(){
+  var a=[];try{a=JSON.parse(K('v21ck:'+today())||'[]')}catch(e){}
+  var ids=CK.map(function(x){return x.id});
+  return a.map(function(v){return typeof v==='number'?'d'+v:v}).filter(function(v){return ids.indexOf(v)>-1});
+}
+var DATA=null,uid=K('v22ckuid');
+
+/* ---------- tanggal ---------- */
+(function(){var d=new Date();$('date').textContent=DAY[d.getDay()]+', '+d.getDate()+' '+MON[d.getMonth()]+' '+d.getFullYear()})();
+
+/* ---------- checklist ---------- */
+var CHECK='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
+function renderCk(){
+  var box=$('items'),st=state();
+  box.textContent='';
+  if(!CK.length){var p=document.createElement('p');p.className='empty';p.textContent='Checklist kosong. Buka aplikasi lalu tambahkan poin sesuai metodemu.';box.appendChild(p)}
+  CK.forEach(function(x){
+    var b=document.createElement('button');
+    b.type='button';b.className='item';b.setAttribute('role','checkbox');b.dataset.id=x.id;
+    b.setAttribute('aria-checked',st.indexOf(x.id)>-1?'true':'false');
+    var bx=document.createElement('span');bx.className='box';bx.innerHTML=CHECK;
+    var l=document.createElement('span');l.className='lbl';l.textContent=x.t;
+    b.appendChild(bx);b.appendChild(l);box.appendChild(b);
+  });
+  progress(st.length);
+}
+function progress(n){
+  var t=CK.length,p=t?Math.round(n/t*100):0;
+  $('pct').textContent=t?(n+'/'+t):'';
+  $('bar').style.width=p+'%';
+  var done=t>0&&n===t,r=$('ready');
+  r.classList.toggle('on',done);
+  if(done){
+    var f=focusText();
+    $('ready-sub').textContent=f?('Ingat fokusmu: '+(f.length>90?f.slice(0,90).replace(/\s+\S*$/,'')+'…':f)):'Semua poin sudah tercentang';
+  }
+}
+$('items').addEventListener('click',function(e){
+  var b=e.target.closest('.item');if(!b)return;
+  var on=b.getAttribute('aria-checked')!=='true';
+  b.setAttribute('aria-checked',on?'true':'false');
+  var st=[];
+  $('items').querySelectorAll('.item').forEach(function(c){if(c.getAttribute('aria-checked')==='true')st.push(c.dataset.id)});
+  W('v21ck:'+today(),JSON.stringify(st));
+  progress(st.length);
+  try{if(navigator.vibrate)navigator.vibrate(on?12:6)}catch(x){}
+  if(on&&st.length===CK.length){try{if(navigator.vibrate)navigator.vibrate([20,40,20])}catch(x){}}
+});
+$('reset').addEventListener('click',function(){
+  if(!state().length)return;
+  if(confirm('Kosongkan semua centang hari ini?')){W('v21ck:'+today(),'[]');renderCk()}
+});
+
+/* ---------- rekap evaluasi ---------- */
+var SEC=[
+  {k:'x',t:'Jangan diulang'},{k:'i',t:'Perbaiki'},{k:'w',t:'Pertahankan'},
+  {k:'R',t:'Refleksi setelah market'},{k:'J',t:'Catatan journal'},{k:'Y',t:'Diary'}
+];
+function pick(E,k){return (E||[]).filter(function(e){return e[k]}).slice(0,5).map(function(e){return{date:e.date,per:e.per,txt:e[k]}})}
+function items(d,k){return(k==='x'||k==='i'||k==='w')?pick(d.E,k):(d[k]||[])}
+function hasData(d){return !!(d&&((d.E&&d.E.length)||(d.R&&d.R.length)||(d.J&&d.J.length)||(d.Y&&d.Y.length)))}
+function focusText(){var i=DATA&&pick(DATA.E,'i')[0];return i?String(i.txt):''}
+function el(tag,cls,txt){var e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
+function timeline(list){
+  var ol=el('ol','tl');
+  list.forEach(function(it){
+    var li=el('li');li.appendChild(el('div','h',fmt(it.date)));li.appendChild(el('p',null,it.txt));ol.appendChild(li);
+  });
+  return ol;
+}
+function renderRecap(){
+  var host=$('recap');host.textContent='';
+  var d=DATA;
+  if(!hasData(d)){
+    var c=el('section','card');c.appendChild(el('h2',null,'Rekap evaluasi'));
+    c.appendChild(el('p','empty','Belum ada rekap tersimpan di perangkat ini. Buka aplikasi sekali (sambil online dan login) agar evaluasi hari sebelumnya muncul di sini.'));
+    host.appendChild(c);return;
+  }
+  var imp=pick(d.E,'i')[0],mis=pick(d.E,'x')[0],ok=pick(d.E,'w')[0];
+  if(imp){
+    var f=el('section','card focus');
+    f.appendChild(el('span','flag','Fokus hari ini'));
+    f.appendChild(el('p',null,imp.txt));
+    f.appendChild(el('span','src','Dari evaluasi '+fmt(imp.date)));
+    host.appendChild(f);
+  }
+  var duo=[[mis,'x','Jangan diulang'],[ok,'w','Pertahankan']].filter(function(a){return a[0]});
+  if(duo.length){
+    var c2=el('section','card');c2.appendChild(el('h2',null,'Dari evaluasi sebelumnya'));
+    var g=el('div','duo');
+    duo.forEach(function(a){var m=el('div','mini '+a[1]);m.appendChild(el('b',null,a[2]));m.appendChild(el('p',null,a[0].txt));g.appendChild(m)});
+    c2.appendChild(g);host.appendChild(c2);
+  }
+  var rest=SEC.filter(function(s){return items(d,s.k).length});
+  if(rest.length){
+    var det=el('details','card more');
+    var sm=el('summary',null,'Baca semua rekap ('+rest.reduce(function(n,s){return n+items(d,s.k).length},0)+')');
+    det.appendChild(sm);
+    rest.forEach(function(s){det.appendChild(el('h2',null,s.t));det.appendChild(timeline(items(d,s.k)))});
+    host.appendChild(det);
+  }
+}
+function newest(d){var m='';SEC.forEach(function(s){items(d,s.k).forEach(function(it){if(it.date>m)m=it.date})});return m}
+function stale(msg){$('stale').textContent=msg||''}
+function loadCache(){
+  try{if(uid){DATA=JSON.parse(K('v22recapdata:'+uid)||'null')}}catch(e){DATA=null}
+  renderRecap();renderCk();
+  if(DATA&&hasData(DATA)){var n=newest(DATA);stale(n?('Rekap tersimpan di perangkat · evaluasi terbaru: '+fmt(n)):'')}
+}
+
+/* ---------- penyegaran dari Firestore (bila online & sudah login) ---------- */
+/* Logika build() sengaja sama dengan modul Rekap Evaluasi di index.html. */
+function build(rv,ol,jr,dy){
+  var t=today(),E=[],R=[],J=[],Y=[];
+  rv.forEach(function(r){
+    if(!r||!r.start)return;
+    var w=String(r.w||'').trim(),x=String(r.x||'').trim(),i=String(r.i||'').trim();if(!w&&!x&&!i)return;
+    E.push({date:r.start,per:r.period||'d',w:w,x:x,i:i});
+  });
+  E.sort(function(a,b){return a.date<b.date?1:-1});E=E.slice(0,8);
+  ol.forEach(function(o){var a=o.d&&o.d.after,txt=a&&String(a.reflect||'').trim();if(txt&&o.id<=t)R.push({date:o.id,per:'d',txt:txt})});
+  R.sort(function(a,b){return a.date<b.date?1:-1});
+  jr.forEach(function(j){
+    if(!j||!j.date||j.date>=t)return;
+    var txt=String(j.notes||'').split('\n').filter(function(l){return l.indexOf('[Import broker statement]')!==0}).join('\n').trim();
+    if(txt)J.push({date:j.date,per:'d',txt:txt});
+  });
+  J.sort(function(a,b){return a.date<b.date?1:-1});
+  dy.forEach(function(o){var txt=o.d&&String(o.d.notes||'').trim();if(txt&&o.id<t)Y.push({date:o.id,per:'d',txt:txt})});
+  Y.sort(function(a,b){return a.date<b.date?1:-1});
+  return{E:E,R:R.slice(0,4),J:J.slice(0,3),Y:Y.slice(0,3)};
+}
+function refresh(){
+  if(!window.firebase||!navigator.onLine)return;
+  try{
+    var app=firebase.apps.length?firebase.app():firebase.initializeApp({
+      apiKey:"AIzaSyC-JY9a_pB52UMqMo8uO8_QTBt-LKqFU8g",
+      authDomain:"doa-ibu-community-journalling.firebaseapp.com",
+      projectId:"doa-ibu-community-journalling",
+      appId:"1:832821233352:web:0964a8660707c470cf07fd"
+    });
+    var db=firebase.firestore(),auth=firebase.auth();
+    auth.onAuthStateChanged(function(u){
+      if(!u){stale(DATA?'Belum login di perangkat ini — menampilkan rekap tersimpan.':'');return}
+      uid=u.uid;W('v22ckuid',u.uid);
+      var base=db.collection('users').doc(u.uid);
+      var arr=function(p,f){return p.then(function(s){var a=[];s.forEach(function(x){a.push(f(x))});return a}).catch(function(){return[]})};
+      var p1=arr(base.collection('reviews').orderBy('start','desc').limit(40).get(),function(x){return x.data()});
+      var p2=arr(base.collection('outlooks').orderBy(firebase.firestore.FieldPath.documentId(),'desc').limit(14).get(),function(x){return{id:x.id,d:x.data()}});
+      var p3=arr(base.collection('journals').orderBy('date','desc').limit(14).get(),function(x){return x.data()});
+      var p4=arr(base.collection('diaries').orderBy(firebase.firestore.FieldPath.documentId(),'desc').limit(10).get(),function(x){return{id:x.id,d:x.data()}});
+      var pc=base.get().then(function(s){return s.exists?s.data().checklistItems:null}).catch(function(){return null});
+      Promise.all([p1,p2,p3,p4,pc]).then(function(r){
+        var d=build(r[0],r[1],r[2],r[3]);
+        if(hasData(d)||!hasData(DATA)){DATA=d;W('v22recapdata:'+u.uid,JSON.stringify(d))}
+        if(Array.isArray(r[4])){CK=clean(r[4]);W('v22ckitems',JSON.stringify(CK))}
+        renderRecap();renderCk();
+        var n=newest(DATA||{});stale('Diperbarui barusan'+(n?' · evaluasi terbaru: '+fmt(n):''));
+      });
+    });
+  }catch(e){}
+}
+
+/* ---------- sinkron antar jendela & saat kembali ke halaman ---------- */
+window.addEventListener('storage',function(e){if(e.key&&(e.key.indexOf('v21ck:')===0||e.key==='v22ckitems')){CK=(function(){try{return clean(JSON.parse(K('v22ckitems')))}catch(x){return CK}})();renderCk()}});
+var lastDay=today();
+document.addEventListener('visibilitychange',function(){
+  if(document.hidden)return;
+  if(today()!==lastDay){lastDay=today();location.reload();return} // ganti hari: centang mulai dari nol
+  loadCache();refresh();
+});
+
+/* ---------- pasang ke layar utama ---------- */
+var deferred=null,btn=$('install'),setup=$('setup');
+var standalone=(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||window.navigator.standalone;
+var ua=navigator.userAgent,isIOS=/iphone|ipad|ipod/i.test(ua)||(/Macintosh/i.test(ua)&&navigator.maxTouchPoints>1);
+var isAndroid=/android/i.test(ua);
+var dismissed=K('v39setupx')==='1';
+function steps(){
+  var l=[];
+  if(isIOS)l=['Buka halaman ini di <b>Safari</b>.','Ketuk tombol <b>Bagikan</b> (kotak dengan panah ke atas).','Pilih <b>Tambah ke Layar Utama</b>, lalu <b>Tambah</b>.'];
+  else if(isAndroid)l=['Ketuk menu <b>⋮</b> di pojok kanan atas Chrome.','Pilih <b>Instal aplikasi</b> atau <b>Tambahkan ke layar utama</b>.','Ketuk <b>Instal</b>/<b>Tambah</b>. Ikon “Pre-Trade” muncul di beranda.'];
+  else l=['Klik ikon <b>Instal</b> di bilah alamat browser, atau menu ⋮ → <b>Instal Pre-Trade</b>.'];
+  $('setup-steps').innerHTML=l.map(function(t){return'<li>'+t+'</li>'}).join('');
+}
+function showSetup(force){
+  if(standalone)return;
+  if(dismissed&&!force)return;
+  steps();setup.classList.add('on');
+  if(force)setup.scrollIntoView({behavior:'smooth',block:'center'});
+}
+window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferred=e;if(!standalone)btn.classList.add('on')});
+btn.addEventListener('click',function(){if(!deferred){showSetup(true);return}deferred.prompt();deferred.userChoice.finally(function(){deferred=null;btn.classList.remove('on')})});
+window.addEventListener('appinstalled',function(){btn.classList.remove('on');setup.classList.remove('on')});
+$('setup-x').addEventListener('click',function(){W('v39setupx','1');dismissed=true;setup.classList.remove('on')});
+/* ?install=1 (dari tombol "Pasang ke beranda" di aplikasi) = tampilkan panduan walau pernah ditutup */
+var wantInstall=/[?&]install=1/.test(location.search);
+if(!standalone&&(wantInstall||!dismissed))setTimeout(function(){showSetup(wantInstall)},wantInstall?400:0);
+
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(function(){});
+
+loadCache();
+window.addEventListener('load',function(){setTimeout(refresh,0)});
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+/* =========================================================================
+   v16.72 — Hierarki editorial
+   Urutan perhatian: (1) P/L hari ini, (2) P/L bulan ini, (3) tombol Journal Baru,
+   (4) statistik sekunder (win rate, profit factor, trade), (5) sisanya.
+   Emas pekat hanya dipakai satu kali per layar: tombol Journal Baru.
+   Semua dikunci ke html.ed-on. Membatalkan: hapus link + script editorial.* dari index.html.
+   ========================================================================= */
+html.ed-on{--ed-serif:var(--font-sans)}
+
+/* ---------- Beranda: hero ---------- */
+html.ed-on .hm-hero.ed-hero{display:block;padding:28px 28px 8px}
+html.ed-on .ed-hero::before,html.ed-on .ed-hero::after{display:none}
+html.ed-on .ed-top{display:grid;gap:4px;margin-bottom:32px}
+html.ed-on .ed-date{font-size:13px;font-weight:500;color:var(--mu)}
+html.ed-on .ed-greet{margin:0;font:500 clamp(19px,4.6vw,24px)/1.25 var(--ed-serif);letter-spacing:-.005em;color:var(--tx)}
+
+html.ed-on .ed-focus{display:grid;gap:28px}
+html.ed-on .ed-month{padding-top:24px;border-top:1px solid var(--ln);min-width:0}
+html.ed-on .ed-today{min-width:0}
+@media (min-width:820px){
+  html.ed-on .ed-focus{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:0}
+  html.ed-on .ed-month{padding:0 0 0 40px;border-top:0;border-left:1px solid var(--ln)}
+}
+
+html.ed-on .ed-label{margin:0 0 8px;font-size:15px;font-weight:500;color:var(--mu)}
+html.ed-on .ed-fig{display:block;margin:0;max-width:100%;overflow:hidden;white-space:nowrap;padding-bottom:.05em;
+  font-family:var(--ed-serif);font-weight:500;letter-spacing:-.025em;line-height:1.08;
+  font-variant-numeric:lining-nums tabular-nums;font-feature-settings:"lnum","tnum"}
+html.ed-on .ed-lead{font-size:clamp(50px,14.5vw,84px)}
+html.ed-on .ed-second{font-size:clamp(34px,9vw,44px)}
+html.ed-on .ed-fig.ed-nil{color:var(--mu);opacity:.5}
+html.ed-on .ed-meta{margin:12px 0 0;font-size:15px;line-height:1.45;color:var(--mu)}
+
+/* grafik ekuitas ringkas: satu garis, tanpa sumbu; detail muncul saat disentuh */
+html.ed-on .ed-spark{position:relative;height:72px;margin-top:20px;touch-action:pan-y;cursor:crosshair;outline:0;-webkit-tap-highlight-color:transparent;--ed-c:var(--win);--ed-rgb:var(--wr)}
+html.ed-on .ed-spark.down{--ed-c:var(--loss);--ed-rgb:var(--lr)}
+html.ed-on .ed-spark svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+html.ed-on .ed-sp-path{fill:none;stroke:var(--ed-c);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+html.ed-on .ed-sp-area{fill:var(--ed-c);fill-opacity:.09;stroke:none}
+html.ed-on .ed-sp-zero{stroke:var(--mu);stroke-opacity:.32;stroke-width:1;stroke-dasharray:2 4;vector-effect:non-scaling-stroke}
+html.ed-on .ed-sp-line{position:absolute;top:0;bottom:0;width:1px;margin-left:-0.5px;background:var(--mu);opacity:0;transition:opacity .12s}
+html.ed-on .ed-spark.scrub .ed-sp-line{opacity:.5}
+html.ed-on .ed-sp-dot{position:absolute;width:9px;height:9px;margin:-4px 0 0 -4px;border-radius:50%;background:var(--ed-c);box-shadow:0 0 0 5px rgba(var(--ed-rgb),.18)}
+html.ed-on .ed-spark:focus-visible{outline:2px solid var(--g);outline-offset:6px;border-radius:6px}
+html.ed-on .ed-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* statistik sekunder: kecil, sejajar, dipisah garis tipis */
+html.ed-on .ed-sec{display:flex;margin:24px 0 0;padding:16px 0 0;border-top:1px solid var(--ln)}
+html.ed-on .ed-sec>div{flex:1 1 0;min-width:0;padding:0 12px 0 0}
+html.ed-on .ed-sec>div+div{padding-left:16px;border-left:1px solid var(--ln)}
+html.ed-on .ed-sec dt{margin:0 0 4px;font-size:13px;font-weight:500;color:var(--mu)}
+html.ed-on .ed-sec dd{margin:0;font-size:17px;font-weight:600;color:var(--tx);font-variant-numeric:tabular-nums}
+
+/* langkah berikutnya: satu baris teks, bukan kartu bertombol */
+html.ed-on .ed-next{display:flex;align-items:center;justify-content:space-between;gap:8px 20px;flex-wrap:wrap;margin:28px -28px 0;padding:8px 28px 12px;border-top:1px solid var(--ln)}
+html.ed-on .ed-next-t{font-size:15px;line-height:1.4;color:var(--tx)}
+html.ed-on .ed-next-b{all:unset;box-sizing:border-box;cursor:pointer;display:inline-flex;align-items:center;min-height:44px;padding:0 2px;font-size:15px;font-weight:600;color:var(--g);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px}
+html.ed-on .ed-next-b:focus-visible{outline:2px solid var(--g);outline-offset:2px;border-radius:4px}
+html.ed-on .ed-skel{display:grid;padding-bottom:28px}
+
+/* ---------- Beranda: sisanya lebih tenang ---------- */
+html.ed-on .hm-quick{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+html.ed-on .hm-tile{min-height:0;padding:16px 16px;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:12px;border-radius:20px}
+html.ed-on .hm-ti{width:auto;height:auto;background:none;box-shadow:none;color:var(--mu)}
+html.ed-on .hm-card:not(.ed-hero){border-radius:24px;box-shadow:inset 0 0 0 1px var(--ln)}
+html.ed-on .hm-card:not(.ed-hero)::before{display:none}
+html.ed-on .hm-ch h3{font-size:15px;font-weight:600;color:var(--mu)}
+html.ed-on .hm-pair,html.ed-on .hm-pl{font-size:20px}
+@media (max-width:640px){
+  html.ed-on .hm-hero.ed-hero{padding:24px 20px 8px}
+  html.ed-on .ed-next{margin:24px -20px 0;padding:8px 20px 8px}
+  html.ed-on .hm-ts{display:block}
+}
+
+/* ---------- Tombol Journal Baru: aksi utama, satu-satunya emas pekat ---------- */
+html.ed-on body.authed #btn-new-journal-fab{
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  width:auto !important;min-width:56px;height:56px !important;padding:0 24px 0 20px;overflow:hidden;white-space:nowrap;
+  border-radius:999px;animation:none !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 16px 32px -12px rgba(215,180,74,.75),0 2px 6px rgba(0,0,0,.35) !important;
+  transition:padding .28s cubic-bezier(.3,.8,.3,1),gap .28s cubic-bezier(.3,.8,.3,1),transform .28s cubic-bezier(.2,.9,.25,1),opacity .2s ease,bottom .28s ease;
+}
+html.ed-on body.authed #btn-new-journal-fab svg{flex:none;width:22px;height:22px}
+html.ed-on body.authed #btn-new-journal-fab::after{
+  content:attr(data-label);display:block;max-width:190px;margin:0;opacity:1;overflow:hidden;white-space:nowrap;
+  font-size:15px;font-weight:700;letter-spacing:-.01em;line-height:1;
+  transition:max-width .28s cubic-bezier(.3,.8,.3,1),opacity .18s ease;
+}
+/* sedang menggulir: mengecil jadi bulat, tidak hilang */
+html.ed-on body.authed.mf-fab-hide #btn-new-journal-fab,
+html.ed-on body.authed.an-compact #btn-new-journal-fab,
+html.ed-on body.px.authed #btn-new-journal-fab.px-hide{width:56px !important;padding:0;gap:0}
+html.ed-on body.authed.mf-fab-hide #btn-new-journal-fab::after,
+html.ed-on body.authed.an-compact #btn-new-journal-fab::after,
+html.ed-on body.px.authed #btn-new-journal-fab.px-hide::after{max-width:0;opacity:0}
+@media (max-width:360px){
+  html.ed-on body.authed #btn-new-journal-fab{width:56px !important;padding:0;gap:0}
+  html.ed-on body.authed #btn-new-journal-fab::after{max-width:0;opacity:0}
+}
+
+/* ---------- Dashboard: grafik ekuitas lebih ringkas ---------- */
+html.ed-on .v5 .v5-eq svg .v5-grid-l{stroke-opacity:.07}
+html.ed-on .v5 .v5-eq svg text.v5-ax{fill-opacity:.4}
+html.ed-on .v5 .v5-eqcard{padding-bottom:12px}
+
+@media (prefers-reduced-motion:reduce){
+  html.ed-on body.authed #btn-new-journal-fab,html.ed-on body.authed #btn-new-journal-fab::after,html.ed-on .ed-sp-line{transition:none !important}
+}
+@media (forced-colors:active){
+  html.ed-on .ed-sp-path{stroke:CanvasText}html.ed-on .ed-sp-dot{background:CanvasText}
+}

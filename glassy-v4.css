@@ -1,0 +1,271 @@
+/* ==========================================================================
+   DOA IBU — v16.98  GLASSY DASHBOARD (emas lembut) · gaya video referensi + liquid glass emas
+   --------------------------------------------------------------------------
+   Meniru bahasa visual video "Glassy Dashboard V4":
+     · latar ruang hangat yang di-blur (cahaya jendela, tanaman, lampu bulat, sofa)
+     · panel & kartu kaca frosted besar (radius 28px), tepi putih tipis + kilau emas
+     · pil navigasi: item aktif berupa pil gelap (tema terang) / pil emas (tema gelap)
+     · tombol pil emas, pil gelap sekunder, angka besar & ringan (font Outfit)
+     · kartu "inversi" gelap berisi daftar centang emas (Rhythm di tema terang)
+   Yang TETAP: material kaca 3 tingkat (glass-tiers.css), arah cahaya 128°, token emas,
+   slider "Transparansi kaca" (--lg), tema gelap/terang, semua JS & data (tidak disentuh).
+
+   Urutan muat: ... trading-rhythm.css → glassy-v4.css → navigation-refinement-v16.97.css (nav dimiliki file terakhir).
+   Cara kerja — aditif. Memakai token
+   --gt3-* / --amb-solid / --sgt-data-* milik glass-tiers.css, lalu beberapa pemilih langsung.
+   PENYETELAN CEPAT: blok "TOKEN" di bawah (kekeruhan kaca, blur, radius, kekuatan latar).
+   Membatalkan: hapus <link href="glassy-v4.css">. Tampilan kembali persis v16.93.
+   ========================================================================== */
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap");
+
+/* ==========================================================================
+   0. FONT — Outfit untuk seluruh aplikasi (cadangan Inter / sistem)
+   ========================================================================== */
+html:root {
+  --font-family: "Outfit", "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, system-ui, sans-serif;
+}
+
+/* ==========================================================================
+   1. TOKEN — tema gelap (kayu-ambar) dan terang (krem hangat seperti video)
+   ========================================================================== */
+html body.authed {
+  --gv-g1: #dcc47e; --gv-g2: #c3a455; --gv-g3: #a2843a;   /* emas lembut (lebih redup dari #f0cf70/#d4af37) */
+  --gv-glow:    .28;                           /* kekuatan pendar emas di bawah tombol */
+  --gv-scrim:   24, 18, 10;                   /* warna latar untuk scrim header */
+  --gv-r:       28px;                         /* radius kartu */
+  --gv-r-lg:    34px;                         /* hero / panel besar */
+  --gv-r-sm:    20px;                         /* isi kartu */
+  --gv-blur:    30px;
+  --gv-sat:     150%;
+
+  /* kaca: lapisan warna (mulai atas-kiri, 128°) */
+  --gv-fill-a:  rgba(66, 52, 30, .60);
+  --gv-fill-b:  rgba(28, 22, 13, .50);
+  --gv-edge:    rgba(255, 228, 166, .20);     /* cincin 1px */
+  --gv-hi:      rgba(255, 238, 196, .30);     /* kilau tepi atas */
+  --gv-gold:    212, 175, 55;
+  --gv-shadow:  0 26px 60px -30px rgba(0, 0, 0, .70), 0 2px 0 rgba(0, 0, 0, .18);
+
+  /* pil & tombol */
+  --gv-ink:     #1b160a;
+  --gv-pill-bg: rgba(255, 236, 190, .10);
+  --gv-pill-ln: rgba(255, 228, 166, .20);
+
+  /* arahkan token tingkat-3 (kartu data/form) dari padat → frosted */
+  --gt3-rgb:    52, 41, 24;
+  --gt3-a:      calc(.50 + var(--lg, .55) * .12);
+  --gt3-bf:     blur(var(--gv-blur)) saturate(var(--gv-sat));
+  --gt3-hi:     .30;
+  --gt3-line:   rgba(255, 228, 166, .18);
+  --sgt-data-a:  var(--gt3-a);
+  --sgt-data-bf: var(--gt3-bf);
+  --sgt-form-a:  calc(.80 + var(--lg, .55) * .12);   /* form tetap lebih padat agar nyaman diisi */
+  --sgt-form-bf: var(--gt3-bf);
+  --amb-solid:   rgb(var(--gt3-rgb));
+  --sgt-label-off: rgba(250, 240, 214, .80);
+}
+html body.light.authed {
+  --gv-fill-a:  rgba(255, 253, 246, .66);
+  --gv-fill-b:  rgba(255, 244, 216, .44);
+  --gv-edge:    rgba(255, 255, 255, .78);
+  --gv-hi:      rgba(255, 255, 255, .95);
+  --gv-gold:    168, 128, 20;
+  --gv-shadow:  0 26px 60px -32px rgba(96, 70, 22, .42), 0 1px 0 rgba(255, 255, 255, .6);
+
+  --gv-g1: #d4ba78; --gv-g2: #b99a4c; --gv-g3: #9a7d34;
+  --gv-scrim:   226, 214, 192;
+  --gv-ink:     #1d1810;
+  --gv-pill-bg: rgba(255, 255, 255, .55);
+  --gv-pill-ln: rgba(255, 255, 255, .80);
+
+  --gt3-rgb:    255, 251, 240;
+  --gt3-a:      calc(.52 + var(--lg, .55) * .16);
+  --gt3-hi:     .95;
+  --gt3-line:   rgba(255, 255, 255, .72);
+  --sgt-form-a:  calc(.84 + var(--lg, .55) * .12);
+  --sgt-label-off: rgba(40, 33, 18, .78);
+}
+
+/* ==========================================================================
+   2. LATAR — ruang hangat ter-blur (gradien murni, tanpa gambar, tanpa animasi)
+      Cahaya jendela kanan-atas · tanaman kiri · lampu bulat · sofa bawah · pendar emas.
+   ========================================================================== */
+html body.authed[data-amb] {
+  background-attachment: fixed !important;
+  background-color: #1a140a !important;
+  background-image:
+    radial-gradient(ellipse 46% 52% at 88% 4%,  rgba(255, 220, 150, .30), transparent 70%),
+    radial-gradient(circle 15vmax at 50% 26%,   rgba(236, 178, 84, .26),  transparent 72%),
+    radial-gradient(ellipse 20% 46% at 2% 40%,  rgba(96, 112, 56, .34),   transparent 72%),
+    radial-gradient(ellipse 58% 20% at 34% 98%, rgba(176, 150, 108, .30), transparent 74%),
+    radial-gradient(ellipse 34% 18% at 88% 94%, rgba(168, 140, 100, .26), transparent 74%),
+    radial-gradient(ellipse 70% 44% at 12% -6%, rgba(var(--gv-gold), .18), transparent 70%),
+    linear-gradient(180deg, #2a2112 0%, #1a140a 52%, #120d06 100%) !important;
+}
+html body.light.authed[data-amb] {
+  background-color: #dfd3bd !important;
+  background-image:
+    radial-gradient(ellipse 46% 52% at 88% 4%,  rgba(255, 252, 238, .96), transparent 70%),
+    radial-gradient(circle 15vmax at 50% 26%,   rgba(232, 178, 86, .66), transparent 72%),
+    radial-gradient(ellipse 20% 46% at 2% 40%,  rgba(104, 124, 66, .46),  transparent 72%),
+    radial-gradient(ellipse 58% 20% at 34% 98%, rgba(250, 244, 230, .92), transparent 74%),
+    radial-gradient(ellipse 34% 18% at 88% 94%, rgba(244, 234, 212, .88), transparent 74%),
+    radial-gradient(ellipse 70% 44% at 12% -6%, rgba(var(--gv-gold), .16), transparent 70%),
+    linear-gradient(180deg, #ece3d0 0%, #dccfb6 52%, #cdbe9f 100%) !important;
+}
+
+/* ==========================================================================
+   3. KARTU & PANEL KACA — satu resep untuk semua permukaan kartu
+   ========================================================================== */
+html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > main:not(#dg-1):not(#dg-2):not(#dg-3) :is(
+  .hm-card, .hm-tile, .stat-card, .v5-card, .v5-kpi, .v5-chart, .v5-chart-card, .v5-equity,
+  .stx-card, .stx-hero, .calx-shell, .px-range, .glass.ms-card, .v5 .v5-eqcard, .v5 .pf-hero, .ptr
+):not(.hm-hero) {
+  border-radius: var(--gv-r) !important;
+  background-color: transparent !important;
+  background-image:
+    radial-gradient(120% 80% at 6% -14%, rgba(var(--gv-gold), .20), transparent 58%),
+    linear-gradient(142deg, var(--gv-fill-a), var(--gv-fill-b)) !important;
+  background-size: 100% 100% !important;
+  background-position: 0 0 !important;
+  background-repeat: no-repeat !important;
+  -webkit-backdrop-filter: blur(var(--gv-blur)) saturate(var(--gv-sat)) !important;
+          backdrop-filter: blur(var(--gv-blur)) saturate(var(--gv-sat)) !important;
+  box-shadow:
+    inset 0 1px 0 var(--gv-hi),
+    inset 1px 0 0 rgba(255, 255, 255, .16),
+    inset 0 0 0 1px var(--gv-edge),
+    inset -1px -1px 0 rgba(var(--gv-gold), .26),
+    var(--gv-shadow) !important;
+}
+/* hero: panel besar, kaca paling tipis supaya latar terasa */
+html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > main:not(#dg-1):not(#dg-2):not(#dg-3) :is(.hm-hero.hm-card, .v5 .v5-eqcard, .v5 .pf-hero, .calx-shell, .stx-hero) {
+  border-radius: var(--gv-r-lg) !important;
+  background-color: transparent !important;
+  background-image:
+    radial-gradient(110% 70% at 8% -16%, rgba(var(--gv-gold), .26), transparent 60%),
+    radial-gradient(70% 50% at 100% 0%,  rgba(255, 244, 214, .12), transparent 64%),
+    linear-gradient(142deg, var(--gv-fill-a), var(--gv-fill-b)) !important;
+  background-size: 100% 100% !important;
+  background-position: 0 0 !important;
+  background-repeat: no-repeat !important;
+  -webkit-backdrop-filter: blur(calc(var(--gv-blur) + 6px)) saturate(var(--gv-sat)) !important;
+          backdrop-filter: blur(calc(var(--gv-blur) + 6px)) saturate(var(--gv-sat)) !important;
+  box-shadow:
+    inset 0 1px 0 var(--gv-hi),
+    inset 1px 0 0 rgba(255, 255, 255, .18),
+    inset 0 0 0 1px var(--gv-edge),
+    inset -1px -1px 0 rgba(var(--gv-gold), .30),
+    var(--gv-shadow) !important;
+}
+/* kartu tidak boleh menggambar ulang kilau lama di atas kilau baru */
+html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > main:not(#dg-1):not(#dg-2):not(#dg-3) .hm-card::before { background: radial-gradient(90% 60% at 0% -10%, rgba(var(--gv-gold), .10), transparent 56%) !important; }
+/* tile kecil & isi kartu: sudut lebih lembut, kaca lebih tipis dari kartu induk */
+html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > main:not(#dg-1):not(#dg-2):not(#dg-3) .hm-tile { border-radius: var(--gv-r) !important; min-height: 116px; }
+html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > main:not(#dg-1):not(#dg-2):not(#dg-3) :is(.hm-stat, .ptr-stat, .ptr-r, .ptr-ul li, .ptr-empty) {
+  border-radius: var(--gv-r-sm) !important;
+  background: var(--gv-pill-bg) !important;
+  box-shadow: inset 0 1px 0 var(--gv-hi), inset 0 0 0 1px var(--gv-pill-ln) !important;
+}
+
+/* ==========================================================================
+   4. HEADER & NAVIGASI — hanya BENTUK (pil bulat penuh). Warna pil, tab aktif (wash champagne), kabut header,
+      dan dock HP kini dimiliki navigation-refinement-v16.97.css (pemilih x12, dimuat paling akhir),
+      jadi aturan warna nav tidak diulang di sini.
+   ========================================================================== */
+html body.authed[data-amb][data-amb][data-amb][data-amb] :is(#header-left-block, #header-right-block) { border-radius: 999px !important; }
+html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > header.app-header .glass-pill.nav-wrap { border-radius: 999px !important; padding: 5px !important; }
+html body.authed #app > header.app-header .nav-pill-btn { border-radius: 999px; font-weight: 500; letter-spacing: -.005em; }
+html body.authed #app > header.app-header .app-brand-name { font-weight: 600; letter-spacing: .02em; }
+
+/* ==========================================================================
+   5. TIPOGRAFI — judul ringan & besar, angka tegas (seperti "Welcome in, CodeXR")
+   ========================================================================== */
+html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > main:not(#dg-1):not(#dg-2):not(#dg-3) .hm-h { font-weight: 500 !important; font-size: clamp(28px, 5.2vw, 42px) !important; line-height: 1.08 !important; letter-spacing: -.025em !important; }
+html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > main:not(#dg-1):not(#dg-2):not(#dg-3) .hm-sub { font-weight: 400; }
+html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > main:not(#dg-1):not(#dg-2):not(#dg-3) :is(.hm-stat dd, .ptr-stat dd) { font-weight: 500 !important; letter-spacing: -.02em; font-size: clamp(15px, 4.3vw, 32px) !important; white-space: nowrap; }
+html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > main:not(#dg-1):not(#dg-2):not(#dg-3) :is(.hm-ch h3, .ptr-head h3, .ptr-sh h4) { font-weight: 500 !important; letter-spacing: -.01em; }
+html body.light.authed #view-home { --mu: #5a564b; }       /* teks sekunder: kontras aman di atas kaca tipis */
+
+/* ==========================================================================
+   6. TOMBOL — pil emas (utama), pil gelap/kaca (sekunder), kapsul info
+   ========================================================================== */
+html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > main:not(#dg-1):not(#dg-2):not(#dg-3) :is(.hm-btn, .ptr-btn, .btn-gold):not(.hm-tile) { border-radius: 999px !important; font-weight: 600; letter-spacing: -.005em; }
+html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > main:not(#dg-1):not(#dg-2):not(#dg-3) :is(.hm-primary, .ptr-btn, .btn-gold) {
+  background: linear-gradient(135deg, var(--gv-g1), var(--gv-g2) 58%, var(--gv-g3)) !important;
+  color: var(--gv-ink) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 244, 214, .38), 0 8px 18px -10px rgba(var(--gv-gold), var(--gv-glow)) !important;
+}
+html body.light.authed #app > main .hm-ghost {
+  background: linear-gradient(160deg, #2b2416, #15110a) !important; color: var(--gv-g1) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 226, 150, .24), inset 0 0 0 1px rgba(212, 175, 55, .40) !important;
+}
+html body.authed:not(.light) #app > main .hm-ghost {
+  background: var(--gv-pill-bg) !important; color: var(--gv-g1) !important;
+  box-shadow: inset 0 1px 0 var(--gv-hi), inset 0 0 0 1px var(--gv-pill-ln) !important;
+}
+html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > main:not(#dg-1):not(#dg-2):not(#dg-3) .hm-b { border-radius: 999px !important; }
+
+/* ==========================================================================
+   7. KARTU INVERSI — daftar centang emas pada panel gelap (seperti "CRM Deal Tasks")
+      Hanya tema terang; di tema gelap kartu sudah gelap. Memakai token --ptr-* milik trading-rhythm.css.
+   ========================================================================== */
+html body.light.authed #ptr-root { --ptr-tx: #f2ead6; --ptr-mu: #b8ae94; --ptr-ln: rgba(255, 226, 150, .16); --ptr-soft: rgba(255, 236, 190, .07); --ptr-g: #e8c75a; --ptr-gr: 232, 199, 90; --ptr-ink: #1b160a; }
+html body.light.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > main .ptr {
+  background-image: radial-gradient(110% 70% at 8% -16%, rgba(232, 199, 90, .16), transparent 60%), linear-gradient(160deg, rgba(44, 36, 21, .92), rgba(20, 16, 9, .90)) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 226, 150, .26), inset 0 0 0 1px rgba(232, 199, 90, .28), 0 28px 60px -28px rgba(40, 28, 6, .70) !important;
+}
+
+
+/* ==========================================================================
+   10. KENYAMANAN MATA — emas lebih redup, kontras lebih lembut, ikon tab jelas
+       Emas tidak lagi "menyala": gradien memakai --gv-g1/2/3 (lebih gelap & kurang jenuh), pendar bawah tombol
+       dikecilkan (--gv-glow), teks utama tema gelap diturunkan dari putih-krem terang ke krem lembut.
+       Ikon tab (::before mask) sebelumnya berotasi .75 di atas warna label yang juga transparan → hampir hilang;
+       kini opasitas penuh, warna label padat, dan garis ikon ditebalkan sedikit lewat drop-shadow tipis.
+   ========================================================================== */
+html body.authed:not(.light) { --sgt-label-off: rgb(226, 216, 190); }
+html body.light.authed       { --sgt-label-off: rgb(52, 44, 28); }
+html body.authed:not(.light) #view-home { --tx: #e0d8c3; --mu: #a8a08c; --g: #cdb46a; --g2: #dcc47e; --gr: 205, 180, 106; }
+html body.authed:not(.light) { --text-primary: rgba(240, 233, 214, .90); }
+
+/* ikon tab */
+html body.authed[data-amb][data-amb][data-amb] #app .glass-pill.nav-wrap .nav-pill-btn:not(.active)::before {
+  opacity: 1 !important;
+  filter: drop-shadow(0 0 .45px currentColor);
+}
+
+/* tombol "Journal Baru" (FAB): emas lembut, pendar dikecilkan */
+html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #btn-new-journal-fab {
+  background: linear-gradient(135deg, var(--gv-g1), var(--gv-g2) 58%, var(--gv-g3)) !important;
+  color: var(--gv-ink) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 244, 214, .40), inset 0 0 0 1px rgba(255, 236, 190, .16), 0 12px 24px -12px rgba(0, 0, 0, .55), 0 8px 20px -12px rgba(var(--gv-gold), var(--gv-glow)) !important;
+}
+html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #btn-new-journal-fab::before { display: none !important; }
+/* kapsul cincin emas di tepi kartu & pil: lebih tipis */
+html body.authed:not(.light) { --gv-edge: rgba(236, 210, 150, .15); --gv-hi: rgba(250, 232, 190, .22); }
+
+/* ==========================================================================
+   8. HP — dock bawah tetap milik native-tabbar (L1); hanya radius & jarak kartu yang menyesuaikan
+   ========================================================================== */
+@media (max-width: 640px) {
+  html body.authed { --gv-r: 24px; --gv-r-lg: 28px; --gv-blur: 24px; }
+  html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > main:not(#dg-1):not(#dg-2):not(#dg-3) .hm { gap: 14px; }
+}
+
+/* ==========================================================================
+   9. FALLBACK — Reduce Transparency, HP hemat (html.mo-lite), efek rendah, tanpa backdrop-filter:
+      kartu jadi padat hangat; bentuk, radius, dan emas tetap sama.
+   ========================================================================== */
+@media (prefers-reduced-transparency: reduce) {
+  html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > main:not(#dg-1):not(#dg-2):not(#dg-3) :is(.hm-card, .hm-tile, .stat-card, .v5-card, .v5-kpi, .v5-chart, .v5-chart-card, .v5-equity, .stx-card, .stx-hero, .calx-shell, .px-range, .v5 .v5-eqcard, .v5 .pf-hero) {
+    -webkit-backdrop-filter: none !important; backdrop-filter: none !important; background-image: linear-gradient(142deg, #2d2515, #1c160b) !important;
+  }
+  html body.light.authed[data-amb] #app > main :is(.hm-card, .hm-tile, .stat-card, .v5-card, .v5-kpi, .v5-chart, .v5-chart-card, .v5-equity, .stx-card, .stx-hero, .calx-shell, .px-range, .v5 .v5-eqcard, .v5 .pf-hero) { background-image: linear-gradient(142deg, #fffdf6, #f7efd9) !important; }
+}
+html.mo-lite body.authed, html[data-ui-effects="low"] body.authed { --gv-blur: 0px; --gv-sat: 100%; --gv-fill-a: rgba(44, 35, 20, .94); --gv-fill-b: rgba(28, 22, 13, .94); }
+html.mo-lite body.light.authed, html[data-ui-effects="low"] body.light.authed { --gv-fill-a: rgba(255, 253, 246, .96); --gv-fill-b: rgba(250, 242, 222, .96); }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  html body.authed { --gv-fill-a: rgba(44, 35, 20, .94); --gv-fill-b: rgba(28, 22, 13, .94); }
+  html body.light.authed { --gv-fill-a: rgba(255, 253, 246, .96); --gv-fill-b: rgba(250, 242, 222, .96); }
+}

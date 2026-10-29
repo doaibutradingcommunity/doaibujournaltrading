@@ -1,0 +1,122 @@
+/* DOA IBU v16.36 — Motion System
+   Lightweight, interaction-first motion. No app state, data, or navigation logic changed. */
+:root {
+  --di-motion-ease: cubic-bezier(.2,.75,.25,1);
+  --di-motion-fast: 140ms;
+  --di-motion-base: 220ms;
+  --di-motion-enter: 320ms;
+}
+html { scroll-behavior: smooth; }
+body.px :is(button,[role="button"],a,.hm-tile,.hm-card,.glass,.hm-btn,.v5-btn,.px-state-act,
+  .nav-item,.tab-btn,.recent-input-chip,summary,.modal-card,.toast,.px-range) {
+  transition:
+    transform var(--di-motion-base) var(--di-motion-ease),
+    background-color var(--di-motion-base) ease,
+    border-color var(--di-motion-base) ease,
+    box-shadow var(--di-motion-base) ease,
+    color var(--di-motion-fast) ease,
+    opacity var(--di-motion-base) ease,
+    filter var(--di-motion-base) ease;
+  -webkit-tap-highlight-color: transparent;
+}
+body.px :is(button,[role="button"],.hm-btn,.v5-btn,.px-state-act,.recent-input-chip) {
+  position: relative;
+  isolation: isolate;
+  touch-action: manipulation;
+}
+body.px :is(button,[role="button"],.hm-btn,.v5-btn,.px-state-act,.recent-input-chip):not(:disabled):not([aria-disabled="true"]):active,
+body.px .di-pressed {
+  transform: scale(.975);
+  filter: brightness(1.08);
+}
+body.px :is(a,.hm-tile,.hm-card,.glass,.modal-card):active {
+  transform: scale(.992);
+}
+@media (hover:hover) and (pointer:fine) {
+  body.px :is(button,[role="button"],.hm-btn,.v5-btn,.px-state-act):not(:disabled):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 22px -14px rgba(216,180,94,.42);
+  }
+  body.px :is(.hm-tile,.hm-card,.glass):hover {
+    border-color: rgba(216,180,94,.22);
+  }
+}
+body.px :is(input,select,textarea,[contenteditable="true"]) {
+  transition: border-color var(--di-motion-base) ease, box-shadow var(--di-motion-base) ease,
+    background-color var(--di-motion-base) ease, transform var(--di-motion-fast) ease;
+}
+body.px :is(input,select,textarea,[contenteditable="true"]):focus {
+  box-shadow: 0 0 0 3px rgba(216,180,94,.11);
+}
+body.px .di-ripple {
+  position: absolute;
+  z-index: 0;
+  display: block;
+  border-radius: 999px;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(242,217,143,.32) 0%, rgba(216,180,94,.14) 38%, transparent 72%);
+  transform: scale(0);
+  animation: di-ripple 520ms var(--di-motion-ease) forwards;
+}
+@keyframes di-ripple {
+  to { transform: scale(1); opacity: 0; }
+}
+@keyframes di-view-in {
+  from { opacity: .35; transform: translate3d(0,8px,0) scale(.996); filter: blur(2px); }
+  to { opacity: 1; transform: translate3d(0,0,0) scale(1); filter: blur(0); }
+}
+body.px .di-view-enter { animation: di-view-in var(--di-motion-enter) var(--di-motion-ease) both; }
+body.px .di-control-changed { animation: di-control-pop 260ms var(--di-motion-ease); }
+@keyframes di-control-pop {
+  0% { box-shadow: 0 0 0 0 rgba(216,180,94,0); }
+  45% { box-shadow: 0 0 0 4px rgba(216,180,94,.13); }
+  100% { box-shadow: 0 0 0 0 rgba(216,180,94,0); }
+}
+body.px :is(button,a,[role="button"],input,select,textarea):focus-visible {
+  outline: 2px solid var(--px-gold, #d8b45e);
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto !important; }
+  body.px *, body.px *::before, body.px *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+  body.px .di-ripple { display: none !important; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  body.px .di-ripple { background: rgba(216,180,94,.14); }
+}
+
+/* ===== v16.37.1 — Form Journal: ruang napas antara teks dan garis kotak =====
+   Kotak .jw-form kini punya border/surface (liquid-glass), tetapi padding lamanya hanya 2px
+   sehingga label, input, dan teks menempel ke garis. Beri padding dalam yang proporsional. */
+body.px #jw-card .jw-form,
+#jw-card .jw-form {
+  padding: 20px 24px 0;
+  margin: 0;
+  border-radius: 20px;
+  scroll-padding: 20px 0 110px;
+}
+#jw-card .jw-form .jw-body { margin: 0; padding: 4px 0 24px; }
+#jw-card .jw-date label { margin-bottom: 8px; }
+#jw-card .jw-tabs { margin-bottom: 24px; }
+#jw-card .jw-progress { margin-bottom: 28px; }
+#jw-card .jw-head { margin-bottom: 20px; }
+/* Tombol aksi: lebar penuh sampai tepi kotak, tapi tombolnya sendiri tetap berjarak dari garis */
+#jw-card .jw-foot {
+  margin: 0 -24px;
+  padding: 16px 24px 20px;
+  background: var(--di-surface-1, rgba(26,27,31,.96));
+  box-shadow: 0 -14px 14px -8px var(--di-surface-1, rgba(26,27,31,.96));
+  border-radius: 0 0 20px 20px;
+}
+@media (max-width: 479px) {
+  body.px #jw-card .jw-form, #jw-card .jw-form { padding: 16px 16px 0; }
+  #jw-card .jw-foot { margin: 0 -16px; padding: 12px 16px 16px; }
+}
+/* Mode keyboard terbuka: rapatkan sedikit agar tetap muat */
+#form-section.jw-kb #jw-card .jw-form { padding: 12px 16px 0; }
+#form-section.jw-kb #jw-card .jw-foot { margin: 0 -16px; padding: 12px 16px 12px; }

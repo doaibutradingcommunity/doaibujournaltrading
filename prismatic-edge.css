@@ -1,0 +1,189 @@
+/* ==========================================================================
+   DOA IBU — v16.78  PRISMATIC EDGE GLASS
+   --------------------------------------------------------------------------
+   Pembiasan cahaya yang sangat halus di tepi atas kaca. Ketika sheet dibuka,
+   tepi atasnya menangkap kilau champagne gold; bagian lain tetap graphite.
+   Materialnya terasa lebih nyata tanpa membuat seluruh panel berkilau.
+
+   Tiga batas yang menjaga efek tetap halus:
+     1. TEPI SAJA     garis 1px (pseudo-element bertopeng cincin), bukan wash di panel.
+     2. TOP SAJA      gradient hanya digambar di 20px teratas; sisi dan bawah tidak disentuh.
+     3. TERBATAS      satu titik sorot (±32% lebar) + serat dispersi sangat tipis
+                      (es → champagne → rose, alpha .13–.34). Tidak ada pelangi penuh.
+
+   Saat sheet dibuka, titik sorot menyapu sekali dari kiri lalu berhenti di posisi diamnya
+   (±1 detik). Tidak berulang, tidak ada loop. Posisi diam = tampilan tetap setelah itu.
+
+   Siapa memegang apa
+     .npv-sheet               ::before   baru   (menu HP; strip lengket 28px agar tidak ikut tergulir)
+     modal .glass             ::before   cincin lama (--orn-rim) diganti gradasinya
+     #sp-modal .sp-sheet      ::after    cincin lama (.glass::after) diganti gradasinya
+   Dikecualikan dengan sengaja: #v22-recap (sudah punya bingkai emas sendiri), .jd-panel (padat,
+   berisi P/L), menu/popover/toast/filter (bukan sheet), FAB (sorotnya dipegang glass-depth.css).
+
+   Menggantikan: garis champagne atas & kiri di sheet dari optical-glass.css v16.74 (dua lapis
+   pertama background-image). Kalau tidak, ada dua garis emas di baris piksel yang sama dan sisi
+   kiri tetap keemasan. Sorot sudut lunak dan gradasi atas-terang/bawah-gelap tetap dipakai.
+
+   Cara kerja: aditif, dimuat paling akhir (setelah glass-depth.css). Tidak menyentuh alpha, blur,
+   brightness, bayangan, atau fallback (milik v16.76 / v16.77). Hanya body.authed.
+   Membatalkan: hapus <link href="prismatic-edge.css">. Tampilan kembali persis v16.77.
+   ========================================================================== */
+
+
+/* ==========================================================================
+   0. TOKEN
+      Warna dasar memakai --og-champ (optical-glass.css; terang = champagne lebih dalam)
+      dan faktor --og-g (calm = lantai .45, glow = 1), sehingga halaman calm tetap tenang.
+   ========================================================================== */
+html body.authed[data-amb] {
+  --pe-champ: var(--og-champ, 234, 210, 154);
+  --pe-k:     var(--og-g, 1);
+
+  --pe-hot:     rgba(var(--pe-champ), calc(var(--pe-k) * .78));    /* titik sorot */
+  --pe-warm:    rgba(var(--pe-champ), calc(var(--pe-k) * .34));    /* badan serat */
+  --pe-ice:     rgba(176, 204, 236, calc(var(--pe-k) * .13));      /* tepi dingin (dispersi) */
+  --pe-rose:    rgba(232, 182, 176, calc(var(--pe-k) * .16));      /* tepi hangat (dispersi) */
+  --pe-neutral: rgba(255, 255, 255, .10);                          /* kilap netral di sisi jauh */
+
+  /* tiga lapis, atas ke bawah: titik sorot (bergerak) · serat dispersi · kilap netral kanan */
+  --pe-stack:
+    linear-gradient(90deg, transparent 0, var(--pe-hot) 50%, transparent 100%),
+    linear-gradient(90deg, transparent 2%, var(--pe-ice) 9%, var(--pe-warm) 22%, var(--pe-warm) 36%, var(--pe-rose) 52%, transparent 68%),
+    linear-gradient(90deg, transparent 74%, var(--pe-neutral) 90%, transparent 99%);
+  --pe-size: 32% 20px, 100% 20px, 100% 20px;     /* tinggi 20px = batas "top saja" */
+  --pe-rest: 20% 0, 0 0, 0 0;                    /* posisi diam titik sorot */
+}
+html body.light.authed[data-amb] {
+  --pe-hot:     rgba(var(--pe-champ), calc(var(--pe-k) * .88));
+  --pe-warm:    rgba(var(--pe-champ), calc(var(--pe-k) * .46));
+  --pe-ice:     rgba(86, 128, 190, calc(var(--pe-k) * .18));
+  --pe-rose:    rgba(196, 116, 106, calc(var(--pe-k) * .20));
+  --pe-neutral: rgba(34, 31, 24, .10);
+}
+/* kontras tinggi: tinggalkan serat dispersi, pertahankan titik sorot */
+@media (prefers-contrast: more) {
+  html body.authed[data-amb] { --pe-ice: transparent; --pe-rose: transparent; }
+}
+
+
+/* ==========================================================================
+   1. MENGGANTIKAN GARIS TEPI LAMA DI SHEET (optical-glass.css §3, dua lapis pertama)
+      Sisa: sorot lunak sudut kiri-atas + gradasi atas-terang/bawah-gelap.
+   ========================================================================== */
+html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] :is(
+  .npv-sheet,
+  .modal-overlay:not(#image-zoom-modal) > .glass,
+  #sp-modal .sp-sheet
+) {
+  background-image:
+    radial-gradient(64% 58% at 4% -6%, var(--og-f3), transparent 70%),
+    linear-gradient(180deg, var(--og-white-top), rgba(255, 255, 255, .010) 34%, var(--og-white-bot) 100%);
+  background-size: 100% 100%, 100% 100%;
+  background-position: 0 0, 0 0;
+  background-repeat: no-repeat;
+}
+
+
+/* ==========================================================================
+   2. TEPI PRISMATIK — pseudo-element bertopeng cincin 1px
+      Pola topeng sama dengan cincin modal di index.html (padding 1px + content-box exclude).
+      Tanpa dukungan mask-composite, seluruh blok dilewati: sheet tampil seperti v16.77.
+   ========================================================================== */
+@supports ((mask-composite: exclude) or (-webkit-mask-composite: xor)) {
+
+  /* a) Menu HP (.npv-sheet): overflow-y:auto, jadi strip dibuat lengket di atas agar tepi tidak
+        ikut tergulir. Chromium menjepit elemen sticky ke tepi isi (content box), jadi margin
+        negatif tidak bisa membawanya ke area padding. Maka padding atas sheet (8px) dipindah ke
+        strip: strip 28px menempati y 0–28, margin bawah -20px mengembalikan isi ke y 8, persis
+        jarak semula. Tata letak sheet tidak bergeser. */
+  html body.npv.authed[data-amb][data-amb] .npv-sheet { padding-top: 0; }
+  html body.npv.authed[data-amb][data-amb] .npv-sheet::before {
+    content: "";
+    display: block;
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    box-sizing: border-box;
+    height: 28px;
+    margin: 0 -16px -20px;
+    padding: 1px;
+    border-radius: 28px 28px 0 0;
+    pointer-events: none;
+    background-image: var(--pe-stack);
+    background-size: var(--pe-size);
+    background-position: var(--pe-rest);
+    background-repeat: no-repeat;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  }
+
+  /* b) Modal ber-kelas .glass: ::before sudah berupa cincin 1px (index.html, memakai --orn-rim,
+        diagonal emas di seluruh tepi, !important). Geometri, topeng, dan z-index dipakai apa adanya;
+        hanya isinya diganti menjadi tepi atas prismatik. */
+  html body.authed[data-amb][data-amb] .modal-overlay:not(#image-zoom-modal) > .glass::before {
+    background-image: var(--pe-stack) !important;
+    background-size: var(--pe-size) !important;
+    background-position: var(--pe-rest) !important;
+    background-repeat: no-repeat !important;
+  }
+
+  /* c) Strategy picker (.sp-sheet.glass): ::after sudah berupa cincin emas 1px (".glass::after",
+        --orn-rim, !important). Sama seperti modal: geometri dan topeng dipakai apa adanya,
+        hanya isinya diganti. */
+  html body.authed[data-amb][data-amb] #sp-modal .sp-sheet::after {
+    background-image: var(--pe-stack) !important;
+    background-size: var(--pe-size) !important;
+    background-position: var(--pe-rest) !important;
+    background-repeat: no-repeat !important;
+  }
+
+  /* ========================================================================
+     3. SAAT DIBUKA — satu sapuan, lalu diam
+        Keyframe sengaja tanpa 100%: akhirnya adalah gaya dasar (posisi diam), jadi tidak ada
+        angka yang harus disamakan dengan --pe-rest. Hanya background-position dan opacity
+        yang dianimasikan (strip 28px / cincin 1px: murah dan tidak mengubah tata letak).
+        Animasi menyala ulang tiap sheet ditampilkan: .npv-open dipasang, .modal-overlay
+        keluar dari display:none, #sp-modal mendapat .open.
+     ======================================================================== */
+  @keyframes pe-catch {
+    0%   { opacity: 0; background-position: -90% 0, 0 0, 0 0; }
+    32%  { opacity: 1; }
+  }
+  html body.npv.authed.npv-open[data-amb][data-amb] .npv-sheet::before,
+  html body.authed[data-amb][data-amb] .modal-overlay:not(#image-zoom-modal) > .glass::before,
+  html body.authed[data-amb][data-amb] #sp-modal.open .sp-sheet::after {
+    animation: pe-catch 1.1s cubic-bezier(.22, 1, .36, 1) .14s both;
+  }
+}
+
+
+/* ==========================================================================
+   4. AKSESIBILITAS & HEMAT DAYA
+      Tanpa animasi: tepi tampil langsung di posisi diam. Garis tetap ada (dekoratif, statis, murah).
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  html body.authed[data-amb][data-amb][data-amb] :is(
+    .npv-sheet::before,
+    .modal-overlay:not(#image-zoom-modal) > .glass::before,
+    #sp-modal .sp-sheet::after
+  ) { animation: none !important; }
+}
+html.mo-lite body.authed[data-amb][data-amb][data-amb] :is(
+  .npv-sheet::before,
+  .modal-overlay:not(#image-zoom-modal) > .glass::before,
+  #sp-modal .sp-sheet::after
+),
+html[data-ui-effects="low"] body.authed[data-amb][data-amb][data-amb] :is(
+  .npv-sheet::before,
+  .modal-overlay:not(#image-zoom-modal) > .glass::before,
+  #sp-modal .sp-sheet::after
+) { animation: none !important; }
+
+/* mode warna paksa: sistem memegang warna; lukisan dimatikan */
+@media (forced-colors: active) {
+  html body.authed .npv-sheet::before,
+  html body.authed #sp-modal .sp-sheet::after { display: none; }
+  html body.authed .modal-overlay:not(#image-zoom-modal) > .glass::before { background-image: none !important; }
+}

@@ -1,0 +1,1321 @@
+/* ==========================================================================
+   Doa Ibu Journal — High-Contrast Market Session Clock & Forex Factory News
+   Version 17.04 — Luxury Glass & Champagne Gold (Doa Ibu Native Theme)
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Upgraded Session Radar Card (Matches .glass & .stat-card)
+   -------------------------------------------------------------------------- */
+.ios-session-radar {
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.02) 38%, rgba(12, 12, 14, 0.62)) !important;
+  backdrop-filter: blur(26px) saturate(165%) !important;
+  -webkit-backdrop-filter: blur(26px) saturate(165%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), inset 0 -1px 0 rgba(212, 175, 55, 0.10), 0 10px 34px -14px rgba(0, 0, 0, 0.65) !important;
+  border-radius: 24px !important;
+  padding: 22px 24px !important;
+  margin-bottom: 22px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+  position: relative !important;
+  isolation: isolate !important;
+}
+
+body.light .ios-session-radar {
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.90), rgba(255, 255, 255, 0.72) 45%, rgba(255, 255, 255, 0.50)) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.90), 0 10px 30px -12px rgba(120, 100, 40, 0.12) !important;
+}
+
+/* Authentic Doa Ibu Champagne Sheen */
+.ios-session-radar::before {
+  content: '' !important;
+  position: absolute !important;
+  inset: 0 !important;
+  border-radius: inherit !important;
+  background: linear-gradient(125deg, rgba(212, 175, 55, 0.13), transparent 40%) !important;
+  pointer-events: none !important;
+  z-index: -1 !important;
+}
+
+/* Top bar: Status, live clock, timezone indicator, and countdown */
+.ios-radar-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.ios-radar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ios-radar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ios-radar-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+body.light .ios-radar-status {
+  background: rgba(0, 0, 0, 0.035);
+  border-color: rgba(0, 0, 0, 0.07);
+}
+
+.ios-radar-pulse {
+  position: relative;
+  width: 8.5px;
+  height: 8.5px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 10px #10b981;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.ios-radar-pulse::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: inherit;
+  opacity: 0.45;
+  animation: iosPulse 2s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+}
+
+.ios-radar-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: rgba(255, 255, 255, 0.94);
+}
+
+body.light .ios-radar-title {
+  color: #111827;
+}
+
+/* Realtime digital clock */
+.ios-live-clock-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+body.light .ios-live-clock-wrap {
+  background: rgba(0, 0, 0, 0.035);
+  border-color: rgba(0, 0, 0, 0.07);
+}
+
+.ios-live-clock {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: #e0b94a;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.ios-live-date {
+  font-size: 11.5px;
+  color: rgba(235, 235, 245, 0.6);
+  font-weight: 500;
+}
+
+body.light .ios-live-date {
+  color: #52525b;
+}
+
+/* Timezone Indicator Pill (Non-obstructive; clicks to open Settings) */
+.ios-tz-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: rgba(200, 169, 106, 0.10);
+  border: 1px solid rgba(200, 169, 106, 0.28);
+  color: #f6e3b4;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.32, 0.72, 0, 1);
+  touch-action: manipulation;
+}
+
+.ios-tz-pill-btn:hover {
+  background: rgba(200, 169, 106, 0.20);
+  border-color: rgba(200, 169, 106, 0.50);
+  transform: translateY(-1px);
+}
+
+body.light .ios-tz-pill-btn {
+  background: rgba(158, 125, 59, 0.09);
+  border-color: rgba(158, 125, 59, 0.26);
+  color: #7e5f17;
+}
+
+.ios-radar-countdown {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #c8a96a;
+  background: rgba(200, 169, 106, 0.08);
+  border: 1px solid rgba(200, 169, 106, 0.22);
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* --------------------------------------------------------------------------
+   2. Session Cards Grid (Harmonized with .stat-card & .glass)
+   -------------------------------------------------------------------------- */
+.ios-sessions-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 10px !important;
+}
+
+@media (max-width: 680px) {
+  .ios-sessions-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+.ios-session-pill {
+  padding: 12px 14px !important;
+  border-radius: 16px !important;
+  text-align: left !important;
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.07) !important;
+  transition: all 0.22s cubic-bezier(0.32, 0.72, 0, 1) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  position: relative;
+  overflow: hidden;
+}
+
+body.light .ios-session-pill {
+  background: rgba(0, 0, 0, 0.025) !important;
+  border-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Active session styling (Doa Ibu Luxury Champagne Glow) */
+.ios-session-pill.active {
+  background: linear-gradient(165deg, rgba(200, 169, 106, 0.14), rgba(200, 169, 106, 0.04) 55%, rgba(20, 20, 24, 0.6)) !important;
+  border: 1px solid rgba(200, 169, 106, 0.45) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 6px 18px -4px rgba(200, 169, 106, 0.22) !important;
+}
+
+body.light .ios-session-pill.active {
+  background: linear-gradient(165deg, rgba(200, 169, 106, 0.20), rgba(255, 255, 255, 0.8)) !important;
+  border-color: rgba(158, 125, 59, 0.50) !important;
+  box-shadow: inset 0 1px 0 #ffffff, 0 4px 14px -3px rgba(158, 125, 59, 0.25) !important;
+}
+
+/* Head */
+.ios-session-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.ios-session-name-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ios-session-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.ios-session-name {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: rgba(255, 255, 255, 0.90) !important;
+  letter-spacing: -0.01em;
+}
+
+body.light .ios-session-name {
+  color: #1f2937 !important;
+}
+
+.ios-session-pill.active .ios-session-name {
+  color: #fbf5e6 !important;
+}
+
+body.light .ios-session-pill.active .ios-session-name {
+  color: #7e5f17 !important;
+}
+
+/* Status tag */
+.ios-session-tag {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.ios-session-tag.inactive {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(235, 235, 245, 0.5);
+  border: 0.5px solid rgba(255, 255, 255, 0.08);
+}
+
+body.light .ios-session-tag.inactive {
+  background: rgba(0, 0, 0, 0.035);
+  color: #71717a;
+  border-color: rgba(0, 0, 0, 0.06);
+}
+
+.ios-session-tag.active {
+  background: rgba(200, 169, 106, 0.22);
+  color: #f6e3b4;
+  border: 1px solid rgba(200, 169, 106, 0.45);
+}
+
+body.light .ios-session-tag.active {
+  background: rgba(158, 125, 59, 0.18);
+  color: #7e5f17;
+  border-color: rgba(158, 125, 59, 0.40);
+}
+
+/* Converted Local Hours */
+.ios-session-hours {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(235, 235, 245, 0.65);
+  font-variant-numeric: tabular-nums lining-nums;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+body.light .ios-session-hours {
+  color: #52525b;
+}
+
+.ios-session-pill.active .ios-session-hours {
+  color: #fbf5e6;
+  font-weight: 700;
+}
+
+body.light .ios-session-pill.active .ios-session-hours {
+  color: #1f2937;
+}
+
+/* Progress track */
+.ios-session-prog-wrap {
+  width: 100%;
+  height: 3.5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+  margin: 3px 0 2px 0;
+}
+
+body.light .ios-session-prog-wrap {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.ios-session-prog-bar {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #c8a96a, #e0b94a);
+  transition: width 0.4s ease;
+}
+
+/* Session foot */
+.ios-session-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: rgba(235, 235, 245, 0.5);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+body.light .ios-session-foot {
+  color: #71717a;
+}
+
+.ios-session-pill.active .ios-session-foot {
+  color: rgba(246, 227, 180, 0.85);
+}
+
+/* --------------------------------------------------------------------------
+   3. Golden Overlap Highlight Banner (London & New York)
+   -------------------------------------------------------------------------- */
+.ios-overlap-banner {
+  background: linear-gradient(135deg, rgba(200, 169, 106, 0.12), rgba(255, 255, 255, 0.03));
+  border: 1px solid rgba(200, 169, 106, 0.32);
+  border-radius: 16px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+body.light .ios-overlap-banner {
+  background: linear-gradient(135deg, rgba(158, 125, 59, 0.10), rgba(0, 0, 0, 0.02));
+  border-color: rgba(158, 125, 59, 0.28);
+}
+
+.ios-overlap-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ios-overlap-icon {
+  font-size: 18px;
+}
+
+.ios-overlap-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #f6e3b4;
+  letter-spacing: -0.01em;
+}
+
+body.light .ios-overlap-title {
+  color: #7e5f17;
+}
+
+.ios-overlap-desc {
+  font-size: 11px;
+  color: rgba(235, 235, 245, 0.65);
+}
+
+body.light .ios-overlap-desc {
+  color: #52525b;
+}
+
+.ios-overlap-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(200, 169, 106, 0.20);
+  border: 1px solid rgba(200, 169, 106, 0.40);
+  color: #f6e3b4;
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   4. 24-Hour Visual Session Track
+   -------------------------------------------------------------------------- */
+.ios-timeline-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.ios-timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: rgba(235, 235, 245, 0.55);
+}
+
+body.light .ios-timeline-header {
+  color: #71717a;
+}
+
+.ios-timeline-bar-container {
+  position: relative;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+body.light .ios-timeline-bar-container {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.06);
+}
+
+.ios-timeline-block {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  border-radius: 4px;
+  opacity: 0.55;
+  transition: opacity 0.2s ease;
+}
+
+.ios-timeline-block.active {
+  opacity: 0.95;
+  box-shadow: 0 0 6px currentColor;
+}
+
+.ios-timeline-block.sydney { background: #0ea5e9; color: #0ea5e9; }
+.ios-timeline-block.asia { background: #a855f7; color: #a855f7; }
+.ios-timeline-block.london { background: #10b981; color: #10b981; }
+.ios-timeline-block.ny { background: #f59e0b; color: #f59e0b; }
+.ios-timeline-block.overlap { background: linear-gradient(90deg, #10b981, #f59e0b); color: #f59e0b; }
+
+.ios-timeline-needle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #ffffff;
+  box-shadow: 0 0 6px #ffffff, 0 0 10px #c8a96a;
+  z-index: 10;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   5. Integrated Upcoming Forex Factory News Preview in Radar
+   -------------------------------------------------------------------------- */
+.ios-radar-news-section {
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding-top: 12px;
+  margin-top: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+body.light .ios-radar-news-section {
+  border-color: rgba(0, 0, 0, 0.06);
+}
+
+.ios-radar-news-urgent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
+.ios-urgent-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fee2e2;
+}
+
+.ios-urgent-countdown {
+  font-size: 11px;
+  font-weight: 700;
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.18);
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.ios-radar-news-items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ios-radar-news-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 12px;
+  transition: background 0.15s ease;
+}
+
+.ios-radar-news-row:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+body.light .ios-radar-news-row {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: rgba(0, 0, 0, 0.05);
+}
+
+.ios-radar-news-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.ios-news-curr {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.9);
+  flex-shrink: 0;
+}
+
+body.light .ios-news-curr {
+  background: rgba(0, 0, 0, 0.04);
+  color: #111827;
+}
+
+.ios-news-impact-dot {
+  width: 7.5px;
+  height: 7.5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.ios-news-impact-dot.high { background: #ef4444; box-shadow: 0 0 6px #ef4444; }
+.ios-news-impact-dot.medium { background: #f59e0b; box-shadow: 0 0 5px #f59e0b; }
+.ios-news-impact-dot.low { background: #eab308; }
+.ios-news-impact-dot.holiday { background: #9ca3af; }
+
+.ios-radar-news-title {
+  color: rgba(255, 255, 255, 0.90);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body.light .ios-radar-news-title {
+  color: #1f2937;
+}
+
+.ios-radar-news-time {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  color: rgba(235, 235, 245, 0.55);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums lining-nums;
+  flex-shrink: 0;
+}
+
+.ios-radar-news-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 4px;
+}
+
+.ios-radar-news-link {
+  font-size: 12px;
+  font-weight: 600;
+  color: #c8a96a;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+}
+
+.ios-radar-news-link:hover {
+  background: rgba(200, 169, 106, 0.10);
+  transform: translateX(2px);
+}
+
+/* --------------------------------------------------------------------------
+   6. Trading Insight Card (.ios-insight-card) - Harmonized with .glass
+   -------------------------------------------------------------------------- */
+.ios-insight-card {
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.02) 38%, rgba(12, 12, 14, 0.62)) !important;
+  backdrop-filter: blur(26px) saturate(165%) !important;
+  -webkit-backdrop-filter: blur(26px) saturate(165%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), inset 0 -1px 0 rgba(212, 175, 55, 0.10), 0 10px 34px -14px rgba(0, 0, 0, 0.65) !important;
+  border-radius: 24px !important;
+  padding: 22px 24px !important;
+  margin-bottom: 24px !important;
+  position: relative !important;
+  isolation: isolate !important;
+}
+
+.ios-insight-card::before {
+  content: '' !important;
+  position: absolute !important;
+  inset: 0 !important;
+  border-radius: inherit !important;
+  background: linear-gradient(125deg, rgba(212, 175, 55, 0.13), transparent 40%) !important;
+  pointer-events: none !important;
+  z-index: -1 !important;
+}
+
+body.light .ios-insight-card {
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.90), rgba(255, 255, 255, 0.72) 45%, rgba(255, 255, 255, 0.50)) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.90), 0 10px 30px -12px rgba(120, 100, 40, 0.12) !important;
+}
+
+.ios-insight-title {
+  color: #f6e3b4 !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.015em !important;
+}
+
+body.light .ios-insight-title {
+  color: #7e5f17 !important;
+}
+
+.ios-insight-tabs {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 14px !important;
+  padding: 3px !important;
+}
+
+body.light .ios-insight-tabs {
+  background: rgba(0, 0, 0, 0.035) !important;
+  border-color: rgba(0, 0, 0, 0.07) !important;
+}
+
+.ios-insight-tab {
+  border-radius: 11px !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  color: rgba(235, 235, 245, 0.65) !important;
+  transition: all 0.2s ease !important;
+}
+
+.ios-insight-tab.active {
+  background: rgba(200, 169, 106, 0.18) !important;
+  border: 1px solid rgba(200, 169, 106, 0.45) !important;
+  color: #f6e3b4 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 2px 10px -2px rgba(200, 169, 106, 0.25) !important;
+}
+
+body.light .ios-insight-tab.active {
+  background: rgba(176, 138, 52, 0.18) !important;
+  border-color: rgba(150, 112, 30, 0.45) !important;
+  color: #7e5f17 !important;
+  box-shadow: 0 2px 8px -2px rgba(120, 100, 40, 0.15) !important;
+}
+
+/* --------------------------------------------------------------------------
+   7. Dedicated Forex News Section View (#news-section)
+   -------------------------------------------------------------------------- */
+#news-section {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-bottom: 40px;
+}
+
+.fn-header-card {
+  padding: 22px 24px !important;
+  border-radius: 24px !important;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.02) 38%, rgba(12, 12, 14, 0.62)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), inset 0 -1px 0 rgba(212, 175, 55, 0.10), 0 10px 34px -14px rgba(0, 0, 0, 0.65) !important;
+  backdrop-filter: blur(26px) saturate(165%) !important;
+  -webkit-backdrop-filter: blur(26px) saturate(165%) !important;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative !important;
+  isolation: isolate !important;
+}
+
+.fn-header-card::before {
+  content: '' !important;
+  position: absolute !important;
+  inset: 0 !important;
+  border-radius: inherit !important;
+  background: linear-gradient(125deg, rgba(212, 175, 55, 0.13), transparent 40%) !important;
+  pointer-events: none !important;
+  z-index: -1 !important;
+}
+
+body.light .fn-header-card {
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.90), rgba(255, 255, 255, 0.72) 45%, rgba(255, 255, 255, 0.50)) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.90), 0 10px 30px -12px rgba(120, 100, 40, 0.12) !important;
+}
+
+.fn-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.fn-title-wrap h2 {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  color: #f6e3b4;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+body.light .fn-title-wrap h2 {
+  color: #7e5f17;
+}
+
+.fn-title-wrap p {
+  font-size: 13px;
+  color: rgba(235, 235, 245, 0.65);
+  margin-top: 3px;
+  max-width: 620px;
+}
+
+body.light .fn-title-wrap p {
+  color: #52525b;
+}
+
+.fn-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.fn-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.10);
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  color: #6ee7b7;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.fn-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 10px;
+  background: rgba(200, 169, 106, 0.10);
+  border: 1px solid rgba(200, 169, 106, 0.28);
+  color: #f6e3b4;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  touch-action: manipulation;
+}
+
+.fn-refresh-btn:hover {
+  background: rgba(200, 169, 106, 0.20);
+  border-color: rgba(200, 169, 106, 0.50);
+}
+
+.fn-refresh-btn.spinning svg {
+  animation: fnSpin 0.9s linear infinite;
+}
+
+@keyframes fnSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Multi-Filter Controls Bar */
+.fn-controls-card {
+  padding: 18px 22px !important;
+  border-radius: 20px !important;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.015) 45%, rgba(12, 12, 14, 0.55)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 8px 24px -10px rgba(0, 0, 0, 0.50) !important;
+  backdrop-filter: blur(22px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(160%) !important;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+body.light .fn-controls-card {
+  background: rgba(255, 255, 255, 0.88) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.90), 0 6px 20px -8px rgba(120, 100, 40, 0.10) !important;
+}
+
+.fn-filter-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.fn-search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 240px;
+}
+
+.fn-search-input {
+  width: 100%;
+  padding: 8px 12px 8px 36px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  color: #ffffff;
+  font-size: 13px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.fn-search-input:focus {
+  border-color: #c8a96a;
+  box-shadow: 0 0 0 3px rgba(200, 169, 106, 0.15);
+}
+
+body.light .fn-search-input {
+  background: rgba(0, 0, 0, 0.035);
+  border-color: rgba(0, 0, 0, 0.08);
+  color: #111827;
+}
+
+.fn-search-ico {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(235, 235, 245, 0.5);
+  pointer-events: none;
+}
+
+.fn-timeframe-tabs {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+body.light .fn-timeframe-tabs {
+  background: rgba(0, 0, 0, 0.035);
+  border-color: rgba(0, 0, 0, 0.07);
+}
+
+.fn-tf-tab {
+  padding: 5px 12px;
+  border-radius: 9px;
+  background: transparent;
+  border: none;
+  color: rgba(235, 235, 245, 0.6);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.fn-tf-tab:hover {
+  color: #ffffff;
+}
+
+.fn-tf-tab.active {
+  background: rgba(200, 169, 106, 0.18);
+  border: 0.5px solid rgba(200, 169, 106, 0.35);
+  color: #f6e3b4;
+}
+
+body.light .fn-tf-tab.active {
+  background: rgba(158, 125, 59, 0.15);
+  color: #7e5f17;
+}
+
+.fn-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.fn-filter-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(235, 235, 245, 0.5);
+  min-width: 55px;
+}
+
+body.light .fn-filter-label {
+  color: #71717a;
+}
+
+/* Chips matching Doa Ibu .chip */
+.fn-chip {
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(235, 235, 245, 0.7);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  touch-action: manipulation;
+}
+
+.fn-chip:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+body.light .fn-chip {
+  background: rgba(0, 0, 0, 0.035);
+  border-color: rgba(0, 0, 0, 0.07);
+  color: #52525b;
+}
+
+.fn-chip.active {
+  background: rgba(200, 169, 106, 0.15) !important;
+  border-color: rgba(200, 169, 106, 0.38) !important;
+  color: #f6e3b4 !important;
+  font-weight: 700 !important;
+}
+
+body.light .fn-chip.active {
+  background: rgba(158, 125, 59, 0.14) !important;
+  border-color: rgba(158, 125, 59, 0.35) !important;
+  color: #7e5f17 !important;
+}
+
+.fn-super-high-btn {
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  background: rgba(239, 68, 68, 0.10);
+  border: 1px solid rgba(239, 68, 68, 0.32);
+  color: #fca5a5;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+}
+
+.fn-super-high-btn:hover {
+  background: rgba(239, 68, 68, 0.20);
+}
+
+.fn-super-high-btn.active {
+  background: rgba(239, 68, 68, 0.28);
+  border-color: #ef4444;
+  color: #fee2e2;
+}
+
+/* --------------------------------------------------------------------------
+   8. News List & Event Cards
+   -------------------------------------------------------------------------- */
+.fn-news-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.fn-group-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #f6e3b4;
+  padding: 4px 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+body.light .fn-group-title {
+  color: #7e5f17;
+}
+
+.fn-event-card {
+  padding: 16px 20px !important;
+  border-radius: 18px !important;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015) 45%, rgba(14, 14, 18, 0.58)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 4px 18px -6px rgba(0, 0, 0, 0.45) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  transition: all 0.22s cubic-bezier(0.32, 0.72, 0, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.fn-event-card:hover {
+  border-color: rgba(200, 169, 106, 0.40) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 8px 24px -8px rgba(200, 169, 106, 0.18) !important;
+  transform: translateY(-1.5px);
+}
+
+body.light .fn-event-card {
+  background: rgba(255, 255, 255, 0.88) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.90), 0 4px 14px -6px rgba(120, 100, 40, 0.08) !important;
+}
+
+body.light .fn-event-card:hover {
+  border-color: rgba(158, 125, 59, 0.45) !important;
+}
+
+/* Accent Borders */
+.fn-event-card.impact-high { border-left: 3.5px solid #ef4444; }
+.fn-event-card.impact-medium { border-left: 3.5px solid #f59e0b; }
+.fn-event-card.impact-low { border-left: 3.5px solid #eab308; }
+.fn-event-card.impact-holiday { border-left: 3.5px solid #9ca3af; }
+
+.fn-card-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  flex: 1;
+}
+
+.fn-curr-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+body.light .fn-curr-badge {
+  background: rgba(0, 0, 0, 0.035);
+  border-color: rgba(0, 0, 0, 0.07);
+}
+
+.fn-curr-flag {
+  font-size: 15px;
+  line-height: 1;
+}
+
+.fn-curr-code {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.95);
+  margin-top: 1px;
+}
+
+body.light .fn-curr-code {
+  color: #111827;
+}
+
+.fn-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.fn-card-top-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.fn-impact-pill {
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.fn-impact-pill.high { background: rgba(239, 68, 68, 0.16); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.35); }
+.fn-impact-pill.medium { background: rgba(245, 158, 11, 0.16); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.35); }
+.fn-impact-pill.low { background: rgba(234, 179, 8, 0.15); color: #fde047; border: 1px solid rgba(234, 179, 8, 0.30); }
+.fn-impact-pill.holiday { background: rgba(156, 163, 175, 0.14); color: #d1d5db; border: 1px solid rgba(156, 163, 175, 0.28); }
+
+.fn-event-time {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.92);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+body.light .fn-event-time {
+  color: #111827;
+}
+
+.fn-origin-time {
+  font-size: 10.5px;
+  color: rgba(235, 235, 245, 0.45);
+}
+
+body.light .fn-origin-time {
+  color: #71717a;
+}
+
+.fn-event-countdown {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(200, 169, 106, 0.10);
+  color: #c8a96a;
+  border: 1px solid rgba(200, 169, 106, 0.22);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.fn-event-countdown.urgent {
+  background: rgba(239, 68, 68, 0.18);
+  border-color: #ef4444;
+  color: #fca5a5;
+}
+
+.fn-event-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.94);
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+
+body.light .fn-event-title {
+  color: #111827;
+}
+
+/* Three Data Columns: Actual, Forecast, Previous */
+.fn-card-values {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.fn-val-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  min-width: 52px;
+}
+
+.fn-val-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgba(235, 235, 245, 0.45);
+}
+
+body.light .fn-val-label {
+  color: #71717a;
+}
+
+.fn-val-num {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.88);
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+body.light .fn-val-num {
+  color: #1f2937;
+}
+
+.fn-val-num.actual-better { color: #34d399 !important; font-weight: 800; }
+.fn-val-num.actual-worse { color: #f87171 !important; font-weight: 800; }
+.fn-val-num.pending { color: rgba(235, 235, 245, 0.35); font-style: italic; }
+
+.fn-pin-btn {
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
+  color: rgba(235, 235, 245, 0.4);
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.fn-pin-btn:hover {
+  transform: scale(1.15);
+  color: #e0b94a;
+}
+
+.fn-pin-btn.pinned {
+  color: #e0b94a;
+}
+
+.fn-link-btn {
+  color: rgba(235, 235, 245, 0.4);
+  padding: 4px;
+  display: inline-flex;
+  transition: color 0.15s ease;
+}
+
+.fn-link-btn:hover {
+  color: #c8a96a;
+}
+
+@media (max-width: 640px) {
+  .fn-event-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .fn-card-values {
+    width: 100%;
+    justify-content: space-between;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    padding-top: 8px;
+  }
+  .fn-val-item {
+    align-items: flex-start;
+  }
+}

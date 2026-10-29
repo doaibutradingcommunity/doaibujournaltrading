@@ -1,0 +1,208 @@
+/* v16.64 — Kartu login: Google + email/password.
+   Tata letak mengikuti referensi (kartu gelap, cahaya sudut atas-kiri, kolom email dengan tombol panah,
+   pemisah "atau", tombol Google), aksen disesuaikan ke emas aplikasi. */
+
+#login-screen {
+  --lc-ink: #f2efe6;
+  --lc-mute: #9a978c;
+  --lc-line: rgba(255, 255, 255, .10);
+  --lc-field: rgba(255, 255, 255, .045);
+  --lc-field-line: rgba(255, 255, 255, .12);
+  --lc-card-a: #14161a;
+  --lc-card-b: #0c0d10;
+  --lc-glow: rgba(212, 175, 55, .55);
+  --lc-sheen: rgba(255, 255, 255, .16);
+  --lc-gold: #e0b94a;
+  --lc-gold-ink: #17130a;
+  --lc-err: #ff8a78;
+  --lc-ok: #5fd6c0;
+}
+body.light #login-screen {
+  --lc-ink: #1d1c18;
+  --lc-mute: #6c6a62;
+  --lc-line: rgba(0, 0, 0, .10);
+  --lc-field: rgba(255, 255, 255, .75);
+  --lc-field-line: rgba(0, 0, 0, .14);
+  --lc-card-a: #ffffff;
+  --lc-card-b: #f3efe3;
+  --lc-glow: rgba(212, 175, 55, .42);
+  --lc-sheen: rgba(0, 0, 0, .05);
+  --lc-gold: #b8942a;
+  --lc-gold-ink: #ffffff;
+  --lc-err: #b83526;
+  --lc-ok: #0f766e;
+}
+
+.lc-top {
+  width: 100%; max-width: 400px; margin: 0 auto 16px;
+  display: flex; align-items: center; justify-content: space-between; position: relative; z-index: 2;
+}
+.lc-wrap { width: 100%; max-width: 400px; position: relative; z-index: 2; }
+
+.lc-card {
+  position: relative; overflow: hidden; isolation: isolate;
+  border-radius: 28px; padding: 36px 28px 28px;
+  color: var(--lc-ink); text-align: center;
+  background: linear-gradient(180deg, var(--lc-card-a), var(--lc-card-b));
+  border: 1px solid var(--lc-line);
+  box-shadow: 0 30px 60px -28px rgba(0, 0, 0, .7), inset 0 1px 0 rgba(255, 255, 255, .08);
+}
+/* cahaya sudut atas-kiri + kilau diagonal kanan atas, seperti pada referensi */
+.lc-card::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(130px 120px at 0% 0%, var(--lc-glow), transparent 70%),
+    linear-gradient(118deg, transparent 52%, var(--lc-sheen) 70%, transparent 86%);
+  -webkit-mask-image: linear-gradient(180deg, #000 0, #000 38%, transparent 62%);
+          mask-image: linear-gradient(180deg, #000 0, #000 38%, transparent 62%);
+}
+.lc-card::after { /* garis terang tipis di tepi atas */
+  content: ""; position: absolute; left: 14%; right: 14%; top: 0; height: 1px; pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--lc-glow), transparent); opacity: .9;
+}
+
+.lc-logo {
+  width: 44px; height: 44px; margin: 0 auto 16px; border-radius: 16px; overflow: hidden;
+  display: grid; place-items: center; border: 1px solid var(--lc-line); background: var(--lc-field);
+}
+.lc-logo img { width: 100%; height: 100%; object-fit: contain; }
+.lc-logo svg { width: 22px; height: 22px; color: var(--lc-gold); }
+
+.lc-title { font-size: 28px; line-height: 1.15; font-weight: 600; letter-spacing: -.02em; margin: 0; }
+.lc-sub { margin: 8px 0 0; font-size: 15px; color: var(--lc-mute); min-height: 20px; overflow-wrap: anywhere; }
+.lc-sub button { color: var(--lc-gold); font-weight: 600; margin-left: 8px; background: none; border: 0; padding: 4px 2px; cursor: pointer; }
+
+.lc-form { margin-top: 28px; text-align: left; }
+
+/* kolom: label kecil di atas nilai, tombol bulat di kanan */
+.lc-field {
+  display: flex; align-items: center; gap: 12px;
+  min-height: 64px; padding: 8px 8px 8px 24px; margin-bottom: 12px;
+  border-radius: 999px; background: var(--lc-field); border: 1px solid var(--lc-field-line);
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+.lc-field:focus-within { border-color: var(--lc-gold); box-shadow: 0 0 0 3px rgba(212, 175, 55, .16); background: rgba(255,255,255,.065); }
+body.light .lc-field:focus-within { background: #fff; }
+.lc-field.is-bad { border-color: var(--lc-err); }
+.lc-field-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.lc-field label { font-size: 12px; font-weight: 500; color: var(--lc-mute); line-height: 1.2; cursor: text; }
+/* Gaya input global aplikasi (kotak, border, latar) ditimpa: kolom ini sudah punya bingkai pil sendiri */
+#login-screen .lc-field input,
+#login-screen .lc-field input:hover,
+#login-screen .lc-field input:focus,
+#login-screen .lc-field input:focus-visible,
+#login-screen .lc-field input:-webkit-autofill {
+  width: 100%; min-width: 0; height: auto; margin: 0; padding: 4px 0 0 !important;
+  background: transparent !important; background-image: none !important;
+  border: 0 !important; border-radius: 0 !important; outline: none !important; box-shadow: none !important;
+  font-size: 17px; line-height: 1.35; color: var(--lc-ink) !important;
+  -webkit-text-fill-color: var(--lc-ink); caret-color: var(--lc-gold);
+  appearance: none; -webkit-appearance: none;
+}
+#login-screen .lc-field input:-webkit-autofill { transition: background-color 9999s ease 0s; }
+.lc-field input::placeholder { color: var(--lc-mute); opacity: .7; }
+.lc-eye {
+  flex: none; width: 36px; height: 36px; border-radius: 50%; border: 0; background: transparent;
+  color: var(--lc-mute); display: grid; place-items: center; cursor: pointer;
+}
+.lc-eye:hover { color: var(--lc-ink); }
+.lc-eye svg { width: 20px; height: 20px; }
+
+.lc-go {
+  flex: none; width: 46px; height: 46px; border-radius: 50%; border: 0; cursor: pointer;
+  display: grid; place-items: center; color: var(--lc-gold-ink);
+  background: linear-gradient(135deg, #f0d477, #d4af37 60%, #b8942a);
+  box-shadow: 0 8px 20px -8px rgba(212, 175, 55, .75), inset 0 1px 0 rgba(255, 255, 255, .4);
+  transition: transform .15s ease, filter .15s ease;
+}
+.lc-go:hover { filter: brightness(1.06); }
+.lc-go:active { transform: scale(.94); }
+.lc-go svg { width: 20px; height: 20px; }
+.lc-go[disabled], .lc-alt[disabled] { cursor: progress; filter: saturate(.6) brightness(.9); }
+.lc-spin { width: 20px; height: 20px; border-radius: 50%; border: 2px solid currentColor; border-top-color: transparent; animation: lc-rot .7s linear infinite; }
+@keyframes lc-rot { to { transform: rotate(360deg); } }
+
+/* langkah: hanya satu yang tampil */
+.lc-card[data-step="email"] .lc-pass-only { display: none; }
+.lc-card[data-step="pass"] .lc-email-only { display: none; }
+.lc-card[data-mode="in"] .lc-up-only { display: none; }
+.lc-card[data-mode="up"] .lc-in-only { display: none; }
+
+.lc-row { display: flex; justify-content: flex-end; margin: -2px 8px 4px; }
+.lc-link { background: none; border: 0; padding: 8px 4px; font-size: 13px; color: var(--lc-gold); font-weight: 600; cursor: pointer; }
+.lc-link:hover { text-decoration: underline; }
+
+.lc-rules { list-style: none; margin: 4px 8px 12px; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; font-size: 13px; color: var(--lc-mute); }
+.lc-rules li { display: flex; align-items: center; gap: 8px; }
+.lc-rules li::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--lc-mute); transition: all .15s ease; }
+.lc-rules li.ok { color: var(--lc-ink); }
+.lc-rules li.ok::before { background: var(--lc-ok); border-color: var(--lc-ok); }
+
+.lc-msg { min-height: 0; margin: 4px 8px 0; font-size: 13px; line-height: 1.4; text-align: center; color: var(--lc-err); }
+.lc-msg:empty { display: none; }
+.lc-msg.is-ok { color: var(--lc-ok); }
+
+.lc-or { display: flex; align-items: center; gap: 16px; margin: 16px 8px 20px; color: var(--lc-mute); font-size: 12px; }
+.lc-or::before, .lc-or::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--lc-line)); }
+.lc-or::after { background: linear-gradient(270deg, transparent, var(--lc-line)); }
+
+.lc-alt {
+  width: 100%; display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 8px 8px 8px 20px;
+  border-radius: 999px; cursor: pointer; text-align: left; font-size: 15px; color: var(--lc-ink);
+  background: var(--lc-field); border: 1px solid var(--lc-field-line);
+  transition: border-color .18s ease, background .18s ease;
+}
+.lc-alt:hover { border-color: rgba(212, 175, 55, .55); }
+.lc-alt svg.lc-g { width: 20px; height: 20px; flex: none; }
+.lc-alt span { flex: 1; }
+.lc-alt i { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--lc-line); color: var(--lc-mute); }
+.lc-alt i svg { width: 17px; height: 17px; }
+
+.lc-foot { margin: 24px 0 8px; text-align: center; font-size: 13px; color: var(--lc-mute); }
+.lc-foot button { background: none; border: 0; padding: 8px 2px; margin-left: 4px; color: var(--lc-gold); font-weight: 600; cursor: pointer; font-size: inherit; }
+.lc-note { margin: 12px 0 0; text-align: center; font-size: 12px; color: var(--lc-mute); opacity: .8; }
+
+.lc-card :focus-visible:not(.lc-field input), .lc-top :focus-visible { outline: 2px solid var(--lc-gold); outline-offset: 2px; }
+.lc-eye:focus-visible, .lc-go:focus-visible, .lc-alt:focus-visible { outline-offset: 3px; }
+
+#login-screen .lc-card { animation: lc-in .35s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes lc-in { from { opacity: 0; transform: translateY(10px) scale(.985); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  #login-screen .lc-card { animation: none; }
+  .lc-spin { animation-duration: 1.6s; }
+}
+@media (max-width: 380px) {
+  .lc-card { padding: 28px 20px 24px; border-radius: 28px; }
+  .lc-title { font-size: 28px; }
+  .lc-rules { grid-template-columns: 1fr; }
+}
+
+/* Input polos: kolom (.lc-field) yang menjadi satu-satunya "kotak". Selector dikuatkan agar gaya input
+   global aplikasi (latar, border, bayangan, tinggi minimum) tidak membuat kotak di dalam kotak. */
+#login-screen .lc-card .lc-field input,
+#login-screen .lc-card .lc-field input:hover,
+#login-screen .lc-card .lc-field input:focus,
+#login-screen .lc-card .lc-field input:focus-visible,
+#login-screen .lc-card .lc-field input:active,
+#login-screen .lc-card .lc-field input:-webkit-autofill {
+  -webkit-appearance: none !important; appearance: none !important;
+  background: transparent !important; background-image: none !important;
+  border: 0 !important; border-radius: 0 !important;
+  box-shadow: none !important; outline: 0 !important; filter: none !important;
+  height: auto !important; min-height: 0 !important; width: 100% !important; min-width: 0;
+  margin: 0 !important; padding: 4px 0 0 !important;
+  font-size: 17px !important; line-height: 1.35 !important; font-weight: 500;
+  color: var(--lc-ink) !important; -webkit-text-fill-color: var(--lc-ink);
+  caret-color: var(--lc-gold);
+}
+#login-screen .lc-card .lc-field input::placeholder { color: var(--lc-mute) !important; opacity: .65 !important; -webkit-text-fill-color: var(--lc-mute); }
+/* autofill Chrome: tetap tanpa latar kuning/putih */
+#login-screen .lc-card .lc-field input:-webkit-autofill { -webkit-box-shadow: 0 0 0 40px var(--lc-card-b) inset !important; transition: background-color 9999s; }
+#login-screen .lc-card .lc-field label { display: block; margin: 0; padding: 0; font-size: 12px; font-weight: 500; color: var(--lc-mute); opacity: 1; letter-spacing: .01em; }
+#login-screen .lc-card .lc-field:focus-within label { color: var(--lc-gold); }
+#login-screen .lc-card .lc-field { min-height: 64px; padding: 8px 8px 8px 24px; gap: 8px; cursor: text; }
+#login-screen .lc-card .lc-field-body { gap: 1px; justify-content: center; }
+#login-screen .lc-card .lc-eye { background: transparent !important; border: 0 !important; box-shadow: none !important; padding: 0; }
+#login-screen .lc-card .lc-rules { margin: 8px 8px 16px; }
+#login-screen .lc-card .lc-msg:empty { min-height: 0; margin: 0; }
+#login-screen .lc-card .lc-msg { margin-top: 12px; }

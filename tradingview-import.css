@@ -1,0 +1,918 @@
+/* ============================================================
+   tradingview-import.css — Tahap 2: Import CSV TradingView
+   DOA IBU Journal v17.03 — Dark iOS Premium Theme
+   ============================================================ */
+
+/* ---------- Root Tokens (mengikuti design system proyek) ---------- */
+:root {
+  --tv-bg:          #0d0d0f;
+  --tv-surface:     #1a1a1f;
+  --tv-surface2:    #222228;
+  --tv-surface3:    #2a2a32;
+  --tv-border:      rgba(255,255,255,0.07);
+  --tv-border-gold: rgba(212,175,55,0.25);
+  --tv-gold:        #d4af37;
+  --tv-gold-dim:    rgba(212,175,55,0.55);
+  --tv-gold-bg:     rgba(212,175,55,0.08);
+  --tv-green:       #34c68a;
+  --tv-green-bg:    rgba(52,198,138,0.1);
+  --tv-red:         #ff5f5f;
+  --tv-red-bg:      rgba(255,95,95,0.1);
+  --tv-text:        #f0f0f2;
+  --tv-text2:       #9898a6;
+  --tv-text3:       #6a6a7a;
+  --tv-radius:      14px;
+  --tv-radius-sm:   9px;
+  --tv-shadow:      0 4px 24px rgba(0,0,0,0.5);
+  --tv-dur:         200ms;
+  --tv-ease:        cubic-bezier(0.25,0.46,0.45,0.94);
+}
+
+/* ============================================================
+   Import CSV Section Container
+   ============================================================ */
+#tv-import-section {
+  padding: 0 0 env(safe-area-inset-bottom, 24px);
+}
+
+.tv-import-wrap {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 20px 16px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ============================================================
+   Section Header
+   ============================================================ */
+.tv-import-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.tv-import-eyebrow {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tv-gold);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tv-import-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--tv-text);
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+  margin: 0;
+}
+.tv-import-subtitle {
+  font-size: 13px;
+  color: var(--tv-text2);
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* ============================================================
+   Step Guide (Panduan Langkah dalam halaman)
+   ============================================================ */
+.tv-guide-card {
+  background: var(--tv-surface);
+  border: 1px solid var(--tv-border);
+  border-radius: var(--tv-radius);
+  overflow: hidden;
+}
+.tv-guide-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  cursor: pointer;
+  user-select: none;
+  gap: 12px;
+  background: none;
+  border: none;
+  width: 100%;
+  color: var(--tv-text);
+  transition: background var(--tv-dur) var(--tv-ease);
+}
+.tv-guide-toggle:hover {
+  background: rgba(255,255,255,0.03);
+}
+.tv-guide-toggle-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--tv-text);
+}
+.tv-guide-toggle-icon {
+  font-size: 15px;
+}
+.tv-guide-chevron {
+  font-size: 11px;
+  color: var(--tv-text2);
+  transition: transform var(--tv-dur) var(--tv-ease);
+  flex-shrink: 0;
+}
+.tv-guide-card.is-open .tv-guide-chevron {
+  transform: rotate(180deg);
+}
+.tv-guide-body {
+  display: none;
+  padding: 0 16px 16px;
+  border-top: 1px solid var(--tv-border);
+}
+.tv-guide-card.is-open .tv-guide-body {
+  display: block;
+}
+.tv-guide-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-top: 14px;
+}
+.tv-guide-step {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.tv-guide-step-num {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--tv-gold-bg);
+  border: 1px solid var(--tv-border-gold);
+  color: var(--tv-gold);
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+.tv-guide-step-text {
+  flex: 1;
+  font-size: 13px;
+  color: var(--tv-text2);
+  line-height: 1.55;
+}
+.tv-guide-step-text strong {
+  color: var(--tv-text);
+  font-weight: 600;
+}
+.tv-guide-step-text code {
+  font-size: 11px;
+  background: var(--tv-surface3);
+  border-radius: 4px;
+  padding: 1px 5px;
+  color: var(--tv-gold);
+  font-family: 'SF Mono', Menlo, monospace;
+}
+.tv-guide-note {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: var(--tv-gold-bg);
+  border: 1px solid var(--tv-border-gold);
+  border-radius: var(--tv-radius-sm);
+  font-size: 12px;
+  color: var(--tv-gold-dim);
+  line-height: 1.5;
+}
+.tv-guide-note strong {
+  color: var(--tv-gold);
+}
+
+/* ============================================================
+   Account Selector (Pilih akun tujuan import)
+   ============================================================ */
+.tv-acct-selector {
+  background: var(--tv-surface);
+  border: 1px solid var(--tv-border);
+  border-radius: var(--tv-radius);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.tv-acct-selector-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--tv-text2);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.tv-acct-select-wrap {
+  position: relative;
+}
+.tv-acct-select {
+  width: 100%;
+  background: var(--tv-surface2);
+  border: 1px solid var(--tv-border);
+  border-radius: var(--tv-radius-sm);
+  color: var(--tv-text);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 36px 10px 12px;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  transition: border-color var(--tv-dur) var(--tv-ease);
+}
+.tv-acct-select:focus {
+  outline: none;
+  border-color: var(--tv-gold);
+}
+.tv-acct-select-arrow {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--tv-text2);
+  font-size: 10px;
+}
+
+/* ============================================================
+   Drop Zone (Upload Area)
+   ============================================================ */
+.tv-dropzone {
+  border: 2px dashed var(--tv-border);
+  border-radius: var(--tv-radius);
+  background: var(--tv-surface);
+  padding: 36px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--tv-dur) var(--tv-ease),
+              background var(--tv-dur) var(--tv-ease);
+  position: relative;
+}
+.tv-dropzone:hover,
+.tv-dropzone.drag-over {
+  border-color: var(--tv-gold);
+  background: var(--tv-gold-bg);
+}
+.tv-dropzone.has-file {
+  border-style: solid;
+  border-color: var(--tv-gold);
+}
+.tv-dropzone-icon {
+  font-size: 36px;
+  display: block;
+  margin-bottom: 10px;
+  line-height: 1;
+}
+.tv-dropzone-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--tv-text);
+  margin-bottom: 4px;
+}
+.tv-dropzone-subtitle {
+  font-size: 12px;
+  color: var(--tv-text2);
+  line-height: 1.5;
+}
+.tv-dropzone-subtitle strong {
+  color: var(--tv-gold);
+  font-weight: 600;
+}
+.tv-dropzone-sub2 {
+  font-size: 11px;
+  color: var(--tv-text3);
+  margin-top: 6px;
+}
+.tv-file-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+.tv-file-chosen {
+  display: none;
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: var(--tv-gold-bg);
+  border-radius: var(--tv-radius-sm);
+  font-size: 12px;
+  color: var(--tv-gold);
+  font-weight: 500;
+  align-items: center;
+  gap: 8px;
+}
+.tv-file-chosen.visible {
+  display: flex;
+}
+.tv-file-chosen-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tv-file-clear {
+  background: none;
+  border: none;
+  color: var(--tv-text2);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0 2px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.tv-file-clear:hover {
+  color: var(--tv-red);
+}
+.tv-parse-btn {
+  display: block;
+  margin-top: 12px;
+  width: 100%;
+  padding: 12px 20px;
+  background: var(--tv-gold);
+  color: #0d0d0f;
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  border-radius: var(--tv-radius-sm);
+  cursor: pointer;
+  transition: opacity var(--tv-dur);
+  letter-spacing: 0.01em;
+}
+.tv-parse-btn:hover { opacity: 0.9; }
+.tv-parse-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ============================================================
+   Parse Status / Error
+   ============================================================ */
+.tv-parse-status {
+  display: none;
+  padding: 12px 14px;
+  border-radius: var(--tv-radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.tv-parse-status.visible { display: block; }
+.tv-parse-status.error {
+  background: var(--tv-red-bg);
+  border: 1px solid rgba(255,95,95,0.2);
+  color: var(--tv-red);
+}
+.tv-parse-status.info {
+  background: var(--tv-gold-bg);
+  border: 1px solid var(--tv-border-gold);
+  color: var(--tv-gold);
+}
+.tv-parse-status.success {
+  background: var(--tv-green-bg);
+  border: 1px solid rgba(52,198,138,0.2);
+  color: var(--tv-green);
+}
+
+/* ============================================================
+   Preview Table
+   ============================================================ */
+.tv-preview-section {
+  display: none;
+  flex-direction: column;
+  gap: 14px;
+}
+.tv-preview-section.visible {
+  display: flex;
+}
+.tv-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.tv-preview-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--tv-text);
+}
+.tv-preview-meta {
+  font-size: 12px;
+  color: var(--tv-text2);
+}
+.tv-preview-meta b {
+  color: var(--tv-text);
+}
+.tv-preview-dup-badge {
+  font-size: 11px;
+  padding: 3px 8px;
+  background: rgba(255,95,95,0.12);
+  color: var(--tv-red);
+  border-radius: 20px;
+  font-weight: 600;
+}
+.tv-preview-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.tv-preview-select-all {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--tv-text2);
+  cursor: pointer;
+  user-select: none;
+}
+.tv-preview-select-all input[type="checkbox"] {
+  accent-color: var(--tv-gold);
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+}
+
+/* Table wrapper */
+.tv-preview-table-wrap {
+  background: var(--tv-surface);
+  border: 1px solid var(--tv-border);
+  border-radius: var(--tv-radius);
+  overflow: hidden;
+}
+.tv-preview-table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.tv-preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  min-width: 600px;
+}
+.tv-preview-table thead th {
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--tv-text2);
+  background: var(--tv-surface2);
+  border-bottom: 1px solid var(--tv-border);
+  white-space: nowrap;
+}
+.tv-preview-table thead th:first-child {
+  width: 36px;
+  text-align: center;
+}
+.tv-preview-table tbody tr {
+  border-bottom: 1px solid var(--tv-border);
+  transition: background var(--tv-dur) var(--tv-ease);
+}
+.tv-preview-table tbody tr:last-child {
+  border-bottom: none;
+}
+.tv-preview-table tbody tr:hover {
+  background: rgba(255,255,255,0.03);
+}
+.tv-preview-table tbody tr.is-dup {
+  opacity: 0.45;
+}
+.tv-preview-table tbody td {
+  padding: 9px 12px;
+  color: var(--tv-text);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.tv-preview-table tbody td:first-child {
+  text-align: center;
+}
+.tv-preview-table tbody td input[type="checkbox"] {
+  accent-color: var(--tv-gold);
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+}
+.tv-preview-table tbody tr.is-dup td input[type="checkbox"] {
+  cursor: not-allowed;
+}
+
+/* Cells */
+.tv-cell-pair {
+  font-weight: 600;
+  color: var(--tv-text);
+  font-size: 13px;
+}
+.tv-cell-bias {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 20px;
+  display: inline-block;
+}
+.tv-cell-bias.long {
+  background: rgba(52,198,138,0.12);
+  color: var(--tv-green);
+}
+.tv-cell-bias.short {
+  background: rgba(255,95,95,0.12);
+  color: var(--tv-red);
+}
+.tv-cell-pl {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+.tv-cell-pl.pos { color: var(--tv-green); }
+.tv-cell-pl.neg { color: var(--tv-red); }
+.tv-cell-pl.zero { color: var(--tv-text2); }
+.tv-cell-date {
+  color: var(--tv-text2);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.tv-cell-lot {
+  color: var(--tv-text);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+.tv-cell-dup-label {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  background: rgba(255,95,95,0.12);
+  color: var(--tv-red);
+  border-radius: 20px;
+}
+.tv-cell-new-label {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  background: var(--tv-green-bg);
+  color: var(--tv-green);
+  border-radius: 20px;
+}
+
+/* ============================================================
+   Import Action Footer
+   ============================================================ */
+.tv-import-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.tv-import-summary {
+  font-size: 13px;
+  color: var(--tv-text2);
+  padding: 10px 14px;
+  background: var(--tv-surface2);
+  border-radius: var(--tv-radius-sm);
+  border: 1px solid var(--tv-border);
+}
+.tv-import-summary b {
+  color: var(--tv-text);
+  font-variant-numeric: tabular-nums;
+}
+.tv-import-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.tv-btn-cancel-import {
+  flex: 1;
+  min-width: 100px;
+  padding: 13px 20px;
+  background: var(--tv-surface2);
+  border: 1px solid var(--tv-border);
+  border-radius: var(--tv-radius-sm);
+  color: var(--tv-text2);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--tv-dur);
+}
+.tv-btn-cancel-import:hover {
+  background: var(--tv-surface3);
+  color: var(--tv-text);
+}
+.tv-btn-confirm-import {
+  flex: 2;
+  min-width: 160px;
+  padding: 13px 20px;
+  background: var(--tv-gold);
+  border: none;
+  border-radius: var(--tv-radius-sm);
+  color: #0d0d0f;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity var(--tv-dur);
+  letter-spacing: 0.01em;
+}
+.tv-btn-confirm-import:hover { opacity: 0.9; }
+.tv-btn-confirm-import:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ============================================================
+   Progress Overlay
+   ============================================================ */
+.tv-progress-ov {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(13,13,15,0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.tv-progress-ov.hidden { display: none; }
+.tv-progress-card {
+  background: var(--tv-surface);
+  border: 1px solid var(--tv-border);
+  border-radius: 20px;
+  padding: 28px 24px;
+  text-align: center;
+  max-width: 320px;
+  width: 100%;
+  box-shadow: var(--tv-shadow);
+}
+.tv-progress-spinner {
+  width: 44px;
+  height: 44px;
+  border: 3px solid var(--tv-border);
+  border-top-color: var(--tv-gold);
+  border-radius: 50%;
+  animation: tv-spin 0.8s linear infinite;
+  margin: 0 auto 16px;
+}
+@keyframes tv-spin {
+  to { transform: rotate(360deg); }
+}
+.tv-progress-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--tv-text);
+  margin-bottom: 6px;
+}
+.tv-progress-sub {
+  font-size: 13px;
+  color: var(--tv-text2);
+}
+.tv-progress-bar-wrap {
+  margin-top: 14px;
+  background: var(--tv-surface2);
+  border-radius: 100px;
+  height: 4px;
+  overflow: hidden;
+}
+.tv-progress-bar {
+  height: 100%;
+  background: var(--tv-gold);
+  border-radius: 100px;
+  transition: width 0.3s ease;
+  width: 0%;
+}
+
+/* ============================================================
+   Success State
+   ============================================================ */
+.tv-success-card {
+  display: none;
+  background: var(--tv-surface);
+  border: 1px solid rgba(52,198,138,0.25);
+  border-radius: var(--tv-radius);
+  padding: 28px 20px;
+  text-align: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.tv-success-card.visible { display: flex; }
+.tv-success-icon {
+  font-size: 44px;
+  line-height: 1;
+}
+.tv-success-title {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--tv-green);
+  margin: 0;
+}
+.tv-success-sub {
+  font-size: 13px;
+  color: var(--tv-text2);
+  line-height: 1.55;
+  max-width: 320px;
+}
+.tv-success-sub b {
+  color: var(--tv-text);
+}
+.tv-btn-go-dashboard {
+  margin-top: 6px;
+  padding: 11px 24px;
+  background: var(--tv-gold);
+  color: #0d0d0f;
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  border-radius: var(--tv-radius-sm);
+  cursor: pointer;
+  transition: opacity var(--tv-dur);
+}
+.tv-btn-go-dashboard:hover { opacity: 0.9; }
+.tv-btn-import-more {
+  padding: 11px 20px;
+  background: var(--tv-surface2);
+  border: 1px solid var(--tv-border);
+  border-radius: var(--tv-radius-sm);
+  color: var(--tv-text2);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--tv-dur);
+}
+.tv-btn-import-more:hover {
+  background: var(--tv-surface3);
+  color: var(--tv-text);
+}
+.tv-success-btns {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ============================================================
+   Reflection Badge (nav / accounts section)
+   ============================================================ */
+.tv-reflection-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  background: var(--tv-gold);
+  color: #0d0d0f;
+  font-size: 9px;
+  font-weight: 800;
+  border-radius: 9px;
+  line-height: 1;
+  position: absolute;
+  top: -5px;
+  right: -6px;
+  pointer-events: none;
+}
+
+/* ============================================================
+   Import Entry Point on Accounts Page
+   ============================================================ */
+.tv-import-entry-card {
+  background: var(--tv-surface);
+  border: 1px solid var(--tv-border-gold);
+  border-radius: var(--tv-radius);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.tv-import-entry-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.tv-import-entry-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--tv-gold-bg);
+  border: 1px solid var(--tv-border-gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  flex-shrink: 0;
+}
+.tv-import-entry-texts {
+  flex: 1;
+}
+.tv-import-entry-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--tv-text);
+  line-height: 1.3;
+}
+.tv-import-entry-desc {
+  font-size: 12px;
+  color: var(--tv-text2);
+  line-height: 1.45;
+  margin-top: 2px;
+}
+.tv-btn-open-import {
+  width: 100%;
+  padding: 11px 16px;
+  background: var(--tv-gold-bg);
+  border: 1px solid var(--tv-border-gold);
+  border-radius: var(--tv-radius-sm);
+  color: var(--tv-gold);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background var(--tv-dur), border-color var(--tv-dur);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  letter-spacing: 0.01em;
+}
+.tv-btn-open-import:hover {
+  background: rgba(212,175,55,0.14);
+  border-color: rgba(212,175,55,0.4);
+}
+
+/* ============================================================
+   Reflection Reminder Box (in accounts section)
+   ============================================================ */
+.tv-reflection-box {
+  background: var(--tv-surface);
+  border: 1px solid var(--tv-border);
+  border-radius: var(--tv-radius);
+  padding: 14px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.tv-reflection-box-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+  line-height: 1;
+  padding-top: 2px;
+}
+.tv-reflection-box-content { flex: 1; }
+.tv-reflection-box-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--tv-text);
+  margin-bottom: 3px;
+}
+.tv-reflection-box-sub {
+  font-size: 12px;
+  color: var(--tv-text2);
+  line-height: 1.5;
+}
+.tv-reflection-count {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--tv-gold);
+  font-variant-numeric: tabular-nums;
+  display: block;
+  line-height: 1.2;
+}
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+@media (max-width: 520px) {
+  .tv-import-wrap {
+    padding: 16px 12px 32px;
+    gap: 16px;
+  }
+  .tv-import-title {
+    font-size: 22px;
+  }
+  .tv-import-actions {
+    flex-direction: column;
+  }
+  .tv-btn-cancel-import,
+  .tv-btn-confirm-import {
+    flex: unset;
+    width: 100%;
+  }
+  .tv-preview-table {
+    font-size: 11px;
+  }
+  .tv-preview-table thead th,
+  .tv-preview-table tbody td {
+    padding: 8px 10px;
+  }
+}
+
+/* ============================================================
+   reduced-motion
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .tv-progress-spinner { animation: none; border-top-color: var(--tv-gold); }
+  .tv-dropzone,
+  .tv-guide-chevron,
+  .tv-parse-btn,
+  .tv-btn-confirm-import { transition: none; }
+}

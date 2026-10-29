@@ -1,0 +1,53 @@
+/* v16.47 · Gesture-Driven Mobile UI — gaya untuk gesture-ui.js. Dimuat terakhir. Untuk membatalkan: hapus tautan css & js. */
+
+/* ---- Pengaturan (semua ukuran layar) ---- */
+.gu-settings .gu-set-h { font-size: 12px; font-weight: 600; letter-spacing: 0; text-transform:none; opacity: .6; margin: 0 0 12px; }
+.gu-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 0; }
+.gu-row + .gu-row { border-top: 1px solid rgba(255,255,255,.07); }
+body.light .gu-row + .gu-row { border-top-color: rgba(0,0,0,.08); }
+.gu-row b { display: block; font-size: 15px; font-weight: 600; }
+.gu-row small { display: block; margin-top: 2px; font-size: 12px; line-height: 1.45; opacity: .6; }
+.gu-seg { flex: none; display: inline-flex; padding: 4px; gap: 2px; border-radius: 12px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08); }
+body.light .gu-seg { background: rgba(0,0,0,.04); border-color: rgba(0,0,0,.08); }
+.gu-seg button { min-width: 56px; height: 36px; padding: 0 12px; border: 0; border-radius: 8px; background: transparent; color: inherit; opacity: .7; font-size: 13px; font-weight: 600; cursor: pointer; }
+.gu-seg button[aria-pressed="true"] { background: rgba(215,180,74,.2); color: #e8c766; opacity: 1; }
+body.light .gu-seg button[aria-pressed="true"] { color: #8a6a10; }
+.gu-seg button:focus-visible { outline: 2px solid #d7b44a; outline-offset: 1px; }
+
+/* ---- Tombol tambah: pilihan sisi kiri (bawaan aplikasi: kanan) ---- */
+@media (max-width: 640px) {
+  body.authed.gu-fab-left #btn-new-journal-fab { right: auto !important; left: max(16px, env(safe-area-inset-left, 0px)) !important; }
+
+  /* ---- Tip ---- */
+  .gu-hint { display: flex; align-items: center; gap: 12px; margin: 0 0 12px; padding: 8px 8px 8px 16px; border-radius: 16px; font-size: 13px;
+    background: rgba(215,180,74,.1); border: 1px solid rgba(215,180,74,.24); color: #e8c766; }
+  body.light .gu-hint { color: #7a5c0c; }
+  .gu-hint-t { flex: 1; min-width: 0; }
+  .gu-hint-x { flex: none; width: 36px; height: 36px; border: 0; border-radius: 12px; background: transparent; color: inherit; font-size: 20px; line-height: 1; cursor: pointer; }
+
+  /* ---- 1. Geser kartu journal ---- */
+  #journal-list .jr { touch-action: pan-y; }
+  #journal-list .jr.gu-drag { user-select: none; -webkit-user-select: none; }
+  #journal-list .jr .jr-main { will-change: auto; }
+  #journal-list .jr.gu-drag .jr-main { transform: translate3d(var(--gu-x, 0px), 0, 0); opacity: calc(1 - var(--gu-p, 0) * .35); }
+  #journal-list .jr.gu-snap .jr-main { transition: transform .26s cubic-bezier(.2,.8,.2,1), opacity .26s ease; }
+  #journal-list .jr.gu-drag::after { content: attr(data-gu-label); position: absolute; right: 18px; top: 50%; transform: translateY(-50%) scale(calc(.9 + var(--gu-p, 0) * .1));
+    font-size: 13px; font-weight: 600; color: #e8c766; opacity: var(--gu-p, 0); pointer-events: none; }
+  #journal-list .jr.gu-ready { background: rgba(215,180,74,.08); }
+
+  /* ---- 2. Detail trade ---- */
+  .jd-panel { touch-action: pan-y; }
+  .jd-panel .jd-head { touch-action: none; }
+  .jd-panel.gu-dragging { transition: none !important; }
+  .jd-panel .jd-body { touch-action: pan-y; }
+  .jd-panel.gu-swiping .jd-body { transition: none; }
+  .jd-panel .jd-body { transition: transform .22s cubic-bezier(.2,.8,.2,1); }
+
+  /* ---- 3. Handle ringkasan: batang tarik (teks tombol & fungsi klik tetap) ---- */
+  body .mf-kpi-more { position: relative; touch-action: pan-x !important; padding-top: 12px; }
+  .mf-kpi-more::before { content: ''; position: absolute; top: 5px; left: 50%; width: 32px; height: 3px; margin-left: -16px; border-radius: 3px; background: currentColor; opacity: .35; }
+  .mf-kpi-more.gu-pulling { background: rgba(215,180,74,.16); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #journal-list .jr.gu-snap .jr-main, .jd-panel .jd-body { transition: none !important; }
+}

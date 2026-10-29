@@ -1,0 +1,76 @@
+/* v17.01 — Touch-First Chart Exploration (tampilan saja) */
+
+/* ---------- area sentuh ---------- */
+.v5 .v5-eq, .v5 .tcc-eq { touch-action: pan-y; -webkit-tap-highlight-color: transparent; }
+.v5 .v5-eq svg, .v5 #tcc-dd svg { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: pan-y; }
+.v5 .tc-hit { cursor: crosshair; outline: none; }
+.v5 .tc-hit:focus-visible { outline: 2px solid var(--g); outline-offset: -2px; }
+@media (pointer: coarse) {
+  .v5 .v5-eq svg, .v5 #tcc-dd svg { min-height: 168px; } /* tinggi minimal nyaman untuk jempol */
+}
+
+/* ---------- kurva halus + cahaya tipis di garis ---------- */
+.v5 .tc-line { filter: drop-shadow(0 0 5px color-mix(in srgb, currentColor 45%, transparent)); }
+.v5 .tc-line-pos { color: var(--win); }
+.v5 .tc-line-neg { color: var(--loss); }
+
+/* ---------- crosshair, titik, halo: meluncur mengikuti jari ---------- */
+.v5 .tc-dot .tc-vl, .v5 .tc-dot .tc-halo, .v5 .tc-dot .tc-pt { will-change: transform; }
+.v5 .tc-dot.tc-glide .tc-vl, .v5 .tc-dot.tc-glide .tc-halo, .v5 .tc-dot.tc-glide .tc-pt { transition: transform .085s cubic-bezier(.2,.7,.3,1); }
+.v5 .tc-dot .tc-vl { stroke-opacity: .42; stroke-dasharray: 3 4; }
+.v5 .tc-dot .tc-halo { filter: blur(.5px); }
+
+/* ---------- tooltip dekat titik ---------- */
+.v5 .tc-tip {
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+  transition: opacity .12s ease, transform .12s ease, left .085s cubic-bezier(.2,.7,.3,1), top .085s cubic-bezier(.2,.7,.3,1);
+}
+.v5 .tc-tip .c.pos { text-shadow: 0 0 14px color-mix(in srgb, var(--win) 55%, transparent); }
+.v5 .tc-tip .c.neg { text-shadow: 0 0 14px color-mix(in srgb, var(--loss) 55%, transparent); }
+
+/* ---------- ringkasan periode (ikut seleksi) ---------- */
+.v5 .tc-sum { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--ln, rgba(255,255,255,.08)); }
+.v5 .tc-sum-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; font-size: 12px; color: var(--mu); }
+.v5 .tc-sum-h b { color: var(--tx); font-weight: 600; font-variant-numeric: tabular-nums; }
+.v5 .tc-sum-h i { font-style: normal; padding: 2px 8px; border-radius: 999px; font-size: 11px; background: color-mix(in srgb, var(--g, #c9a227) 16%, transparent); color: var(--g2, var(--g)); opacity: 0; transition: opacity .15s; }
+.v5 .tc-sum.sel .tc-sum-h i { opacity: 1; }
+.v5 .tc-sum-g { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.v5 .tc-sum-g > div { min-width: 0; padding: 10px 12px; border-radius: 14px; background: var(--soft, rgba(255,255,255,.04)); }
+.v5 .tc-sum-g .l { display: block; font-size: 12px; color: var(--mu); margin-bottom: 2px; }
+.v5 .tc-sum-g .v { display: block; font-size: 16px; font-weight: 600; letter-spacing: -.01em; font-variant-numeric: tabular-nums lining-nums; overflow-wrap: anywhere; color: var(--tx); }
+.v5 .tc-sum-g .v.pos { color: var(--win); }
+.v5 .tc-sum-g .v.neg { color: var(--loss); }
+@media (min-width: 560px) { .v5 .tc-sum-g { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+/* ---------- cahaya di belakang angka P/L: mengikuti profit / loss ----------
+   data-tone di-set JS dari tanda angka yang sedang tampil (nilai akhir, atau titik yang disentuh).
+   --tc-i (0–1) = seberapa jauh dari nol relatif terhadap rentang → makin besar, makin terang. */
+.v5 .pf-valbox { position: relative; isolation: isolate; --tc-glow: transparent; --tc-i: .5; }
+.v5 .pf-valbox::before {
+  content: ''; position: absolute; z-index: -1; pointer-events: none;
+  left: -6%; top: -14%; width: min(100%, 360px); height: 118%;
+  background: radial-gradient(closest-side, var(--tc-glow), transparent 72%);
+  filter: blur(14px); opacity: calc(.38 + .5 * var(--tc-i));
+  transition: opacity .35s ease, background .35s ease;
+}
+.v5 .pf-valbox[data-tone="pos"] { --tc-glow: color-mix(in srgb, var(--win) 62%, transparent); }
+.v5 .pf-valbox[data-tone="neg"] { --tc-glow: color-mix(in srgb, var(--loss) 62%, transparent); }
+.v5 .pf-val.pos { text-shadow: 0 0 calc(14px + 18px * var(--tc-i, .5)) color-mix(in srgb, var(--px-profit, var(--win)) 52%, transparent); }
+.v5 .pf-val.neg { text-shadow: 0 0 calc(14px + 18px * var(--tc-i, .5)) color-mix(in srgb, var(--px-loss, var(--loss)) 52%, transparent); }
+/* angka P/L besar lain: cahaya lebih halus, hanya bila sudah diberi warna profit/loss */
+.v5 :is(.de-fig, .ed-fig, .hm-pl, .tcc-big, .mag-big, .stx-big, .sp-net).pos { text-shadow: 0 0 16px color-mix(in srgb, var(--win) 38%, transparent); }
+.v5 :is(.de-fig, .ed-fig, .hm-pl, .tcc-big, .mag-big, .stx-big, .sp-net).neg { text-shadow: 0 0 16px color-mix(in srgb, var(--loss) 38%, transparent); }
+body.light .v5 .pf-valbox::before { opacity: calc(.18 + .3 * var(--tc-i)); filter: blur(18px); }
+body.light .v5 .pf-val.pos, body.light .v5 .pf-val.neg, body.light .v5 .tc-tip .c { text-shadow: 0 0 14px color-mix(in srgb, currentColor 26%, transparent); }
+
+@media (prefers-reduced-motion: reduce) {
+  .v5 .tc-dot.tc-glide .tc-vl, .v5 .tc-dot.tc-glide .tc-halo, .v5 .tc-dot.tc-glide .tc-pt, .v5 .tc-tip, .v5 .pf-valbox::before { transition: none; }
+}
+@media (prefers-contrast: more) {
+  .v5 .pf-valbox::before { display: none; }
+  .v5 .tc-line { filter: none; }
+}
+
+/* tooltip tidak pernah turun baris (aturan lama .pf-hero .v5-tip memperbolehkan wrap → angka terpotong jadi "-$2,357.0 / 0") */
+.v5 .pf-hero .tc-tip, .v5 .tc-tip { white-space: nowrap; overflow-wrap: normal; }

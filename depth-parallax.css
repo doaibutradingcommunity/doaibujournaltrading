@@ -1,0 +1,37 @@
+/* ==========================================================================
+   DOA IBU — v16.80  DEPTH PARALLAX  (lapisan belakang bergerak paling lambat)
+   --------------------------------------------------------------------------
+   Melengkapi v16.77 (elevasi) dengan satu isyarat kedalaman terakhir: paralaks.
+
+     depan    nav (dock, header, tab)     tetap / fixed            → tidak bergerak
+     tengah   panel utama                  gulir normal (1×)        → tidak diubah
+     belakang cahaya ambient #sg-light     bergeser ±36px saja      ← file ini
+
+   Cara kerja: depth-parallax.js mengisi --dp-y (px, tak berunit) pada #sg-light saat digulir.
+   Tiap lampu (b.a/.b/.c) memakai properti `translate` (terpisah dari `transform`), jadi animasi
+   sg-a/b/c dan pergeseran per-halaman (--sg-x/--sg-y) tidak tersentuh. Wadah #sg-light tidak digeser,
+   sehingga tidak ada tepi yang terbuka.
+
+   Fallback (semuanya = statis, persis v16.79):
+     prefers-reduced-motion · html.mo-lite · data-ui-effects="low" · forced-colors · tanpa `translate`
+   Membatalkan: hapus <link href="depth-parallax.css"> dan <script src="depth-parallax.js">.
+   ========================================================================== */
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (translate: 0 0) {
+    html.sg-on body.authed #sg-light b {
+      translate: 0 calc(var(--dp-y, 0) * var(--dp-k, 1) * 1px);
+    }
+    /* kedalaman antar-lampu: yang besar & jauh paling lambat, yang kecil & dekat sedikit lebih cepat */
+    html.sg-on body.authed #sg-light .a { --dp-k: 1; }
+    html.sg-on body.authed #sg-light .b { --dp-k: .6; }
+    html.sg-on body.authed #sg-light .c { --dp-k: 1.5; }
+  }
+}
+
+/* hemat daya / aksesibilitas: statis */
+html.mo-lite body.authed #sg-light b,
+html[data-ui-effects="low"] body.authed #sg-light b { translate: none !important; }
+@media (forced-colors: active) {
+  html body.authed #sg-light b { translate: none !important; }
+}

@@ -1,0 +1,132 @@
+/* v16.93 · Personal Trading Rhythm — gaya untuk trading-rhythm.js. Dimuat setelah status-capsule.css.
+   Memakai token Beranda (#view-home: --g, --gr, --ln, --soft, --tx, --mu, --hm-glass, --hm-ink) dengan cadangan,
+   jadi halaman uji tanpa Beranda tetap benar. Gelap + terang. Untuk membatalkan: hapus tautan css & js.
+   Penyetelan cepat: blok token tepat di bawah ini. */
+#ptr-root {
+  --ptr-g: var(--g, #d7b44a);
+  --ptr-gr: var(--gr, 215, 180, 74);
+  --ptr-ln: var(--ln, rgba(255, 255, 255, .10));
+  --ptr-soft: var(--soft, rgba(255, 255, 255, .045));
+  --ptr-tx: var(--tx, #eee8d6);
+  --ptr-mu: var(--mu, #a8a18f);
+  --ptr-ink: var(--hm-ink, #1a1405);
+  --ptr-glass: var(--hm-glass, rgba(32, 29, 21, .55));
+  --ptr-cell: 40px;
+  color: var(--ptr-tx);
+}
+body.light #ptr-root {
+  --ptr-g: var(--g, #8a6a10);
+  --ptr-gr: var(--gr, 138, 106, 16);
+  --ptr-ln: var(--ln, rgba(0, 0, 0, .11));
+  --ptr-soft: var(--soft, rgba(0, 0, 0, .035));
+  --ptr-tx: var(--tx, #27272a);
+  --ptr-mu: var(--mu, #6b6b72);
+  --ptr-ink: var(--hm-ink, #ffffff);
+  --ptr-glass: var(--hm-glass, rgba(255, 253, 246, .74));
+}
+
+/* Kartu berada di bawah #hm-root; padding bawah (ruang tab bar) pindah ke sini. */
+#view-home.ptr-on .hm { padding-bottom: 16px; }
+#ptr-root[hidden] { display: none; }
+.ptr {
+  box-sizing: border-box; max-width: 64rem; margin: 0 auto; padding: 20px 20px 22px;
+  margin-bottom: calc(112px + env(safe-area-inset-bottom, 0px));
+  border-radius: 24px; background: var(--ptr-glass);
+  -webkit-backdrop-filter: blur(26px) saturate(165%); backdrop-filter: blur(26px) saturate(165%);
+  box-shadow: inset 0 0 0 1px var(--ptr-ln), inset 0 1px 0 rgba(255, 255, 255, .07), 0 18px 44px -26px rgba(0, 0, 0, .55);
+  display: grid; gap: 20px;
+}
+body.light .ptr { box-shadow: inset 0 0 0 1px var(--ptr-ln), inset 0 1px 0 rgba(255, 255, 255, .9), 0 18px 44px -26px rgba(60, 48, 20, .28); }
+.ptr * { box-sizing: border-box; }
+
+.ptr-head h3 { margin: 0; font-size: 18px; line-height: 1.25; font-weight: 700; letter-spacing: 0; }
+.ptr-head p { margin: 4px 0 0; font-size: 13px; line-height: 1.4; color: var(--ptr-mu); }
+
+/* ---------- ringkasan ---------- */
+.ptr-stats { margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.ptr-stat { min-width: 0; padding: 12px; border-radius: 16px; background: var(--ptr-soft); box-shadow: inset 0 0 0 1px var(--ptr-ln); }
+.ptr-stat dt { font-size: 11px; line-height: 1.3; color: var(--ptr-mu); font-weight: 600; }
+.ptr-stat dd { margin: 4px 0 2px; font-size: clamp(18px, 5.2vw, 22px); line-height: 1.1; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--ptr-g); }
+.ptr-stat small { display: block; font-size: 11px; line-height: 1.3; color: var(--ptr-mu); }
+
+/* ---------- seksi ---------- */
+.ptr-sec { min-width: 0; }
+.ptr-sh { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 12px; margin-bottom: 10px; }
+.ptr-sh h4 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: 0; }
+.ptr-sh span { font-size: 12px; color: var(--ptr-mu); }
+.ptr-empty { margin: 0; padding: 12px 14px; border-radius: 14px; background: var(--ptr-soft); font-size: 13px; line-height: 1.5; color: var(--ptr-mu); }
+.ptr-empty.ok { color: var(--ptr-tx); }
+.ptr-more { margin: 8px 2px 0; font-size: 12px; color: var(--ptr-mu); }
+
+/* ---------- rutinitas ---------- */
+.ptr-rl, .ptr-ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.ptr-r, .ptr-ul li { position: relative; display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 8px 8px 8px 12px; border-radius: 16px; background: var(--ptr-soft); box-shadow: inset 0 0 0 1px var(--ptr-ln); }
+.ptr-rt { flex: 1; min-width: 0; display: grid; gap: 1px; }
+.ptr-rt b { font-size: 14px; font-weight: 650; line-height: 1.3; }
+.ptr-rt small { font-size: 12px; line-height: 1.35; color: var(--ptr-mu); }
+.ptr-rs { flex: none; font-size: 12px; color: var(--ptr-mu); }
+.ptr-r.done .ptr-rs { color: var(--ptr-g); font-weight: 600; }
+.ptr-ck { flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; box-shadow: inset 0 0 0 2px var(--ptr-ln); color: var(--ptr-ink); }
+.ptr-ck svg { width: 14px; height: 14px; }
+.ptr-r.done .ptr-ck { background: var(--ptr-g); box-shadow: none; }
+.ptr-r.partial .ptr-ck { box-shadow: inset 0 0 0 2px var(--ptr-g); }
+.ptr-ck i { width: 10px; height: 10px; border-radius: 50%; background: var(--ptr-g); }
+.ptr-wk { min-height: 48px; background: transparent; }
+
+.ptr-btn {
+  flex: none; min-width: 84px; min-height: 44px; padding: 0 14px; border: 0; border-radius: 14px; cursor: pointer;
+  font: 700 13px/1 inherit; font-family: inherit; color: var(--ptr-ink);
+  background: linear-gradient(135deg, #f0d477, var(--ptr-g) 60%, #c3a15f);
+  box-shadow: 0 8px 20px -10px rgba(var(--ptr-gr), .7), inset 0 1px 0 rgba(255, 255, 255, .4);
+  transition: transform .18s cubic-bezier(.22, 1, .36, 1);
+}
+body.light .ptr-btn { background: var(--ptr-g); box-shadow: none; }
+.ptr-btn:active { transform: scale(.96); }
+.ptr-btn:focus-visible, .ptr-d:focus-visible { outline: 2px solid var(--ptr-g); outline-offset: 2px; }
+
+/* ---------- kalender ---------- */
+.ptr-cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; max-width: 420px; }
+.ptr-wd { text-align: center; font-size: 11px; line-height: 1.6; color: var(--ptr-mu); font-weight: 600; }
+.ptr-d {
+  all: unset; box-sizing: border-box; position: relative; display: grid; place-items: center; min-height: var(--ptr-cell); aspect-ratio: 1 / 1;
+  border-radius: 12px; font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ptr-mu);
+}
+button.ptr-d { cursor: pointer; }
+.ptr-d .n { line-height: 1; transform: translateY(-3px); }
+.ptr-d i { position: absolute; left: 0; right: 0; bottom: 3px; text-align: center; font-style: normal; font-size: 10px; line-height: 1; }
+.ptr-d.done { background: var(--ptr-g); color: var(--ptr-ink); }
+.ptr-d.journal { background: rgba(var(--ptr-gr), .14); color: var(--ptr-g); box-shadow: inset 0 0 0 2px var(--ptr-g); }
+.ptr-d.plan { color: var(--ptr-g); box-shadow: inset 0 0 0 1.5px rgba(var(--ptr-gr), .55); border-radius: 12px; background-image: repeating-linear-gradient(135deg, rgba(var(--ptr-gr), .14) 0 3px, transparent 3px 6px); }
+.ptr-d.miss { background: var(--ptr-soft); }
+.ptr-d.off, .ptr-d.future { opacity: .45; }
+.ptr-d.now { outline: 2px solid var(--ptr-tx); outline-offset: 1px; }
+.ptr-lg { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--ptr-mu); }
+.ptr-lg li { display: inline-flex; align-items: center; gap: 6px; }
+.ptr-sw { display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 6px; font-size: 9px; line-height: 1; font-style: normal; }
+.ptr-sw.done { background: var(--ptr-g); color: var(--ptr-ink); }
+.ptr-sw.journal { background: rgba(var(--ptr-gr), .14); color: var(--ptr-g); box-shadow: inset 0 0 0 2px var(--ptr-g); }
+.ptr-sw.plan { box-shadow: inset 0 0 0 1.5px rgba(var(--ptr-gr), .55); color: var(--ptr-g); }
+.ptr-sw.miss { background: var(--ptr-soft); }
+
+/* ---------- belum dievaluasi + rencana ---------- */
+.ptr-cols { display: grid; gap: 20px; }
+@media (min-width: 820px) { .ptr-cols { grid-template-columns: 1fr 1fr; align-items: start; } }
+.ptr-ul li { min-height: 60px; }
+.ptr-bar { height: 8px; margin: 0 0 12px; border-radius: 99px; background: var(--ptr-soft); box-shadow: inset 0 0 0 1px var(--ptr-ln); overflow: hidden; }
+.ptr-bar i { display: block; height: 100%; border-radius: 99px; background: var(--ptr-g); }
+
+@media (max-width: 380px) {
+  .ptr { padding: 16px 14px 18px; }
+  .ptr-stat { padding: 10px; } .ptr-stat dd { font-size: 19px; }
+  .ptr-rs { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }   /* ruang sempit: tetap dibacakan pembaca layar */
+}
+@media (prefers-reduced-motion: reduce) { .ptr-btn { transition: none; } }
+@media (prefers-reduced-transparency: reduce) { .ptr { -webkit-backdrop-filter: none; backdrop-filter: none; background: #1d1b14; } body.light .ptr { background: #fffdf6; } }
+@media (forced-colors: active) {
+  .ptr { box-shadow: none; border: 1px solid CanvasText; }
+  .ptr-d.done { background: Highlight; color: HighlightText; forced-color-adjust: none; }
+  .ptr-d.journal, .ptr-d.plan { box-shadow: none; border: 2px solid Highlight; }
+  .ptr-d.now { outline-color: CanvasText; }
+  .ptr-btn { background: ButtonFace; color: ButtonText; border: 1px solid ButtonText; box-shadow: none; }
+  .ptr-r.done .ptr-ck { background: Highlight; color: HighlightText; }
+}

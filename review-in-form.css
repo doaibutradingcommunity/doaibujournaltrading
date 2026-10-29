@@ -1,0 +1,72 @@
+/* v16.90 · Tab Review di form "+" (After + Evaluasi). Hanya tampilan; logika di review-in-form.js. Dimuat setelah journal-form-ux.css. */
+
+/* 3 tab: Pre-Market | Journal Trade | Review */
+.jw-tabs { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+.jw-tab { min-width: 0; }
+.jw-tab b, .jw-tab small { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 479px) {
+  .jw-tabs { gap: 4px !important; padding: 4px !important; }
+  .jw-tab { padding: 10px 4px !important; }
+  .jw-tab b { font-size: 13px !important; }
+  .jw-tab small { font-size: 11px !important; }
+}
+
+.rvf { display: block; }
+.rvf-sec { box-sizing: border-box; margin: 14px 0 0; padding: 14px; min-width: 0; border: 1px solid rgba(255,255,255,.10); border-radius: 16px; background: rgba(255,255,255,.03); }
+.rvf-leg { display: flex; align-items: center; gap: 8px; padding: 0 6px; font-size: 13px; font-weight: 600; color: #e5e7eb; }
+.rvf-tag { font-size: 10px; letter-spacing: .08em; font-weight: 700; padding: 2px 8px; border-radius: 999px; color: #e7c85a; background: rgba(212,175,55,.14); box-shadow: inset 0 0 0 1px rgba(212,175,55,.35); }
+.rvf-ta { box-sizing: border-box; width: 100%; padding: 10px 14px; border-radius: 12px; resize: none; font: inherit; font-size: 15px; line-height: 1.45; color: #fff; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.10); transition: border-color .2s, box-shadow .2s; }
+.rvf-ta:focus { outline: none; border-color: #d4af37; box-shadow: 0 0 0 3px rgba(212,175,55,.18); }
+
+/* Kartu BEFORE (baca saja) */
+.rvf-before { padding: 12px 14px; border-radius: 16px; border: 1px dashed rgba(212,175,55,.35); background: rgba(212,175,55,.05); }
+.rvf-b-t { font-size: 12px; font-weight: 700; letter-spacing: .02em; color: #e7c85a; margin: 0 0 6px; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; }
+.rvf-b-l { font-size: 14px; color: #e5e7eb; margin: 0; }
+.rvf-b-r { font-size: 13px; color: #9ca3af; margin: 4px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.rvf-b-n { font-size: 13px; color: #9ca3af; margin: 0; }
+.rvf-b-i { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 8px; }
+.rvf-b-i img { width: 100%; height: 64px; object-fit: cover; border-radius: 10px; }
+.rvf-ok { color: #34d399; font-weight: 600; }
+.rvf-bad { color: #fb7185; font-weight: 600; }
+.rvf-link { appearance: none; border: 0; background: none; padding: 6px 0 0; font: inherit; font-size: 13px; font-weight: 600; color: #e7c85a; cursor: pointer; }
+.rvf-link:focus-visible { outline: 2px solid rgba(212,175,55,.8); outline-offset: 2px; border-radius: 6px; }
+
+/* Periode Evaluasi */
+.rvf-per { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; padding: 4px; border-radius: 14px; background: rgba(255,255,255,.05); }
+.rvf-per label { cursor: pointer; }
+.rvf-per input { position: absolute; opacity: 0; pointer-events: none; }
+.rvf-per span { display: block; text-align: center; padding: 8px 4px; border-radius: 10px; font-size: 13px; font-weight: 600; color: #9ca3af; transition: background .2s, color .2s; }
+.rvf-per input:checked + span { background: rgba(212,175,55,.16); color: #e7c85a; box-shadow: inset 0 0 0 1px rgba(212,175,55,.45); }
+.rvf-per input:focus-visible + span { outline: 2px solid rgba(212,175,55,.8); outline-offset: 2px; }
+.rvf-range { margin: 8px 2px 0; font-size: 12px; color: #9ca3af; }
+
+/* Tema terang */
+body.light .rvf-sec { border-color: rgba(0,0,0,.10); background: rgba(0,0,0,.025); }
+body.light .rvf-leg { color: #1f2937; }
+body.light .rvf-tag { color: #7a5c08; background: rgba(160,124,20,.12); box-shadow: inset 0 0 0 1px rgba(160,124,20,.4); }
+body.light .rvf-ta { color: #111827; background: #fff; border-color: rgba(0,0,0,.14); }
+body.light .rvf-ta:focus { border-color: #a07c14; box-shadow: 0 0 0 3px rgba(160,124,20,.18); }
+body.light .rvf-before { border-color: rgba(160,124,20,.4); background: rgba(160,124,20,.06); }
+body.light .rvf-b-t, body.light .rvf-link { color: #7a5c08; }
+body.light .rvf-b-l { color: #1f2937; }
+body.light .rvf-b-r, body.light .rvf-b-n, body.light .rvf-range { color: #4b5563; }
+body.light .rvf-ok { color: #047857; } body.light .rvf-bad { color: #be123c; }
+body.light .rvf-per { background: rgba(0,0,0,.05); }
+body.light .rvf-per span { color: #6b7280; }
+body.light .rvf-per input:checked + span { background: rgba(160,124,20,.14); color: #7a5c08; box-shadow: inset 0 0 0 1px rgba(160,124,20,.4); }
+
+/* Halaman Diary & Review: tampilan baca saja + tombol buka form */
+.rvr-grid { display: grid; gap: 8px; }
+.rvr-item { padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,.08); background: rgba(255,255,255,.03); }
+.rvr-item b { display: block; font-size: 12px; color: #9ca3af; font-weight: 600; margin-bottom: 4px; }
+.rvr-item p { margin: 0; font-size: 14px; line-height: 1.5; color: #e5e7eb; white-space: pre-wrap; overflow-wrap: anywhere; }
+.rvr-item.is-x { border-color: rgba(251,113,133,.35); } .rvr-item.is-i { border-color: rgba(212,175,55,.4); } .rvr-item.is-w { border-color: rgba(52,211,153,.3); }
+.rvr-empty { font-size: 13px; color: #9ca3af; margin: 0; }
+.rvr-btn { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; min-height: 40px; padding: 0 16px; border-radius: 12px; border: 1px solid #d4af37; background: rgba(212,175,55,.10); color: #e7c85a; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.rvr-btn:hover { background: rgba(212,175,55,.18); }
+.rvr-btn:focus-visible { outline: 2px solid rgba(212,175,55,.8); outline-offset: 2px; }
+body.light .rvr-item { border-color: rgba(0,0,0,.10); background: rgba(0,0,0,.025); }
+body.light .rvr-item b, body.light .rvr-empty { color: #4b5563; }
+body.light .rvr-item p { color: #1f2937; }
+body.light .rvr-btn { color: #7a5c08; border-color: #a07c14; background: rgba(160,124,20,.08); }
+@media (prefers-reduced-motion: reduce) { .rvf-ta, .rvf-per span { transition: none; } }

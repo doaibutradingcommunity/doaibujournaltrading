@@ -1,0 +1,151 @@
+/* ==========================================================================
+   DOA IBU — v16.77  MULTI-LAYER GLASS DEPTH  (hierarki elevasi)
+   --------------------------------------------------------------------------
+   Tiga tingkat material. Siapa memegang apa:
+
+     TINGKAT 0 · LATAR AMBIENT   #vibe-ambient (orb blur 70px) + body::before. Tidak diubah. Elevasi 0.
+
+     TINGKAT 1 · PANEL UTAMA     isi & alpha/blur → smart-glass.css (DATA .92–.98; hero padat penuh)
+                                 elevasi & permukaan → FILE INI
+           pendukung (kartu, tile, KPI)                    e1
+           utama (hero, ekuitas, kalender, statistik)       e2 + permukaan satu langkah lebih terang
+
+     TINGKAT 2 · MELAYANG        alpha, blur, brightness, fallback → smart-glass.css
+           nav   (dock, header, tab)  bayangan & sorot → glass-nav.css (--gn-bar-shadow), tidak disentuh
+           sheet (sheet, modal)       elevasi e3, jatuh jauh                           ← file ini
+           menu  (menu, popover, tip) elevasi e-pop, tanpa lapisan jauh                ← file ini
+           aksi  (FAB, toast)         elevasi e4; FAB juga punya sorot & cahaya emas   ← file ini
+
+   Cara kerja: aditif, dimuat paling akhir (setelah smart-glass.css). Hanya mengganti token elevasi
+   yang sudah dibaca lapisan lama (--amb-solid-drop, --amb-drop, --amb-solid). Satu-satunya aturan
+   langsung adalah FAB, karena box-shadow-nya dikunci !important oleh editorial.css.
+   Tidak menyentuh alpha, blur, atau fallback; semuanya tetap milik v16.76.
+   Dikecualikan: .jd-panel (detail trade, berisi P/L) tetap padat.
+   Membatalkan: hapus <link href="glass-depth.css">. Tampilan kembali persis v16.76.
+   ========================================================================== */
+
+
+/* ---- 0. TOKEN ELEVASI — dark -------------------------------------------- */
+html body.authed[data-amb] {
+  --gd-e1:    0 1px 1px rgba(0, 0, 0, .32), 0 8px 18px -14px rgba(0, 0, 0, .60);
+  --gd-e2:    0 1px 2px rgba(0, 0, 0, .34), 0 16px 30px -14px rgba(0, 0, 0, .68), 0 40px 64px -38px rgba(0, 0, 0, .58);
+  --gd-e-pop: 0 2px 5px rgba(0, 0, 0, .30), 0 14px 30px -12px rgba(0, 0, 0, .70);
+  --gd-e3:    0 2px 6px rgba(0, 0, 0, .34), 0 24px 48px -14px rgba(0, 0, 0, .76), 0 56px 100px -40px rgba(0, 0, 0, .64);
+  --gd-e4:    0 3px 6px rgba(0, 0, 0, .36), 0 14px 26px -8px rgba(0, 0, 0, .62), 0 30px 54px -18px rgba(0, 0, 0, .50);
+
+  /* FAB: sorot tepi, cincin dalam, bayangan dalam (cembung), garis luar, cahaya emas */
+  --gd-fab-spec:  rgba(255, 255, 255, .70);
+  --gd-fab-ring:  rgba(255, 244, 200, .22);
+  --gd-fab-shade: rgba(120, 84, 8, .34);
+  --gd-fab-edge:  rgba(60, 40, 0, .55);
+  --gd-fab-glow:  rgba(var(--gold-glass, 212, 175, 55), .66);
+  --gd-fab-gloss: rgba(255, 255, 255, .58);
+
+  --amb-solid-drop: var(--gd-e1);   /* semua panel padat/data */
+  --amb-drop:       var(--gd-e3);   /* semua kaca melayang; menu & aksi menimpa di bagian 2 */
+}
+/* HP: lapisan jatuh jauh dibuang agar gulir tetap ringan */
+@media (max-width: 640px) {
+  html body.authed[data-amb] {
+    --gd-e2: 0 1px 2px rgba(0, 0, 0, .34), 0 14px 26px -14px rgba(0, 0, 0, .66);
+    --gd-e3: 0 2px 6px rgba(0, 0, 0, .34), 0 22px 44px -14px rgba(0, 0, 0, .76);
+  }
+}
+
+/* ---- 0b. TOKEN — tema terang ------------------------------------------- */
+html body.light.authed[data-amb] {
+  --gd-e1:    0 1px 1px rgba(62, 50, 23, .08), 0 8px 18px -14px rgba(62, 50, 23, .22);
+  --gd-e2:    0 1px 2px rgba(62, 50, 23, .10), 0 16px 30px -14px rgba(62, 50, 23, .26), 0 40px 64px -40px rgba(62, 50, 23, .28);
+  --gd-e-pop: 0 2px 5px rgba(62, 50, 23, .10), 0 14px 30px -14px rgba(62, 50, 23, .32);
+  --gd-e3:    0 2px 6px rgba(62, 50, 23, .10), 0 24px 48px -16px rgba(62, 50, 23, .34), 0 56px 100px -44px rgba(62, 50, 23, .30);
+  --gd-e4:    0 3px 6px rgba(62, 50, 23, .14), 0 14px 26px -8px rgba(62, 50, 23, .36), 0 30px 54px -18px rgba(62, 50, 23, .24);
+
+  --gd-fab-spec:  rgba(255, 255, 255, .85);
+  --gd-fab-ring:  rgba(255, 255, 255, .30);
+  --gd-fab-shade: rgba(120, 84, 8, .30);
+  --gd-fab-edge:  rgba(110, 78, 10, .45);
+  --gd-fab-glow:  rgba(var(--gold-glass, 212, 175, 55), .50);
+  --gd-fab-gloss: rgba(255, 255, 255, .70);
+}
+@media (max-width: 640px) {
+  html body.light.authed[data-amb] {
+    --gd-e2: 0 1px 2px rgba(62, 50, 23, .10), 0 14px 26px -14px rgba(62, 50, 23, .26);
+    --gd-e3: 0 2px 6px rgba(62, 50, 23, .10), 0 22px 44px -16px rgba(62, 50, 23, .34);
+  }
+}
+
+
+/* ---- 1. TINGKAT 1 · PANEL UTAMA ----------------------------------------- */
+/* panel yang bersarang di dalam panel utama kembali ke e1 (tidak mewarisi bayangan dalam) */
+html body.authed[data-amb][data-amb] #app > main :is(
+  .hm-card, .hm-tile, .stat-card, .v5-card, .v5-kpi, .v5-chart, .v5-chart-card, .v5-equity,
+  .stx-card, .glass.ms-card, .px-range
+):not(.hm-hero):not(.v5-eqcard):not(.pf-hero):not(.calx-shell):not(.stx-hero) {
+  --amb-solid-drop: var(--gd-e1);
+}
+/* utama: e2 dan permukaan satu langkah lebih terang ("makin tinggi makin terang" di tema gelap).
+   Hero tetap padat penuh (smart-glass.css tidak menyentuhnya), jadi --amb-solid aman diubah di sini. */
+html body.authed[data-amb][data-amb][data-amb] #app > main :is(
+  .hm-hero.hm-card, .v5 .v5-eqcard, .v5 .pf-hero, .calx-shell, .stx-hero
+) { --amb-solid-drop: var(--gd-e2); --amb-solid: #1B1C20; }
+html body.authed[data-amb="analytic"][data-amb] #app > main :is(
+  .hm-hero.hm-card, .v5 .v5-eqcard, .v5 .pf-hero, .calx-shell, .stx-hero
+) { --amb-solid: #1E2025; }
+html body.light.authed[data-amb][data-amb] #app > main :is(
+  .hm-hero.hm-card, .v5 .v5-eqcard, .v5 .pf-hero, .calx-shell, .stx-hero
+) { --amb-solid: #FFFFFF; }
+
+
+/* ---- 2. TINGKAT 2 · MELAYANG -------------------------------------------- */
+/* sheet & modal mewarisi e3 dari bagian 0. Menu & tip kecil turun ke e-pop: bayangan sejauh 100px
+   pada elemen sekecil itu tampak seperti kabut. */
+html body.authed[data-amb] :is(.npv-pop, #export-menu, .v5-tip, .px-glass, .v5-fbar) { --amb-drop: var(--gd-e-pop); }
+@media (min-width: 641px) {
+  html body.authed[data-amb] #filter-panel { --amb-drop: var(--gd-e-pop); }  /* inline di desktop; di HP bottom sheet (e3) */
+}
+/* Modal ber-kelas .glass: bayangannya dikunci "body .glass {…!important}" di index.html, jadi tidak pernah
+   membaca --amb-drop dan tertinggal paling lemah (0 14px 34px) padahal ia lapisan tertinggi. Dikembalikan ke
+   maksud ambient-glass.css: sorot sheet (--amb-rim, sadar tema) + elevasi e3. */
+html body.authed[data-amb][data-amb][data-amb] :is(.modal-overlay:not(#image-zoom-modal) > .glass, #sp-modal .sp-sheet.glass) {
+  box-shadow: var(--amb-rim), var(--amb-drop) !important;
+}
+/* aksi: paling dekat ke pengguna */
+html body.authed[data-amb] :is(.toast, .ur-snack) { --amb-drop: var(--gd-e4); }
+
+/* FAB "Journal Baru": bayangan & sorot sendiri (!important karena editorial.css mengunci box-shadow) */
+html body.authed[data-amb][data-amb] #btn-new-journal-fab {
+  box-shadow:
+    inset 0 1px 0 var(--gd-fab-spec),
+    inset 0 0 0 1px var(--gd-fab-ring),
+    inset 0 -4px 7px var(--gd-fab-shade),
+    0 0 0 .5px var(--gd-fab-edge),
+    0 2px 3px rgba(0, 0, 0, .38),
+    0 10px 20px -6px rgba(0, 0, 0, .55),
+    0 18px 34px -10px var(--gd-fab-glow) !important;
+}
+html body.light.authed[data-amb][data-amb] #btn-new-journal-fab {
+  box-shadow:
+    inset 0 1px 0 var(--gd-fab-spec),
+    inset 0 0 0 1px var(--gd-fab-ring),
+    inset 0 -4px 7px var(--gd-fab-shade),
+    0 0 0 .5px var(--gd-fab-edge),
+    0 2px 3px rgba(62, 50, 23, .30),
+    0 10px 20px -6px rgba(62, 50, 23, .38),
+    0 18px 34px -10px var(--gd-fab-glow) !important;
+}
+/* kilap kubah separuh atas. z-index:-1 di dalam stacking context FAB (fixed + z-index): di atas warna emas,
+   di bawah ikon "+" dan label ::after, jadi ikon tidak pucat. */
+html body.authed[data-amb] #btn-new-journal-fab::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 1px 3px auto 3px;
+  height: 50%;
+  border-radius: 999px 999px 50% 50% / 100% 100% 38% 38%;
+  background: linear-gradient(180deg, var(--gd-fab-gloss), rgba(255, 255, 255, .14) 62%, rgba(255, 255, 255, 0));
+  pointer-events: none;
+}
+
+@media (forced-colors: active) {
+  html body.authed #btn-new-journal-fab::before { display: none; }
+}

@@ -1,0 +1,275 @@
+/* DOA IBU v16.50 · Liquid Glass berlapis
+   Tiga peran yang jelas, bukan semua kotak dibuat kaca:
+
+     LATAR           panggung gelap dengan cahaya aurora (emas + teal tipis) → memberi sesuatu untuk dibiaskan kaca
+     PANEL UTAMA     satu-dua per halaman: kaca sungguhan (tembus, blur, tepi specular, kilau diagonal, cahaya dalam)
+     PANEL SEKUNDER  matte, gelap, hairline tipis — tanpa blur, tanpa kilau; mendukung, tidak bersaing
+     MENGAMBANG      header, dock, filter, menu: kaca lebih tebal, tepi terang
+
+   Dimuat PALING AKHIR (setelah motion-system.css). Hanya tampilan: tidak ada data/logika.
+   Gerak: tidak ada animasi terus-menerus dan tidak ada transform pada teks/angka.
+   Mengikuti slider "Transparansi kaca" (--lg), Reduce Transparency, mode terang, dan html.mo-lite.
+   Untuk membatalkan: hapus tautan liquid-depth.css dari index.html. */
+
+/* ==========================================================================
+   0. TOKEN
+   ========================================================================== */
+:root {
+  /* aurora */
+  --ld-aura-gold: 226, 178, 84;
+  --ld-aura-teal: 45, 212, 191;      /* = --px-profit; hanya bisikan, bukan warna merek baru */
+
+  /* PANEL UTAMA: kaca. Alpha mengikuti slider (0 jernih … 1 pekat) tapi tak pernah di bawah batas baca. */
+  --ld-main-top:  rgba(255, 255, 255, calc(.115 - var(--lg, .55) * .05));
+  --ld-main-mid:  rgba(255, 255, 255, calc(.040 - var(--lg, .55) * .015));
+  --ld-main-bot:  rgba(10, 11, 13, calc(.42 + var(--lg, .55) * .34));
+  --ld-main-blur: blur(calc(18px + var(--lg, .55) * 14px)) saturate(165%);
+  --ld-rim:       linear-gradient(140deg, rgba(255,255,255,.62), rgba(255,255,255,.07) 26%, rgba(255,255,255,.02) 62%, rgba(var(--ld-aura-gold), .42));
+  --ld-edge:      0 0 0 .5px rgba(0, 0, 0, .70);
+  --ld-glow-in:   inset 0 -26px 40px -28px rgba(var(--ld-aura-gold), .22);
+  --ld-drop:      0 1px 2px rgba(0,0,0,.34), 0 18px 34px -16px rgba(0,0,0,.70), 0 44px 70px -40px rgba(0,0,0,.65);
+
+  /* PANEL SEKUNDER: matte */
+  --ld-sec-fill:  linear-gradient(180deg, rgba(255,255,255,.028), rgba(255,255,255,.012));
+  --ld-sec-solid: #14151a;
+  --ld-sec-line:  inset 0 0 0 1px rgba(255, 255, 255, .06);
+  --ld-sec-top:   inset 0 1px 0 rgba(255, 255, 255, .045);
+  --ld-sec-drop:  0 1px 1px rgba(0,0,0,.32), 0 8px 16px -12px rgba(0,0,0,.60);
+}
+body.light {
+  --ld-aura-gold: 190, 148, 52;
+  --ld-aura-teal: 20, 150, 135;
+  --ld-main-top:  rgba(255, 255, 255, .86);
+  --ld-main-mid:  rgba(255, 254, 250, .66);
+  --ld-main-bot:  rgba(246, 242, 230, calc(.55 + var(--lg, .55) * .30));
+  --ld-main-blur: blur(calc(14px + var(--lg, .55) * 10px)) saturate(150%);
+  --ld-rim:       linear-gradient(140deg, rgba(255,255,255,1), rgba(255,255,255,.35) 28%, rgba(120,98,40,.10) 64%, rgba(var(--ld-aura-gold), .45));
+  --ld-edge:      0 0 0 .5px rgba(62, 50, 23, .22);
+  --ld-glow-in:   inset 0 -26px 40px -30px rgba(var(--ld-aura-gold), .20);
+  --ld-drop:      0 1px 2px rgba(62,50,23,.10), 0 18px 34px -18px rgba(62,50,23,.30), 0 44px 70px -44px rgba(62,50,23,.30);
+  --ld-sec-fill:  linear-gradient(180deg, rgba(255,254,250,.70), rgba(255,254,250,.52));
+  --ld-sec-solid: #fffdf6;
+  --ld-sec-line:  inset 0 0 0 1px rgba(34, 31, 24, .08);
+  --ld-sec-top:   inset 0 1px 0 rgba(255, 255, 255, .95);
+  --ld-sec-drop:  0 1px 1px rgba(62,50,23,.08), 0 8px 16px -12px rgba(62,50,23,.22);
+}
+
+/* ==========================================================================
+   1. LATAR — panggung
+   Dua kolam cahaya statis (tanpa animasi, tanpa filter blur: hanya gradien).
+   Emas di kiri-atas, teal sangat tipis di kanan-bawah, vinyet di tepi.
+   ========================================================================== */
+body.px::before {
+  background:
+    radial-gradient(52% 42% at 8% 0%,    rgba(var(--ld-aura-gold), .17), transparent 72%),
+    radial-gradient(46% 40% at 96% 78%,  rgba(var(--ld-aura-teal), .085), transparent 74%),
+    radial-gradient(60% 45% at 50% 0%,   rgba(255, 255, 255, .02), transparent 70%),
+    radial-gradient(120% 90% at 50% 50%, transparent 52%, rgba(0, 0, 0, .40) 100%);
+}
+body.light.px::before {
+  background:
+    radial-gradient(52% 42% at 8% 0%,    rgba(var(--ld-aura-gold), .16), transparent 72%),
+    radial-gradient(46% 40% at 96% 78%,  rgba(var(--ld-aura-teal), .07), transparent 74%),
+    radial-gradient(60% 45% at 50% 0%,   rgba(255, 255, 255, .55), transparent 70%),
+    radial-gradient(120% 90% at 50% 50%, transparent 62%, rgba(60, 48, 20, .07) 100%);
+}
+
+/* ==========================================================================
+   2. PANEL SEKUNDER — matte (kartu statistik, KPI, tile, kartu pendukung)
+   Mencabut kilau & bingkai cahaya bawaan .glass/.stat-card dan blur-nya.
+   Hasilnya turun satu lapis di bawah panel utama.
+   ========================================================================== */
+body .stat-card,
+body .v5 .v5-kpi,
+body .v5 .v5-card:not(.v5-eqcard):not(.pf-hero),
+body .hm-tile,
+body .hm-card:not(.hm-hero),
+body #statistik-section .stx-card:not(.stx-hero),
+body .glass.ms-card {
+  background: var(--ld-sec-fill), var(--ld-sec-solid);
+  -webkit-backdrop-filter: none;
+          backdrop-filter: none;
+  box-shadow: var(--ld-sec-line), var(--ld-sec-top), var(--ld-sec-drop);
+}
+/* tanpa sheen & rim pada sekunder (pseudo-element bawaan dimatikan) */
+body .stat-card::before, body .stat-card::after,
+body .v5 .v5-card:not(.v5-eqcard):not(.pf-hero)::before,
+body .v5 .v5-card:not(.v5-eqcard):not(.pf-hero)::after { display: none; }
+/* hover tetap memberi umpan balik, tapi lewat garis tepi emas, bukan kilau */
+body .stat-card:hover,
+body .hm-tile:hover {
+  box-shadow: inset 0 0 0 1px rgba(var(--ld-aura-gold), .34), var(--ld-sec-top), var(--ld-sec-drop);
+}
+
+/* ==========================================================================
+   3. PANEL UTAMA — kaca sungguhan
+   Hero beranda · kurva ekuitas / performa utama · kalender · hero statistik.
+   Lima ciri kaca, dan hanya di sini:
+     (a) tembus + blur   (b) rim specular gradien   (c) kilau sudut lembut
+     (d) cahaya emas dari bawah   (e) bayangan jatuh berlapis
+   ========================================================================== */
+body .hm-hero.hm-card,
+body .v5 .v5-eqcard.glass,
+body .v5 .pf-hero.glass,
+body #calendar-section .calx-shell,
+body #statistik-section .stx-hero {
+  position: relative;
+  isolation: isolate;
+  background-color: transparent;
+  background-image:
+    radial-gradient(120% 60% at 14% -8%, rgba(255,255,255,.13), transparent 58%),
+    linear-gradient(165deg, var(--ld-main-top), var(--ld-main-mid) 44%, var(--ld-main-bot));
+  -webkit-backdrop-filter: var(--ld-main-blur);
+          backdrop-filter: var(--ld-main-blur);
+  border: 0;
+  border-radius: 28px;
+  box-shadow: var(--ld-edge), var(--ld-glow-in), var(--ld-drop);
+}
+body.light .hm-hero.hm-card,
+body.light .v5 .v5-eqcard.glass,
+body.light .v5 .pf-hero.glass,
+body.light #calendar-section .calx-shell,
+body.light #statistik-section .stx-hero {
+  background-image:
+    radial-gradient(120% 60% at 14% -8%, rgba(255,255,255,.9), transparent 58%),
+    linear-gradient(165deg, var(--ld-main-top), var(--ld-main-mid) 44%, var(--ld-main-bot));
+}
+/* (b) rim specular: bingkai 1px bergradien lewat mask, terang di sudut kiri-atas & kanan-bawah */
+body .hm-hero.hm-card::after,
+body .v5 .v5-eqcard.glass::after,
+body .v5 .pf-hero.glass::after,
+body #calendar-section .calx-shell::after,
+body #statistik-section .stx-hero::after {
+  content: '';
+  display: block;
+  position: absolute;
+  inset: 0;
+  /* v16.57: batalkan ukuran/posisi/blur dari ::after lama (.hm-hero::after 260x260) yang membuat kotak persegi di pojok kiri-atas */
+  width: auto;
+  height: auto;
+  filter: none;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--ld-rim);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  pointer-events: none;
+  z-index: 2;
+}
+/* (c) kilau sudut: pantulan lembut di kiri-atas + bias teal di kanan-bawah (statis, tanpa tepi keras) */
+body .hm-hero.hm-card::before,
+body .v5 .v5-eqcard.glass::before,
+body .v5 .pf-hero.glass::before {
+  content: '';
+  display: block;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: -1;
+  background:
+    radial-gradient(60% 90% at 6% 0%, rgba(255,255,255,.075), rgba(255,255,255,.02) 55%, transparent 80%),
+    radial-gradient(70% 55% at 100% 100%, rgba(var(--ld-aura-teal), .07), transparent 70%);
+}
+body.light .hm-hero.hm-card::before,
+body.light .v5 .v5-eqcard.glass::before,
+body.light .v5 .pf-hero.glass::before {
+  background:
+    radial-gradient(60% 90% at 6% 0%, rgba(255,255,255,.55), rgba(255,255,255,.12) 55%, transparent 80%),
+    radial-gradient(70% 55% at 100% 100%, rgba(var(--ld-aura-teal), .06), transparent 70%);
+}
+/* kilau ada di z-index -1 dalam konteks isolation panel, jadi selalu di belakang isi; isi tidak disentuh */
+
+/* hero Statistik (gelap): aturan lama memakai !important untuk dua cahaya emas; digabung dengan lapisan kaca */
+body:not(.light) #statistik-section .stx-hero {
+  background-image:
+    radial-gradient(ellipse 420px 220px at 12% 0%, rgba(226,184,96,.20), transparent 70%),
+    radial-gradient(ellipse 360px 200px at 100% 100%, rgba(var(--ld-aura-teal), .07), transparent 70%),
+    radial-gradient(120% 60% at 14% -8%, rgba(255,255,255,.12), transparent 58%),
+    linear-gradient(165deg, var(--ld-main-top), var(--ld-main-mid) 44%, var(--ld-main-bot)) !important;
+}
+
+/* ==========================================================================
+   4. MENGAMBANG — header, dock, filter, menu ekspor
+   Sudah kaca dari lapisan sebelumnya; di sini hanya disamakan rim-nya dengan panel utama
+   dan diberi tepi gelap tipis supaya terpisah dari konten yang lewat di bawahnya.
+   ========================================================================== */
+body #app > header.app-header .glass#header-right-block,
+body #app > header.app-header .glass#header-left-block,
+body #app > header.app-header .glass-pill.nav-wrap,
+body.npv.authed .npv-dock,
+body .v5 .v5-fbar {
+  box-shadow: var(--ld-edge), inset 0 1px 0 rgba(255,255,255,.22), var(--ld-glow-in), var(--ld-drop);
+}
+body.light #app > header.app-header .glass#header-right-block,
+body.light #app > header.app-header .glass#header-left-block,
+body.light #app > header.app-header .glass-pill.nav-wrap,
+body.light.npv.authed .npv-dock,
+body.light .v5 .v5-fbar {
+  box-shadow: var(--ld-edge), inset 0 1px 0 #fff, var(--ld-glow-in), var(--ld-drop);
+}
+
+/* ==========================================================================
+   5. DETAIL & MODAL — lapisan tertinggi
+   Kaca padat (alpha tinggi) supaya form dan angka terbaca; tepi rim yang sama.
+   ========================================================================== */
+body .modal-overlay:not(#image-zoom-modal) > .glass {
+  background-image:
+    radial-gradient(120% 50% at 12% -6%, rgba(255,255,255,.10), transparent 58%),
+    linear-gradient(165deg, rgba(34,35,40,.92), rgba(18,19,22,.97));
+  box-shadow: var(--ld-edge), var(--ld-glow-in), 0 8px 18px rgba(0,0,0,.34), 0 40px 80px -22px rgba(0,0,0,.84);
+}
+body.light .modal-overlay:not(#image-zoom-modal) > .glass {
+  background-image:
+    radial-gradient(120% 50% at 12% -6%, rgba(255,255,255,.95), transparent 58%),
+    linear-gradient(165deg, rgba(255,254,250,.97), rgba(247,244,234,.98));
+}
+
+/* ==========================================================================
+   6. HP & HEMAT TENAGA
+   Blur besar di banyak panel berat saat gulir. Di layar sentuh: radius dikurangi;
+   di html.mo-lite: panel utama jadi padat (tanpa blur), kedalaman tetap dari rim + bayangan.
+   ========================================================================== */
+@media (max-width: 640px) {
+  :root { --ld-main-blur: blur(calc(12px + var(--lg, .55) * 8px)) saturate(150%); }
+  body .hm-hero.hm-card, body .v5 .v5-eqcard.glass, body .v5 .pf-hero.glass,
+  body #calendar-section .calx-shell, body #statistik-section .stx-hero { border-radius: 24px; }
+}
+html.mo-lite body .hm-hero.hm-card,
+html.mo-lite body .v5 .v5-eqcard.glass,
+html.mo-lite body .v5 .pf-hero.glass,
+html.mo-lite body #calendar-section .calx-shell,
+html.mo-lite body #statistik-section .stx-hero {
+  -webkit-backdrop-filter: none;
+          backdrop-filter: none;
+  background-color: var(--ld-sec-solid);
+}
+html.mo-lite body .hm-hero.hm-card::before,
+html.mo-lite body .v5 .v5-eqcard.glass::before,
+html.mo-lite body .v5 .pf-hero.glass::before { display: none; }
+
+/* ==========================================================================
+   7. AKSESIBILITAS & FALLBACK
+   ========================================================================== */
+@media (prefers-reduced-transparency: reduce) {
+  body .hm-hero.hm-card, body .v5 .v5-eqcard.glass, body .v5 .pf-hero.glass,
+  body #calendar-section .calx-shell, body #statistik-section .stx-hero {
+    -webkit-backdrop-filter: none !important;
+            backdrop-filter: none !important;
+    background-image: none !important;
+    background-color: var(--ld-sec-solid) !important;
+  }
+}
+@media (forced-colors: active) {
+  body .hm-hero.hm-card::after, body .v5 .v5-eqcard.glass::after, body .v5 .pf-hero.glass::after,
+  body #calendar-section .calx-shell::after, body #statistik-section .stx-hero::after { display: none; }
+  body .hm-hero.hm-card, body .v5 .v5-eqcard.glass, body .v5 .pf-hero.glass,
+  body #calendar-section .calx-shell, body #statistik-section .stx-hero { border: 1px solid CanvasText; }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  body .hm-hero.hm-card, body .v5 .v5-eqcard.glass, body .v5 .pf-hero.glass,
+  body #calendar-section .calx-shell, body #statistik-section .stx-hero {
+    background-color: var(--ld-sec-solid);
+  }
+}

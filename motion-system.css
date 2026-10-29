@@ -1,0 +1,138 @@
+/* DOA IBU v16.49 — Transisi yang konsisten
+   Satu bahasa gerak untuk pergantian halaman, panel, dan grafik.
+   Dimuat PALING AKHIR: menyatukan durasi lama yang tersebar (140–550 ms) tanpa mengubah data/logika.
+   Aturan: hanya transform + opacity, 120–240 ms, satu kurva, tanpa blur/filter saat bergerak.
+   Untuk membatalkan: hapus tautan motion-system.css dan motion-system.js dari index.html. */
+
+:root {
+  --mo-ease: cubic-bezier(.22, .61, .36, 1);
+  --mo-fast: 120ms;   /* tekan tombol, chevron */
+  --mo-base: 200ms;   /* pindah halaman, akordeon, fade overlay */
+  --mo-panel: 240ms;  /* sheet / modal / panel masuk */
+  --mo-exit: 160ms;   /* keluar selalu lebih cepat dari masuk */
+
+  /* peta token lama -> token baru (agar blok lama ikut selaras) */
+  --di-motion-ease: var(--mo-ease);
+  --di-motion-fast: var(--mo-fast);
+  --di-motion-base: var(--mo-base);
+  --di-motion-enter: var(--mo-base);
+  --mi-ease: var(--mo-ease);
+  --mi-press: var(--mo-fast);
+  --mi-base: var(--mo-base);
+  --mi-modal: var(--mo-panel);
+  --mi-close: var(--mo-exit);
+  --sl-ease: var(--mo-ease);
+}
+
+/* ============================================================
+   1. PINDAH HALAMAN — satu animasi di level seksi, tanpa blur
+   ============================================================ */
+@keyframes mo-view-in { from { opacity: 0; transform: translate3d(0, 6px, 0); } to { opacity: 1; transform: none; } }
+@keyframes mo-fade-in { from { opacity: 0; } to { opacity: 1; } }
+/* keyframe lama ditimpa: tidak ada lagi filter:blur() saat pindah halaman */
+@keyframes di-view-in { from { opacity: 0; transform: translate3d(0, 6px, 0); } to { opacity: 1; transform: none; } }
+@keyframes miTab { from { opacity: 0; transform: translate3d(0, 6px, 0); } to { opacity: 1; transform: none; } }
+@keyframes vibeRise { from { opacity: 0; transform: translate3d(0, 6px, 0); } to { opacity: 1; transform: none; } }
+
+#view-home:not(.hidden), #view-dashboard:not(.hidden), #calendar-section:not(.hidden),
+#statistik-section:not(.hidden), #monthly-section:not(.hidden), #strategy-section:not(.hidden),
+#coach-section:not(.hidden), #wrapped-section:not(.hidden), #gallery-section:not(.hidden),
+#diary-section:not(.hidden), #settings-section:not(.hidden), #web-section:not(.hidden),
+body.px .di-view-enter {
+  animation: mo-view-in var(--mo-base) var(--mo-ease) backwards;
+}
+/* Kaskade per-anak (0,06–0,18 s + 550 ms) dihapus: puluhan layer sekaligus saat pindah tab berat di HP,
+   dan membuat halaman terasa lambat muncul. Seksi masuk sebagai satu kesatuan. */
+#dashboard-section > *, #calendar-section > *, #statistik-section > *, #diary-section > *,
+#gallery-section > *, #monthly-section > *, #web-section > *, #settings-section > *,
+#dashboard-section > *:nth-child(n), #calendar-section > *:nth-child(n), #statistik-section > *:nth-child(n),
+#diary-section > *:nth-child(n), #gallery-section > *:nth-child(n) {
+  animation: none;
+}
+
+/* ============================================================
+   2. PANEL — sheet, modal, detail trade, halaman yang mundur
+   ============================================================ */
+/* detail trade (desktop): token yang sama dengan modal */
+body .jd-panel { transition: transform var(--mo-panel) var(--mo-ease), opacity var(--mo-exit) var(--mo-ease); }
+/* halaman di bawah mundur: durasi sama dengan panel */
+body #app > main { transition: transform var(--mo-panel) var(--mo-ease); }
+
+/* Di layar sentuh, mengecilkan SELURUH <main> (berisi banyak elemen kaca) memaksa raster ulang satu halaman penuh
+   setiap modal dibuka. Selisihnya skala 0,992 nyaris tak terlihat, jadi dimatikan di sentuhan. */
+@media (hover: none), (pointer: coarse) {
+  body #app > main { transition: none; }
+  body.jd-lock:not(.mf-sheet-open) #app > main,
+  body:has(.modal-overlay:not(.hidden):not(#image-zoom-modal)):not(.mf-sheet-open) #app > main {
+    transform: none;
+  }
+}
+
+/* Akordeon Ringkasan & "Lihat n lainnya": isi muncul dengan fade + geser kecil (hidden diubah di tempat,
+   jadi animasi hanya jalan saat dibuka, bukan setiap render ulang). */
+@keyframes mo-reveal { from { opacity: 0; transform: translate3d(0, -4px, 0); } to { opacity: 1; transform: none; } }
+.v5 .pf-td:not([hidden]) { animation: mo-reveal var(--mo-base) var(--mo-ease) both; }
+@media (max-width: 1099.98px) {
+  .v5 .pf-sec.pf-all .pf-extra { animation: mo-reveal var(--mo-base) var(--mo-ease) both; }
+}
+.v5 .pf-chev, .v5 .pf-all-b .pf-chev { transition: transform var(--mo-base) var(--mo-ease); }
+
+/* Umpan balik tekan: hanya skala. filter:brightness() memaksa repaint tiap tekan. */
+body.px :is(button, [role="button"], .hm-btn, .v5-btn, .px-state-act, .recent-input-chip):active,
+body.px .di-pressed { filter: none !important; }
+body.px .di-ripple { animation-duration: 400ms; }
+
+/* ============================================================
+   3. GRAFIK — masuk singkat, tidak diulang saat render ulang
+   ============================================================ */
+@media (prefers-reduced-motion: no-preference) {
+  /* kurva ekuitas (SVG): hapus-tirai 640 ms -> 360 ms */
+  body.px .v5 .v5-eq svg.px-draw { animation-duration: 360ms !important; }
+  /* garis kurva bulanan: 1,1 s -> 0,6 s */
+  .v5 .mag-svg .ln { animation-duration: .6s !important; animation-delay: 0s !important; }
+}
+/* Chart.js (P/L kumulatif): durasi & gerbang "sekali saja" diatur di motion-system.js */
+
+/* ============================================================
+   4. HEMAT TENAGA — animasi tanpa akhir bukan transform/opacity
+   ============================================================ */
+/* Animasi berikut menggerakkan background-position / box-shadow / filter, yang tidak bisa ditangani GPU
+   dan menggambar ulang setiap frame (kilau teks emas ada di puluhan judul sekaligus):
+   - kilau foil & gold-text, kilau tombol emas, denyut tombol tambah, blob ambient berblur 70 px */
+@media (hover: none), (pointer: coarse) {
+  .gold-text, .text-gold-300, .text-gold-400, .text-gold-500,
+  .v5 h2.v5-title, .v5 h3.v5-ct, .app-brand-name,
+  #sp-root h3.sp-title, #ef-root .ef-title, #ps-root .ps-title,
+  body:not(.light) .btn-gold, #btn-new-journal-fab, .glow-blob,
+  #vibe-ambient i, #vibe-ambient i:nth-child(n) { animation: none !important; }
+  #vibe-ambient i { filter: blur(48px); }
+}
+/* JS menambah html.mo-lite di perangkat hemat (RAM/CPU kecil, Data Saver): loop mati di semua pointer,
+   halaman masuk hanya fade, dan grafik tanpa animasi. */
+html.mo-lite .gold-text, html.mo-lite .text-gold-300, html.mo-lite .text-gold-400, html.mo-lite .text-gold-500,
+html.mo-lite .v5 h2.v5-title, html.mo-lite .v5 h3.v5-ct, html.mo-lite .app-brand-name,
+html.mo-lite #sp-root h3.sp-title, html.mo-lite #ef-root .ef-title, html.mo-lite #ps-root .ps-title,
+html.mo-lite body:not(.light) .btn-gold, html.mo-lite #btn-new-journal-fab, html.mo-lite .glow-blob,
+html.mo-lite #vibe-ambient i, html.mo-lite #vibe-ambient i:nth-child(n) { animation: none !important; }
+html.mo-lite #view-home:not(.hidden), html.mo-lite #view-dashboard:not(.hidden), html.mo-lite #calendar-section:not(.hidden),
+html.mo-lite #statistik-section:not(.hidden), html.mo-lite #monthly-section:not(.hidden), html.mo-lite #strategy-section:not(.hidden),
+html.mo-lite #coach-section:not(.hidden), html.mo-lite #wrapped-section:not(.hidden), html.mo-lite #gallery-section:not(.hidden),
+html.mo-lite #diary-section:not(.hidden), html.mo-lite #settings-section:not(.hidden), html.mo-lite #web-section:not(.hidden),
+html.mo-lite body.px .di-view-enter { animation: mo-fade-in var(--mo-fast) linear backwards; }
+html.mo-lite body.px .di-ripple { display: none; }
+/* Desktop: kilau dijeda selama halaman digulir agar gulir tidak berebut dengan repaint */
+html.mo-scrolling .gold-text, html.mo-scrolling .text-gold-300, html.mo-scrolling .text-gold-400, html.mo-scrolling .text-gold-500,
+html.mo-scrolling .v5 h2.v5-title, html.mo-scrolling .v5 h3.v5-ct, html.mo-scrolling .app-brand-name,
+html.mo-scrolling body:not(.light) .btn-gold, html.mo-scrolling #btn-new-journal-fab, html.mo-scrolling #vibe-ambient i {
+  animation-play-state: paused !important;
+}
+
+/* ============================================================
+   5. KURANGI GERAKAN — status tetap berubah, gerak hilang
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  #view-home, #view-dashboard, #calendar-section, #statistik-section, #monthly-section, #strategy-section,
+  #coach-section, #wrapped-section, #gallery-section, #diary-section, #settings-section, #web-section,
+  .v5 .pf-td, .v5 .pf-extra { animation: none !important; }
+  body #app > main, body .jd-panel, .v5 .pf-chev { transition-duration: .01ms !important; }
+}

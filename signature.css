@@ -1,0 +1,207 @@
+/* ==========================================================================
+   v16.70 · Signature Ambient Experience
+   --------------------------------------------------------------------------
+   Identitas visual DOA IBU: cahaya emas yang sangat halus dan berubah perlahan di latar,
+   tiga lapis kedalaman (latar → panel padat → sumur konten), header yang menyatu dengan halaman
+   di puncak lalu mengeras halus saat digulir, dan satu bahasa gerak untuk semua pindah halaman.
+
+   Aturan utama: ambient hanya AKSEN. Cahaya berada di belakang segalanya (z-index -1); semua angka dan data
+   tetap di permukaan padat dari v16.66. Tidak ada blur filter, tidak ada animasi paint:
+   hanya transform + opacity yang berjalan di compositor.
+
+   Semua gaya dikunci ke html.sg-on (dipasang signature.js), dan hanya berlaku setelah login (body.authed).
+   Landing & login tidak disentuh. Untuk membatalkan: hapus <link signature.css> dan <script signature.js>.
+   Dimuat PALING AKHIR (setelah living.css).
+   ========================================================================== */
+
+
+/* ==========================================================================
+   0. TOKEN
+   ========================================================================== */
+/* Warna cahaya bergeser pelan sepanjang hari (signature.js memasang html[data-sg-tone]). Didaftarkan agar
+   pergantian nada berlangsung 12 detik, bukan loncat. Browser lama: berganti seketika, tetap benar. */
+@property --sg-c1 { syntax: '<color>'; inherits: true; initial-value: rgb(226, 184, 96); }
+@property --sg-c2 { syntax: '<color>'; inherits: true; initial-value: rgb(214, 160, 72); }
+@property --sg-c3 { syntax: '<color>'; inherits: true; initial-value: rgb(240, 214, 150); }
+
+:root {
+  /* gerak: satu durasi, satu kurva untuk pindah halaman, panel, dan judul */
+  --sg-dur: 200ms;
+  --sg-ease: cubic-bezier(.22, .61, .36, 1);
+
+  /* nada cahaya: siang = emas netral */
+  --sg-c1: rgb(226, 184, 96);
+  --sg-c2: rgb(214, 160, 72);
+  --sg-c3: rgb(240, 214, 150);
+
+  /* kedalaman: sumur konten (cekung) di dalam panel padat */
+  --sg-well: rgba(0, 0, 0, .20);
+  --sg-well-edge: inset 0 1px 3px rgba(0, 0, 0, .38), inset 0 0 0 1px rgba(255, 255, 255, .045);
+  --sg-spill: .20;           /* seberapa jauh panel utama "menumpahkan" cahaya ke latar */
+}
+html[data-sg-tone="dawn"]  { --sg-c1: rgb(238, 204, 138); --sg-c2: rgb(226, 170, 98);  --sg-c3: rgb(250, 226, 176); }
+html[data-sg-tone="dusk"]  { --sg-c1: rgb(232, 158, 72);  --sg-c2: rgb(206, 120, 62);  --sg-c3: rgb(240, 190, 120); }
+html[data-sg-tone="night"] { --sg-c1: rgb(204, 156, 90);  --sg-c2: rgb(170, 122, 72);  --sg-c3: rgb(216, 178, 130); }
+html.sg-on { transition: --sg-c1 12s ease, --sg-c2 12s ease, --sg-c3 12s ease; }
+
+body.light {
+  --sg-well: rgba(70, 54, 20, .045);
+  --sg-well-edge: inset 0 1px 2px rgba(70, 54, 20, .10), inset 0 0 0 1px rgba(34, 31, 24, .06);
+  --sg-spill: .26;
+}
+
+
+/* ==========================================================================
+   1. CAHAYA SIGNATURE — tiga "lampu" besar yang bergeser dan bernapas sangat pelan
+      (89 / 131 / 107 detik, saling tidak habis dibagi → pola tidak terasa berulang)
+   ========================================================================== */
+#sg-light { display: none; }
+
+html.sg-on body.authed #sg-light {
+  display: block; position: fixed; inset: -14vh -14vw; z-index: -1;
+  pointer-events: none; overflow: hidden; contain: layout paint style;
+  /* intensitas mengikuti konteks halaman dari v16.66: glow 1 · analytic ~.3 · calm ~.12 */
+  opacity: calc(.12 + var(--amb-gold, 1) * .88);
+  /* tiap halaman punya titik cahayanya sendiri; pindah halaman = cahaya bergeser pelan (signature.js: --sg-x/--sg-y) */
+  transform: translate3d(calc(var(--sg-x, 0) * 1vw), calc(var(--sg-y, 0) * 1vh), 0);
+  transition: transform 1.8s var(--sg-ease);
+}
+/* pengganti lapisan bola blur 60vmax lama (filter: blur(70px) berat di HP) */
+html.sg-on body.authed #vibe-ambient { display: none; }
+
+#sg-light b {
+  position: absolute; display: block; border-radius: 50%;
+  will-change: transform, opacity;
+  background: radial-gradient(closest-side, rgba(226, 184, 96, .17), transparent);
+}
+#sg-light .a { width: 78vmax; height: 78vmax; left: -6vmax;  top: -34vmax; animation: sg-a 89s  ease-in-out infinite alternate, sg-breathe 97s  ease-in-out infinite; }
+#sg-light .b { width: 66vmax; height: 66vmax; right: -14vmax; bottom: -30vmax; animation: sg-b 131s ease-in-out infinite alternate, sg-breathe 113s ease-in-out infinite reverse; }
+#sg-light .c { width: 54vmax; height: 54vmax; left: 34%; top: 22%;               animation: sg-c 107s ease-in-out infinite alternate, sg-breathe 127s ease-in-out infinite; }
+
+@supports (background: color-mix(in srgb, red 10%, transparent)) {
+  #sg-light .a { background: radial-gradient(closest-side, color-mix(in srgb, var(--sg-c1) 17%, transparent), transparent); }
+  #sg-light .b { background: radial-gradient(closest-side, color-mix(in srgb, var(--sg-c2) 12%, transparent), transparent); }
+  #sg-light .c { background: radial-gradient(closest-side, color-mix(in srgb, var(--sg-c3) 07%, transparent), transparent); }
+}
+/* tema terang: lebih hangat dan lebih tipis; krem dasar tetap terbaca */
+body.light #sg-light .a { opacity: .85; }
+body.light #sg-light .c { display: none; }
+
+@keyframes sg-a { from { transform: translate3d(0, 0, 0) scale(1); }          to { transform: translate3d(10vmax, 7vmax, 0) scale(1.14); } }
+@keyframes sg-b { from { transform: translate3d(0, 0, 0) scale(1.06); }       to { transform: translate3d(-9vmax, -6vmax, 0) scale(.94); } }
+@keyframes sg-c { from { transform: translate3d(-6vmax, 4vmax, 0) scale(.92); } to { transform: translate3d(8vmax, -5vmax, 0) scale(1.1); } }
+@keyframes sg-breathe { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+
+/* hemat tenaga: diam saat menggulir; HP hemat / efek rendah / reduce-motion = cahaya statis, satu lampu saja */
+html.mo-scrolling #sg-light b { animation-play-state: paused; }
+html.mo-lite #sg-light b,
+html[data-ui-effects="low"] #sg-light b { animation: none; }
+html.mo-lite #sg-light .c,
+html[data-ui-effects="low"] #sg-light .c { display: none; }
+html.mo-lite body.authed #sg-light,
+html[data-ui-effects="low"] body.authed #sg-light { transition: none; }
+@media (prefers-reduced-motion: reduce) {
+  #sg-light b { animation: none !important; }
+  html.sg-on body.authed #sg-light { transition: none; }
+  html.sg-on { transition: none; }
+}
+@media (forced-colors: active) { #sg-light { display: none !important; } }
+
+
+/* ==========================================================================
+   2. KEDALAMAN — tiga lapis yang terbaca
+      latar (cahaya, di belakang) → panel padat (terangkat) → sumur konten (cekung)
+   ========================================================================== */
+/* panel utama (hero): tepi emas setipis rambut + cahaya yang tumpah ke latar di bawahnya.
+   Intensitas ikut konteks halaman (calm = netral). Tetap permukaan padat. */
+html.sg-on body[data-amb][data-amb][data-amb][data-amb] #app > main :is(
+  .hm-hero.hm-card, .v5 .v5-eqcard, .v5 .pf-hero, .calx-shell, .stx-hero
+) {
+  background:
+    linear-gradient(90deg, transparent 6%, rgba(226, 184, 96, .5) 50%, transparent 94%) top / 100% 1px no-repeat,
+    radial-gradient(120% 70% at 12% -12%, rgba(var(--amb-gold-rgb), calc(var(--amb-gold) * var(--amb-hero-gold-a))), transparent 62%),
+    radial-gradient(90% 60% at 100% -10%, rgba(var(--amb-cool-rgb), calc(var(--amb-cool) * var(--amb-hero-cool-a))), transparent 64%),
+    linear-gradient(180deg, var(--amb-solid-sheen), transparent 38%),
+    var(--amb-solid) !important;
+  box-shadow: var(--amb-solid-edge), var(--amb-solid-drop) !important;
+}
+@supports (background: color-mix(in srgb, red 10%, transparent)) {
+  html.sg-on body[data-amb][data-amb][data-amb][data-amb] #app > main :is(
+    .hm-hero.hm-card, .v5 .v5-eqcard, .v5 .pf-hero, .calx-shell, .stx-hero
+  ) {
+    background:
+      linear-gradient(90deg, transparent 6%, color-mix(in srgb, var(--sg-c1) calc(var(--amb-gold) * 55%), rgba(255, 255, 255, .22)) 50%, transparent 94%) top / 100% 1px no-repeat,
+      radial-gradient(120% 70% at 12% -12%, rgba(var(--amb-gold-rgb), calc(var(--amb-gold) * var(--amb-hero-gold-a))), transparent 62%),
+      radial-gradient(90% 60% at 100% -10%, rgba(var(--amb-cool-rgb), calc(var(--amb-cool) * var(--amb-hero-cool-a))), transparent 64%),
+      linear-gradient(180deg, var(--amb-solid-sheen), transparent 38%),
+      var(--amb-solid) !important;
+    box-shadow:
+      var(--amb-solid-edge), var(--amb-solid-drop),
+      0 30px 60px -34px color-mix(in srgb, var(--sg-c1) calc(var(--amb-gold) * var(--sg-spill) * 100%), transparent) !important;
+  }
+}
+
+/* sumur konten: blok di dalam panel (aturan, fokus, tujuan) sedikit cekung, bukan sekadar kotak lebih terang */
+html.sg-on body[data-amb][data-amb][data-amb][data-amb] #app > main :is(.hm-goal, .sg-well) {
+  background: var(--sg-well) !important;
+  box-shadow: var(--sg-well-edge) !important;
+}
+
+
+/* ==========================================================================
+   3. HEADER — menyatu dengan halaman di puncak, mengeras halus saat digulir
+      signature.js mengisi --sg-p (0 … 1, dari 0 sampai 140 px gulir) langsung pada header.
+   ========================================================================== */
+#app > header.app-header { --sg-p: 0; }
+
+/* garis emas setipis rambut di tepi bawah header; menguat bersama gulir, netral di halaman calm */
+html.sg-on body.authed #app > header.app-header::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(226, 184, 96, .5) 22%, rgba(226, 184, 96, .5) 78%, transparent);
+  opacity: calc(var(--sg-p) * (.25 + var(--amb-gold, 1) * .75));
+}
+@supports (background: color-mix(in srgb, red 10%, transparent)) {
+  html.sg-on body.authed #app > header.app-header::after {
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--sg-c1) 55%, transparent) 22%, color-mix(in srgb, var(--sg-c1) 55%, transparent) 78%, transparent);
+  }
+}
+
+/* desktop/tablet: kaca semi-transparan di puncak, makin pekat dan bergaris saat digulir */
+@media (min-width: 641px) {
+  html.sg-on body.authed[data-amb][data-amb][data-amb][data-amb] #app > header.app-header {
+    background: rgba(var(--amb-glass-rgb), calc(var(--amb-bar-a) * (.34 + .66 * var(--sg-p)))) !important;
+    box-shadow:
+      inset 0 -1px 0 rgba(255, 255, 255, calc(.075 * var(--sg-p))),
+      inset 0 1px 0 rgba(255, 255, 255, calc(.06 * var(--sg-p))) !important;
+  }
+  html.sg-on body.light.authed[data-amb][data-amb][data-amb][data-amb] #app > header.app-header {
+    box-shadow:
+      inset 0 -1px 0 rgba(34, 31, 24, calc(.09 * var(--sg-p))),
+      inset 0 1px 0 rgba(255, 255, 255, calc(.9 * var(--sg-p))) !important;
+  }
+}
+/* HP: kaca di ::before ikut progres gulir (sebelumnya sakelar 0/1) */
+@media (max-width: 640px) {
+  html.sg-on body.cn-on.npv.authed #app > header.app-header::before { opacity: var(--sg-p); transition: none; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  html.sg-on body.authed[data-amb][data-amb][data-amb][data-amb] #app > header.app-header { background: var(--amb-solid) !important; }
+}
+
+
+/* ==========================================================================
+   4. PINDAH HALAMAN — satu bahasa gerak
+      Semua halaman: fade + naik 6px, 200 ms (calm-nav.css). Beranda dulu punya gerak sendiri
+      (tiap blok naik 14px selama 550 ms dengan jeda berurutan) — diselaraskan ke gerak yang sama.
+      Cahaya latar ikut berpindah (bagian 1) dan judul header berganti 200 ms (calm-nav.css).
+   ========================================================================== */
+@keyframes sg-rise { from { opacity: 0; transform: translate3d(0, 6px, 0); } to { opacity: 1; transform: none; } }
+html.sg-on #view-home:not(.hidden) .hm > * {
+  animation: sg-rise var(--sg-dur) var(--sg-ease) both;
+  animation-delay: 0s !important;
+}
+html.mo-lite.sg-on #view-home:not(.hidden) .hm > * { animation-name: mo-fade-in; }
+@media (prefers-reduced-motion: reduce) {
+  html.sg-on #view-home:not(.hidden) .hm > *,
+  html.mo-lite.sg-on #view-home:not(.hidden) .hm > * { animation: none !important; }
+}

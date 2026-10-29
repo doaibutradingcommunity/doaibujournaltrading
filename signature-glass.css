@@ -1,0 +1,401 @@
+/* ==========================================================================
+   DOA IBU — v16.82  SIGNATURE GLASS IDENTITY
+   --------------------------------------------------------------------------
+   Satu material kaca yang hanya dimiliki DOA IBU. Bukan "kaca putih bening" ala Liquid Glass iOS
+   (tepi putih rata, terang dari atas, bayangan netral), melainkan KACA ASAP BERTEPI EMAS:
+   kaca gelap yang ditangkap lampu emas dari satu arah, dan arah itu sama di seluruh aplikasi.
+
+   EMPAT CIRI (semuanya diturunkan dari satu token, --dg-*):
+
+     1. SUDUT KACA        satu sumbu cahaya: 128° (datang dari kiri-atas, searah lampu ambient `a` di
+                          signature.css). Semua yang miring di aplikasi mengikuti sumbu ini: pita pantul,
+                          wash header, kilap kubah tombol, bayangan dalam tombol. Sudut kiri-atas setiap
+                          kaca adalah titik paling terang ("sudut kaca"); sudut kanan-bawah paling gelap.
+     2. REFLEKSI EMAS     tepi 1px berwarna champagne yang menyala di sudut kiri-atas lalu memudar sepanjang
+                          sisi atas dan sisi kiri (L, bukan cincin rata), ditambah pantulan kedua yang sangat
+                          redup di sudut kanan-bawah. Asimetri inilah yang membedakannya dari rim putih iOS.
+     3. BAYANGAN DALAM    cokelat-hangat (bukan hitam netral): bibir gelap di sisi jauh dari lampu + kolam
+                          bayangan di sudut kanan-bawah. Cekungan (kolom input, sumur) membalik logika yang
+                          sama: tepi kiri-atasnya gelap (terhalang), tepi kanan-bawahnya yang menangkap emas.
+     4. POLA CAHAYA       pita pantul diagonal tipis di sepertiga kiri-atas + titik kilau di sudut. Kekuatannya
+                          mengikuti bobot lampu halaman (--cl-a, v16.81): halaman yang "lampunya" lebih terang
+                          membuat kacanya sedikit lebih berkilau. Rentang sempit (.82–1), tanpa animasi.
+
+   SATU TOKEN, BEBERAPA VARIAN (menurut fungsi komponen)
+     Token material: --dg-sig-img (lapisan lukis), --amb-solid-edge / --amb-rim (bayangan dalam),
+                     --dg-jewel (logam emas). Varian hanya mengatur takaran: --dg-i (tepi), --dg-s (pita),
+                     --dg-r (pantulan kedua), --dg-reach (panjang tepi menyala), --dg-t (tepi atas).
+
+       hero    panel utama (hero, ekuitas, kalender, statistik)   takaran penuh
+       data    kartu angka, KPI, grafik, tile                      tenang: tepi tipis, pita nyaris tak terlihat
+       float   sheet, menu, popover, toast, filter, modal          tepi terang; sheet menyerahkan tepi ATAS pada
+                                                                   prismatic-edge.css (sapuan sekali saat dibuka)
+       nav     dock, pil tab, blok header                          tipis, lewat token --gn-bar-sheen (glass-nav)
+       jewel   FAB, .btn-gold, tombol utama                        logam emas dengan bayangan dalam miring 128°
+       well    kolom input, .hm-goal, .sg-well                     cekung: terang/gelap dibalik
+
+   BATAS YANG MENJAGA IDENTITAS TETAP TENANG
+     • Hanya lukisan statis (gradient + bayangan). Tidak ada animasi, filter, blur baru, atau JS.
+     • Tidak menyentuh warna dasar, alpha, backdrop-filter, atau fallback (milik v16.76 / v16.77).
+     • Tepi & pita hanya di pinggir/sudut: tidak ada wash di atas angka. Kartu data memakai takaran terendah.
+     • Cahaya TIDAK terikat profit/loss. File ini tidak memuat warna merah/hijau dan tidak membaca data
+       (dijaga scripts/ambient_guard.py, kini memindai berkas ini juga).
+
+   API untuk komponen baru: tambahkan  data-dg="hero|data|float|nav|jewel|well"  pada elemen apa pun.
+   Tanpa mengubah CSS lain, elemen itu mendapat material yang sama (hanya lapisan tepi; warna dasarnya
+   tetap milik komponen).
+
+   Cara kerja: aditif, dimuat PALING AKHIR (setelah contextual-ambient.css). Hanya body.authed.
+   Membatalkan: hapus <link href="signature-glass.css">. Tampilan kembali persis v16.81.
+   ========================================================================== */
+
+
+/* ==========================================================================
+   0. TOKEN MATERIAL
+   ========================================================================== */
+html body.authed[data-amb] {
+  /* ---- 1. sudut kaca: SATU sumbu untuk semuanya ---- */
+  --dg-angle: 128deg;
+
+  /* ---- 2. emas: champagne dari optical-glass (gelap = muda, terang = lebih dalam), ikut nada hari ---- */
+  --dg-gold: var(--og-champ, 234, 210, 154);
+  --dg-boost: 1;                                  /* tema terang menaikkan, kontras tinggi menaikkan lagi */
+
+  /* ---- 3. bayangan dalam: cokelat hangat (RGB mentah) ---- */
+  --dg-umber: 22, 14, 2;
+  --dg-sep: 1;                                    /* analytic: pemisah lebih tegas */
+
+  /* ---- 4. pola cahaya ---- */
+  --dg-sheen-rgb: 255, 246, 222;
+  --dg-sheen-a: .050;
+  --dg-sheen-k: 1;                                /* 0 = tanpa pita (kontras tinggi) */
+  --dg-kh: var(--og-gh, 1);                       /* hero: calm = netral, sama dengan v16.70 */
+  --dg-kf: calc(var(--og-g, 1) * (.82 + .18 * var(--cl-a, 1)));   /* lantai calm .45 × bobot lampu halaman */
+
+  /* ---- takaran bawaan (varian menimpa) ---- */
+  --dg-kv: var(--dg-kf);
+  --dg-i: .55;        /* intensitas tepi */
+  --dg-s: .6;         /* pita pantul */
+  --dg-r: .7;         /* pantulan kedua kanan-bawah */
+  --dg-t: 1;          /* tepi atas (0 = diserahkan ke prismatic-edge) */
+  --dg-reach: 320px;  /* panjang tepi atas yang menyala; tepi kiri = 60% */
+  --dg-d: 1;          /* kedalaman bayangan dalam */
+
+  /* ---- lapisan lukis lain: kilap logam emas (jewel) ---- */
+  --dg-jewel-spec:  rgba(255, 255, 255, .72);
+  --dg-jewel-ring:  rgba(255, 244, 200, .24);
+  --dg-jewel-shade: rgba(120, 84, 8, .38);
+  --dg-jewel-edge:  rgba(60, 40, 0, .50);
+
+  /* ---- cincin ornamen lama (1px bertopeng, ::after kartu/hero/modal): token-nya diarahkan ke material ini.
+          Sebelumnya: --ld-rim putih 140° (hero) dan --orn-rim emas 140° (kartu, modal). Kini satu gradasi 128°:
+          menyala di sudut kiri-atas, memudar, redup kembali di kanan-bawah. Garis tengah simetris lama dihapus. ---- */
+  --dg-ring: linear-gradient(var(--dg-angle),
+    rgba(var(--dg-gold), calc(var(--dg-kf) * var(--dg-boost) * .95)) 0,
+    rgba(var(--dg-gold), calc(var(--dg-kf) * var(--dg-boost) * .52)) 70px,
+    rgba(var(--dg-gold), calc(var(--dg-kf) * var(--dg-boost) * .16)) 260px,
+    rgba(var(--dg-gold), 0) 46%,
+    rgba(var(--dg-gold), 0) calc(100% - 240px),
+    rgba(var(--dg-gold), calc(var(--dg-kf) * var(--dg-boost) * .30)) 100%);
+  --ld-rim:   var(--dg-ring);
+  --orn-rim:  var(--dg-ring);
+  --orn-line: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0));
+  --orn-glow: radial-gradient(70% 100% at 0 0, rgba(var(--dg-gold), calc(var(--dg-kf) * .075)), transparent 62%);
+
+  /* ---- bayangan dalam: panel padat (data + hero) ---- */
+  --amb-solid-edge:
+    inset 0 1px 0 rgba(var(--dg-sheen-rgb), .085),
+    inset 1px 0 0 rgba(var(--dg-sheen-rgb), .030),
+    inset 0 0 0 1px rgba(255, 255, 255, .014),
+    inset -1px -1px 0 rgba(var(--dg-umber), calc(.34 * var(--dg-sep))),
+    inset -10px -12px 20px -14px rgba(var(--dg-umber), calc(.42 * var(--dg-sep)));
+
+  /* ---- bayangan dalam: kaca melayang ---- */
+  --amb-rim:
+    inset 0 1px 0 rgba(var(--dg-sheen-rgb), .20),
+    inset 1px 0 0 rgba(var(--dg-sheen-rgb), .070),
+    inset 0 0 0 1px rgba(255, 255, 255, .022),
+    inset -1px -1px 0 rgba(var(--dg-umber), .34),
+    inset 0 18px 20px -20px rgba(var(--dg-sheen-rgb), .13),
+    inset -14px -16px 24px -18px rgba(var(--dg-umber), .46);
+
+  /* ---- sumur (cekung): cahaya dibalik. Dibaca signature.css (.hm-goal, .sg-well) ---- */
+  --sg-well-edge:
+    inset 2px 2px 4px -1px rgba(var(--dg-umber), .62),
+    inset 0 0 0 1px rgba(255, 255, 255, .040),
+    inset -1px -1px 0 rgba(var(--dg-gold), calc(.10 * var(--dg-kf)));
+
+  /* ---- kapsul tab aktif (glass-nav.css): sorot kiri-atas, bukan rata di atas ---- */
+  --gn-cap-edge:
+    inset 1px 1px 0 rgba(255, 255, 255, .30),
+    inset 0 0 0 1px rgba(255, 255, 255, .09),
+    inset -2px -6px 10px -6px rgba(var(--an-gold-rgb, 200, 169, 106), .26);
+}
+html body.light.authed[data-amb] {
+  --dg-boost: 1.22;
+  --dg-umber: 70, 50, 14;
+  --dg-sheen-rgb: 255, 255, 255;
+  --dg-sheen-a: .55;
+  --dg-jewel-spec:  rgba(255, 255, 255, .88);
+  --dg-jewel-ring:  rgba(255, 255, 255, .32);
+  --dg-jewel-shade: rgba(120, 84, 8, .30);
+  --dg-jewel-edge:  rgba(110, 78, 10, .45);
+
+  --amb-solid-edge:
+    inset 0 1px 0 #fff,
+    inset 1px 0 0 rgba(255, 255, 255, .80),
+    inset 0 0 0 1px rgba(34, 31, 24, .026),
+    inset -1px -1px 0 rgba(var(--dg-umber), calc(.13 * var(--dg-sep))),
+    inset -10px -12px 20px -14px rgba(var(--dg-umber), calc(.11 * var(--dg-sep)));
+  --amb-rim:
+    inset 0 1px 0 #fff,
+    inset 1px 0 0 rgba(255, 255, 255, .85),
+    inset 0 0 0 1px rgba(34, 31, 24, .040),
+    inset -1px -1px 0 rgba(var(--dg-umber), .16),
+    inset 0 18px 20px -20px rgba(255, 255, 255, .95),
+    inset -14px -16px 24px -18px rgba(var(--dg-umber), .12);
+  --sg-well-edge:
+    inset 2px 2px 3px -1px rgba(var(--dg-umber), .20),
+    inset 0 0 0 1px rgba(34, 31, 24, .055),
+    inset -1px -1px 0 rgba(255, 255, 255, .85);
+  --gn-cap-edge:
+    inset 1px 1px 0 #fff,
+    inset 0 0 0 1px rgba(60, 48, 20, .08),
+    inset -2px -6px 10px -6px rgba(var(--an-gold-rgb, 126, 95, 23), .18);
+}
+/* analytic (Kalender, Statistik, Strategy, AI Coach): pemisah lebih tegas, tetap berarah */
+html body.authed[data-amb="analytic"] { --dg-sep: 1.3; }
+
+/* kontras tinggi: tepi lebih tegas, pita pantul dilepas */
+@media (prefers-contrast: more) {
+  html body.authed[data-amb] { --dg-boost: 1.35; --dg-sheen-k: 0; --dg-sep: 1.5; }
+}
+/* mode warna paksa: sistem memegang warna; semua lukisan emas dimatikan */
+@media (forced-colors: active) {
+  html body.authed[data-amb] { --dg-boost: 0; --dg-sheen-k: 0; }
+}
+
+
+/* ==========================================================================
+   1. PEMBENTUK LAPISAN — satu rumus, dihitung di tiap elemen (agar takaran varian ikut)
+      Custom property yang memuat var() dihitung di elemen tempat ia dideklarasikan, jadi komposit
+      harus dideklarasikan pada elemen itu sendiri (bukan pada body). Daftar ini = gabungan semua varian.
+
+      Urutan lapisan (atas → bawah):  sudut · pita pantul · tepi atas · tepi kiri · pantulan bawah · pantulan kanan
+   ========================================================================== */
+html body.authed[data-amb] :is(
+  #app > main :is(
+    .hm-card, .hm-tile, .stat-card, .v5-card, .v5-kpi, .v5-chart, .v5-chart-card, .v5-equity,
+    .stx-card, .stx-hero, .calx-shell, .px-range, .glass.ms-card, .v5 .v5-eqcard, .v5 .pf-hero, .glass
+  ),
+  .npv-dock, .npv-sheet, .npv-pop, .toast, .ur-snack, .px-glass, .v5-tip,
+  #export-menu, #filter-panel, .v5-fbar,
+  .modal-overlay:not(#image-zoom-modal) > .glass, #sp-modal .sp-sheet, #v22-recap > [role="dialog"],
+  #app > header.app-header .glass-pill.nav-wrap, #header-left-block, #header-right-block,
+  [data-dg]
+) {
+  /* kekuatan efektif: kv (faktor halaman) × i (varian) × boost (tema/kontras) */
+  --dg-a:    calc(var(--dg-kv) * var(--dg-i) * var(--dg-boost));
+  --dg-hot:  rgba(var(--dg-gold), calc(var(--dg-a) * var(--dg-t) * 1));
+  --dg-mid:  rgba(var(--dg-gold), calc(var(--dg-a) * var(--dg-t) * .58));
+  --dg-low:  rgba(var(--dg-gold), calc(var(--dg-a) * var(--dg-t) * .20));
+  --dg-lhot: rgba(var(--dg-gold), calc(var(--dg-a) * .62));
+  --dg-llow: rgba(var(--dg-gold), calc(var(--dg-a) * .16));
+  --dg-ret:  rgba(var(--dg-gold), calc(var(--dg-a) * var(--dg-r) * .34));
+  --dg-glint: rgba(var(--dg-gold), calc(var(--dg-a) * .30));
+  --dg-band: rgba(var(--dg-sheen-rgb), calc(var(--dg-sheen-a) * var(--dg-s) * var(--dg-sheen-k)));
+  --dg-bandg: rgba(var(--dg-gold), calc(var(--dg-kv) * var(--dg-s) * var(--dg-sheen-k) * .05));
+
+  --dg-sig-img:
+    radial-gradient(circle 40px at 4px 2px, var(--dg-glint), transparent),
+    linear-gradient(var(--dg-angle), transparent 6%, var(--dg-band) 18%, var(--dg-bandg) 27%, transparent 40%),
+    linear-gradient(90deg, var(--dg-hot) 0, var(--dg-mid) calc(var(--dg-reach) * .30), var(--dg-low) calc(var(--dg-reach) * .70), transparent var(--dg-reach)),
+    linear-gradient(180deg, var(--dg-lhot) 0, var(--dg-llow) calc(var(--dg-reach) * .35), transparent calc(var(--dg-reach) * .60)),
+    linear-gradient(270deg, var(--dg-ret) 0, transparent calc(var(--dg-reach) * .55)),
+    linear-gradient(0deg, var(--dg-ret) 0, transparent calc(var(--dg-reach) * .35));
+  --dg-sig-size: 100% 100%, 100% 100%, 100% 1px, 1px 100%, 100% 1px, 1px 100%;
+  --dg-sig-pos:  0 0, 0 0, 0 0, 0 0, 0 100%, 100% 0;
+}
+
+
+/* ==========================================================================
+   2. VARIAN — takaran + lukisan dasar per fungsi
+      Lukisan dasar tiap varian meniru persis aturan lama yang sudah memegang elemen itu (smart-glass §4,
+      optical-glass §2–3, prismatic-edge §1), hanya ditambah lapisan sinyal di atasnya. Karena itu tidak ada
+      elemen yang kehilangan warna dasar atau alpha-nya.
+   ========================================================================== */
+
+/* ---- HERO · panel utama ------------------------------------------------- */
+html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > main :is(
+  .hm-hero.hm-card, .v5 .v5-eqcard, .v5 .pf-hero, .calx-shell, .stx-hero, [data-dg="hero"]
+) {
+  --dg-kv: var(--dg-kh);
+  --dg-i: 1.15; --dg-s: 1; --dg-r: 1; --dg-reach: 620px;
+  background-image:
+    var(--dg-sig-img),
+    radial-gradient(120% 70% at 12% -12%, rgba(var(--amb-gold-rgb), calc(var(--amb-gold) * var(--amb-hero-gold-a))), transparent 62%),
+    radial-gradient(90% 60% at 100% -10%, rgba(var(--amb-cool-rgb), calc(var(--amb-cool) * var(--amb-hero-cool-a))), transparent 64%),
+    linear-gradient(180deg, var(--amb-solid-sheen), transparent 38%) !important;
+  background-size: var(--dg-sig-size), 100% 100%, 100% 100%, 100% 100% !important;
+  background-position: var(--dg-sig-pos), 0 0, 0 0, 0 0 !important;
+  background-repeat: no-repeat !important;
+  background-origin: border-box !important;
+  background-color: var(--amb-solid) !important;
+}
+
+/* ---- DATA · kartu angka, KPI, grafik, tile ------------------------------
+      Takaran terendah: angka yang menonjol, bukan kacanya. Daftar & pelindung spesifisitas = smart-glass §4. */
+@supports (background: color-mix(in srgb, red 10%, transparent)) {
+  html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > main:not(#dg-1):not(#dg-2):not(#dg-3) :is(
+    .hm-card:not(.hm-hero), .hm-tile, .stat-card, .v5-card, .v5-kpi, .v5-chart, .v5-chart-card, .v5-equity,
+    .stx-card, .glass.ms-card, .px-range, [data-dg="data"]
+  ),
+  html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > main:not(#dg-1):not(#dg-2):not(#dg-3) .glass:not(#export-menu):not(#filter-panel):not(.v5-fbar):not(.v5-tip):not(.calx-sheet):not([role="dialog"]):not([role="menu"]):not(.hm-hero):not(.pf-hero):not(.v5-eqcard):not(.stx-hero):not(.calx-shell):not(.modal-overlay > .glass) {
+    --dg-i: .95; --dg-s: .6; --dg-r: .7; --dg-reach: 300px;
+    background-image:
+      var(--dg-sig-img),
+      linear-gradient(180deg, var(--amb-solid-sheen), transparent 38%) !important;
+    background-size: var(--dg-sig-size), 100% 100% !important;
+    background-position: var(--dg-sig-pos), 0 0 !important;
+    background-repeat: no-repeat !important;
+    background-origin: border-box !important;
+    background-color: color-mix(in srgb, var(--amb-solid) calc(var(--sgt-data-a) * 100%), transparent) !important;
+  }
+}
+
+/* ---- FLOAT · sheet, menu, popover, toast, filter, modal ------------------
+      Sheet/modal: tepi ATAS dipegang prismatic-edge.css (sapuan sekali saat dibuka, lalu diam),
+      jadi --dg-t:0 agar tidak ada dua garis emas di baris piksel yang sama. Tepi kiri, sudut, dan pantulan
+      kanan-bawah tetap dari material ini. */
+html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] :is(
+  .npv-sheet, .npv-pop, .toast, .ur-snack, .px-glass, .v5-tip,
+  #export-menu, #filter-panel:not(.hidden), .v5-fbar,
+  .modal-overlay:not(#image-zoom-modal) > .glass,
+  #sp-modal .sp-sheet, #v22-recap > [role="dialog"], [data-dg="float"]
+) {
+  --dg-i: 1.2; --dg-s: .8; --dg-r: .9; --dg-reach: 420px;
+  background-image:
+    var(--dg-sig-img),
+    linear-gradient(180deg, var(--og-white-top), rgba(255, 255, 255, .010) 34%, var(--og-white-bot) 100%);
+  background-size: var(--dg-sig-size), 100% 100%;
+  background-position: var(--dg-sig-pos), 0 0;
+  background-repeat: no-repeat;
+  background-origin: border-box;
+}
+html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] :is(
+  .npv-sheet, .modal-overlay:not(#image-zoom-modal) > .glass, #sp-modal .sp-sheet
+) { --dg-t: 0; }
+@media (max-width: 640px) {
+  html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > main :is(
+    .hm-hero.hm-card, .v5 .v5-eqcard, .v5 .pf-hero, .calx-shell, .stx-hero
+  ) { --dg-reach: 380px; }
+  html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] :is(
+    .npv-sheet, .npv-pop, .toast, .ur-snack
+  ) { --dg-reach: 300px; }
+}
+
+/* ---- NAV · dock, pil tab, blok header ------------------------------------
+      Dock & pil tab membaca --gn-bar-sheen (glass-nav.css); token itu diarahkan ke lapisan material ditambah
+      sheen lama. Blok header (.glass) mengganti wash 155° lama (index.html) menjadi 128°. */
+html body.authed[data-amb] :is(.npv-dock, #app > header.app-header .glass-pill.nav-wrap) {
+  --dg-i: 1; --dg-s: .5; --dg-r: .7; --dg-reach: 360px;
+  --gn-bar-sheen:
+    var(--dg-sig-img),
+    linear-gradient(180deg, rgba(255, 255, 255, .075), rgba(255, 255, 255, 0) 46%, rgba(0, 0, 0, .10));
+}
+html body.light.authed[data-amb] :is(.npv-dock, #app > header.app-header .glass-pill.nav-wrap) {
+  --gn-bar-sheen:
+    var(--dg-sig-img),
+    linear-gradient(180deg, rgba(255, 255, 255, .55), rgba(255, 255, 255, 0) 50%, rgba(60, 48, 20, .035));
+}
+html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] :is(.npv-dock, #app > header.app-header .glass-pill.nav-wrap, [data-dg="nav"]) {
+  background-size: var(--dg-sig-size), 100% 100% !important;
+  background-position: var(--dg-sig-pos), 0 0 !important;
+  background-repeat: no-repeat !important;
+  background-origin: border-box !important;
+}
+@media (min-width: 641px) {
+  html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] :is(#header-left-block, #header-right-block) {
+    --dg-i: 1; --dg-s: .5; --dg-r: .7; --dg-reach: 220px;
+    background-image:
+      var(--dg-sig-img),
+      linear-gradient(var(--dg-angle), rgba(var(--dg-gold), calc(var(--dg-kf) * .075)) 0%, rgba(255, 255, 255, .022) 42%, rgba(255, 255, 255, .010) 100%) !important;
+    background-size: var(--dg-sig-size), 100% 100% !important;
+    background-position: var(--dg-sig-pos), 0 0 !important;
+    background-repeat: no-repeat !important;
+    background-origin: border-box !important;
+  }
+}
+html body.light.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] :is(#header-left-block, #header-right-block) {
+  background-image: var(--dg-sig-img) !important;
+  background-size: var(--dg-sig-size) !important;
+  background-position: var(--dg-sig-pos) !important;
+}
+
+
+/* ==========================================================================
+   3. JEWEL · logam emas (FAB, .btn-gold, tombol utama)
+      Bukan kaca, tetapi logam di atas kaca; harus berbagi cahaya yang sama. Perubahannya satu: bayangan dalam
+      yang tadinya lurus ke bawah kini miring searah sumbu (kiri-atas terang, kanan-bawah gelap), dan kilap
+      kubah FAB mengikuti sudut yang sama. Bayangan luar (cahaya emas, tinggi) tidak diubah.
+   ========================================================================== */
+html body.authed[data-amb][data-amb][data-amb][data-amb] :is(.btn-gold, [data-dg="jewel"]):not(#btn-new-journal-fab) {
+  box-shadow:
+    inset 1px 1px 0 var(--dg-jewel-spec),
+    inset 0 0 0 1px var(--dg-jewel-ring),
+    inset -2px -6px 10px var(--dg-jewel-shade),
+    0 14px 30px -10px rgba(var(--gold-glass, 212, 175, 55), .62),
+    0 2px 6px rgba(var(--dg-umber), .40) !important;
+}
+html body.authed[data-amb][data-amb][data-amb] #btn-new-journal-fab {
+  box-shadow:
+    inset 1px 1px 0 var(--dg-jewel-spec),
+    inset 0 0 0 1px var(--dg-jewel-ring),
+    inset -2px -5px 8px var(--dg-jewel-shade),
+    0 0 0 .5px var(--dg-jewel-edge),
+    0 2px 3px rgba(var(--dg-umber), .42),
+    0 10px 20px -6px rgba(var(--dg-umber), .55),
+    0 18px 34px -10px rgba(var(--gold-glass, 212, 175, 55), .62) !important;
+}
+html body.authed[data-amb][data-amb] #btn-new-journal-fab::before {
+  background: linear-gradient(var(--dg-angle), var(--gd-fab-gloss, rgba(255, 255, 255, .58)), rgba(255, 255, 255, .14) 62%, rgba(255, 255, 255, 0));
+}
+html body.authed[data-amb][data-amb][data-amb] #app > main .hm-primary {
+  box-shadow:
+    inset 1px 1px 0 var(--dg-jewel-spec),
+    inset -2px -4px 8px var(--dg-jewel-shade),
+    0 10px 26px -10px rgba(var(--gr, 215, 180, 74), .7);
+}
+html body.light.authed[data-amb][data-amb][data-amb] #app > main .hm-primary {
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, .45),
+    inset -2px -4px 8px rgba(40, 28, 0, .28),
+    0 8px 20px -10px rgba(var(--dg-umber), .5);
+}
+@media (forced-colors: active) {
+  html body.authed #btn-new-journal-fab::before { display: none; }
+}
+
+
+/* ==========================================================================
+   4. WELL · cekungan (kolom input, sumur konten)
+      Aturan cahaya dibalik: sisi kiri-atas terhalang (gelap), sisi kanan-bawah menangkap emas redup.
+      .hm-goal/.sg-well dipegang token --sg-well-edge di atas. Kolom input memakai rumus yang sama,
+      kecuali saat fokus (cincin fokus milik komponen tidak ditimpa).
+   ========================================================================== */
+html body.authed[data-amb][data-amb][data-amb] :is(#form-section, #jw-card, #sp-modal, .modal-overlay > .glass, [data-dg="well"]) :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  select, textarea
+):not(:focus):not(:focus-visible) {
+  box-shadow:
+    inset 2px 2px 4px -1px rgba(var(--dg-umber), .55),
+    inset -1px -1px 0 rgba(var(--dg-gold), calc(.07 * var(--dg-kf)));
+}
+html body.light.authed[data-amb][data-amb][data-amb] :is(#form-section, #jw-card, #sp-modal, .modal-overlay > .glass, [data-dg="well"]) :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  select, textarea
+):not(:focus):not(:focus-visible) {
+  box-shadow:
+    inset 2px 2px 3px -1px rgba(var(--dg-umber), .18),
+    inset -1px -1px 0 rgba(255, 255, 255, .9);
+}

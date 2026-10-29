@@ -1,0 +1,291 @@
+/* ==========================================================================
+   DOA IBU — v16.74  OPTICAL GLASS & EDGE REFRACTION
+   --------------------------------------------------------------------------
+   Kaca bukan sekadar transparan + blur. Tepinya menangkap cahaya.
+
+   Model cahaya (satu sumber, kiri-atas):
+     • Tepi atas  : paling terang. Sisi kiri: sedang. Kanan: redup. Bawah: gelap/nyaris tak ada.
+     • Border dua lapis, sangat tipis:
+         lapis luar  = sabit 1px di luar tepi (box-shadow offset, tanpa mengubah layout)
+         lapis dalam = garis 1px di dalam tepi (inset)
+     • Pantulan champagne gold hanya di area tertentu: garis tepi atas sisi kiri,
+       garis tepi kiri atas, dan sorot lunak di sudut kiri-atas. Tidak di seluruh tepi.
+     • Tidak ada outline putih tebal rata di semua sisi.
+
+   Cara kerja: aditif, dimuat paling akhir.
+     1) mengganti TOKEN tepi yang sudah dipakai lapisan lama (--amb-*, --sl-*, --di-*),
+        jadi tidak ada aturan lama yang ditulis ulang;
+     2) menetralkan border 1px putih rata pada panel;
+     3) menambah pantulan champagne lewat background-image (tidak menimpa warna dasar).
+   Hanya di dalam aplikasi (body.authed). Landing/login tidak disentuh.
+   Membatalkan: hapus <link href="optical-glass.css">.
+   ========================================================================== */
+
+
+/* ==========================================================================
+   0. TOKEN
+   ========================================================================== */
+html body.authed[data-amb] {
+  /* champagne gold (RGB mentah untuk rgba()) */
+  --og-champ: 234, 210, 154;
+
+  /* kekuatan pantulan: kaca melayang punya lantai .45 supaya identitasnya tetap ada di halaman calm;
+     panel utama (hero) mengikuti --amb-gold apa adanya (calm = netral, sesuai v16.70) */
+  --og-g:  calc(.45 + var(--amb-gold, 1) * .55);
+  --og-gh: var(--amb-gold, 1);
+
+  /* pantulan: 4 tingkat alpha. Kaca melayang (f) dan hero (h). */
+  --og-f1: rgba(var(--og-champ), calc(var(--og-g) * .60));
+  --og-f2: rgba(var(--og-champ), calc(var(--og-g) * .30));
+  --og-f3: rgba(var(--og-champ), calc(var(--og-g) * .13));
+  --og-f4: rgba(var(--og-champ), calc(var(--og-g) * .07));
+  --og-h1: rgba(var(--og-champ), calc(var(--og-gh) * .62));
+  --og-h2: rgba(var(--og-champ), calc(var(--og-gh) * .32));
+  --og-h3: rgba(var(--og-champ), calc(var(--og-gh) * .14));
+  --og-h4: rgba(var(--og-champ), calc(var(--og-gh) * .08));
+
+  /* kilap putih netral (untuk sudut yang tidak boleh keemasan) */
+  --og-white-top: rgba(255, 255, 255, .075);
+  --og-white-bot: rgba(0, 0, 0, .10);
+
+  /* ---- PANEL PADAT (kartu angka & data): tenang, tepi halus ---- */
+  --amb-solid-edge:
+    0 -1px 0 0 rgba(255, 255, 255, .075),            /* lapis luar: sabit terang di atas saja */
+    inset 0 1px 0 rgba(255, 255, 255, .11),          /* lapis dalam: tepi atas paling terang */
+    inset 1px 0 0 rgba(255, 255, 255, .030),         /* kiri: tangkap cahaya sedikit */
+    inset 0 0 0 1px rgba(255, 255, 255, .016),       /* garis dalam sangat tipis, semua sisi */
+    inset 0 -1px 0 rgba(0, 0, 0, .26),               /* bawah: gelap, bukan putih */
+    inset 0 14px 16px -16px rgba(255, 255, 255, .070);
+
+  /* ---- KACA MELAYANG (sheet, menu, toast, filter, modal) ---- */
+  --amb-rim:
+    0 -1px 0 0 rgba(255, 255, 255, .085),
+    inset 0 1px 0 rgba(255, 255, 255, .22),          /* atas jauh lebih terang daripada bawah */
+    inset 1px 0 0 rgba(255, 255, 255, .070),
+    inset -1px 0 0 rgba(255, 255, 255, .022),
+    inset 0 0 0 1px rgba(255, 255, 255, .026),
+    inset 0 -1px 0 rgba(0, 0, 0, .24),
+    inset 0 18px 20px -20px rgba(255, 255, 255, .17),   /* refraksi: cahaya tertahan di bawah tepi atas */
+    inset 0 -16px 18px -20px rgba(0, 0, 0, .30);
+
+  /* ---- Token lapisan kedalaman (spatial-layers): rim rata → rim berarah ---- */
+  --sl-rim:    inset 0 0 0 1px rgba(255, 255, 255, .026), inset 0 -1px 0 rgba(0, 0, 0, .22);
+  --sl-rim-hi: inset 0 0 0 1px rgba(255, 255, 255, .036), inset 0 -1px 0 rgba(0, 0, 0, .28);
+  --sl-lit:    inset 0 1px 0 rgba(255, 255, 255, .095), inset 1px 0 0 rgba(255, 255, 255, .030);
+  --sl-lit-hi: inset 0 1px 0 rgba(255, 255, 255, .20),  inset 1px 0 0 rgba(255, 255, 255, .060),
+               inset 0 16px 18px -18px rgba(255, 255, 255, .10);
+
+  /* fallback untuk kartu lama yang masih membaca border/ highlight dari liquid-glass-v1634 */
+  --di-border:    rgba(255, 255, 255, .050);
+  --di-highlight: rgba(255, 255, 255, .13);
+}
+html body.authed[data-amb="analytic"] {
+  /* analytic: pemisah tetap lebih tegas dari glow/calm, tapi tidak jadi garis putih tebal */
+  --amb-solid-edge:
+    0 -1px 0 0 rgba(255, 255, 255, .10),
+    inset 0 1px 0 rgba(255, 255, 255, .13),
+    inset 1px 0 0 rgba(255, 255, 255, .045),
+    inset 0 0 0 1px rgba(255, 255, 255, .028),
+    inset 0 -1px 0 rgba(0, 0, 0, .30),
+    inset 0 14px 16px -16px rgba(255, 255, 255, .075);
+  --di-border: rgba(255, 255, 255, .080);
+}
+
+/* Perkiraan warna lebih akurat bila browser mendukung color-mix:
+   champagne ikut bergeser sedikit mengikuti nada hari (--sg-c1 dari signature.css) */
+@supports (background: color-mix(in srgb, red 10%, transparent)) {
+  html body.authed[data-amb] {
+    --og-c: color-mix(in srgb, var(--sg-c1, rgb(226, 184, 96)) 28%, rgb(238, 216, 164));
+    --og-f1: color-mix(in srgb, var(--og-c) calc(var(--og-g)  * 60%), transparent);
+    --og-f2: color-mix(in srgb, var(--og-c) calc(var(--og-g)  * 30%), transparent);
+    --og-f3: color-mix(in srgb, var(--og-c) calc(var(--og-g)  * 13%), transparent);
+    --og-f4: color-mix(in srgb, var(--og-c) calc(var(--og-g)  *  7%), transparent);
+    --og-h1: color-mix(in srgb, var(--og-c) calc(var(--og-gh) * 62%), transparent);
+    --og-h2: color-mix(in srgb, var(--og-c) calc(var(--og-gh) * 32%), transparent);
+    --og-h3: color-mix(in srgb, var(--og-c) calc(var(--og-gh) * 14%), transparent);
+    --og-h4: color-mix(in srgb, var(--og-c) calc(var(--og-gh) *  8%), transparent);
+  }
+}
+
+/* ---- Tema terang: sisi atas putih murni, bawah abu hangat; champagne lebih dalam supaya terbaca ---- */
+html body.light.authed[data-amb] {
+  --og-champ: 178, 136, 52;
+  --og-white-top: rgba(255, 255, 255, .70);
+  --og-white-bot: rgba(62, 50, 23, .03);
+
+  --amb-solid-edge:
+    0 -1px 0 0 rgba(255, 255, 255, .95),
+    inset 0 1px 0 #fff,
+    inset 1px 0 0 rgba(255, 255, 255, .80),
+    inset 0 0 0 1px rgba(34, 31, 24, .030),
+    inset 0 -1px 0 rgba(34, 31, 24, .080),
+    inset 0 14px 16px -16px rgba(255, 255, 255, .90);
+
+  --amb-rim:
+    0 -1px 0 0 rgba(255, 255, 255, .90),
+    inset 0 1px 0 #fff,
+    inset 1px 0 0 rgba(255, 255, 255, .85),
+    inset -1px 0 0 rgba(34, 31, 24, .035),
+    inset 0 0 0 1px rgba(34, 31, 24, .045),
+    inset 0 -1px 0 rgba(34, 31, 24, .12),
+    inset 0 18px 20px -20px rgba(255, 255, 255, .95),
+    inset 0 -16px 18px -20px rgba(62, 50, 23, .10);
+
+  --sl-rim:    inset 0 0 0 1px rgba(34, 31, 24, .040), inset 0 -1px 0 rgba(34, 31, 24, .09);
+  --sl-rim-hi: inset 0 0 0 1px rgba(34, 31, 24, .055), inset 0 -1px 0 rgba(34, 31, 24, .11);
+  --sl-lit:    inset 0 1px 0 #fff, inset 1px 0 0 rgba(255, 255, 255, .85);
+  --sl-lit-hi: inset 0 1px 0 #fff, inset 1px 0 0 #fff, inset 0 16px 18px -18px rgba(255, 255, 255, .9);
+
+  --di-border:    rgba(34, 31, 24, .075);
+  --di-highlight: rgba(255, 255, 255, .95);
+}
+html body.light.authed[data-amb="analytic"] {
+  --amb-solid-edge:
+    0 -1px 0 0 rgba(255, 255, 255, .95),
+    inset 0 1px 0 #fff,
+    inset 1px 0 0 rgba(255, 255, 255, .80),
+    inset 0 0 0 1px rgba(34, 31, 24, .060),
+    inset 0 -1px 0 rgba(34, 31, 24, .15),
+    inset 0 14px 16px -16px rgba(255, 255, 255, .90);
+  --di-border: rgba(34, 31, 24, .11);
+}
+
+
+/* ==========================================================================
+   1. NETRALKAN BORDER PUTIH RATA
+      Border 1px lama (var(--di-border) dkk.) dibuat transparan: garis tepi kini
+      dilukis oleh dua lapis di atas (sabit luar + garis dalam), bukan outline rata.
+      Hanya border-color, jadi ukuran dan tata letak tidak bergeser sedikit pun.
+   ========================================================================== */
+html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb] :is(
+  #app > main :is(
+    .hm-card, .hm-tile:not(:hover), .stat-card, .v5-card, .v5-kpi, .v5-chart, .v5-chart-card, .v5-equity,
+    .stx-card, .stx-hero, .calx-shell, .px-range, .glass.ms-card, .hm-hero.hm-card,
+    .v5 .v5-eqcard, .v5 .pf-hero, .glass:not(.v5-fbar)
+  ),
+  .npv-dock, .npv-sheet, .npv-pop, .toast, .ur-snack, .px-glass, .v5-tip,
+  #export-menu, #filter-panel, .v5-fbar, .modal-card,
+  .modal-overlay:not(#image-zoom-modal) > .glass,
+  #sp-modal .sp-sheet, #v22-recap > [role="dialog"]
+) {
+  border-color: transparent;
+}
+
+
+/* ==========================================================================
+   2. HERO / PANEL UTAMA — pantulan champagne di area tertentu
+      Menggantikan garis emas tengah (signature.css, 6%→94%) yang membentang
+      di seluruh lebar. Sekarang:
+        • garis atas: champagne hanya di sisi kiri, lalu memudar; sisi kanan putih redup
+        • garis kiri: champagne dari sudut atas, memudar ke bawah (tangkapan sudut)
+        • sorot lunak di sudut kiri-atas (bukan wash di seluruh panel)
+      Lapisan lain (cahaya hero, kilau atas, warna padat) identik dengan signature.css.
+   ========================================================================== */
+html.sg-on body.authed[data-amb][data-amb][data-amb][data-amb][data-amb] #app > main :is(
+  .hm-hero.hm-card, .v5 .v5-eqcard, .v5 .pf-hero, .calx-shell, .stx-hero
+) {
+  background:
+    linear-gradient(90deg, transparent 1%, var(--og-h1) 9%, var(--og-h2) 26%, var(--og-h4) 46%, transparent 62%) top / 100% 1px no-repeat,
+    linear-gradient(90deg, transparent 68%, rgba(255, 255, 255, .10) 90%, transparent 99%) top / 100% 1px no-repeat,
+    linear-gradient(180deg, var(--og-h2), var(--og-h4) 22%, transparent 42%) left / 1px 100% no-repeat,
+    radial-gradient(42% 62% at 5% -4%, var(--og-h3), transparent 72%),
+    radial-gradient(120% 70% at 12% -12%, rgba(var(--amb-gold-rgb), calc(var(--amb-gold) * var(--amb-hero-gold-a))), transparent 62%),
+    radial-gradient(90% 60% at 100% -10%, rgba(var(--amb-cool-rgb), calc(var(--amb-cool) * var(--amb-hero-cool-a))), transparent 64%),
+    linear-gradient(180deg, var(--amb-solid-sheen), transparent 38%),
+    var(--amb-solid) !important;
+}
+/* bayangan jatuh + cahaya yang tumpah: sama dengan signature.css, tepi memakai token baru */
+@supports (background: color-mix(in srgb, red 10%, transparent)) {
+  html.sg-on body.authed[data-amb][data-amb][data-amb][data-amb][data-amb] #app > main :is(
+    .hm-hero.hm-card, .v5 .v5-eqcard, .v5 .pf-hero, .calx-shell, .stx-hero
+  ) {
+    box-shadow:
+      var(--amb-solid-edge), var(--amb-solid-drop),
+      0 30px 60px -34px color-mix(in srgb, var(--sg-c1) calc(var(--amb-gold) * var(--sg-spill) * 100%), transparent) !important;
+  }
+}
+
+
+/* ==========================================================================
+   3. KACA MELAYANG — kilap atas, pantulan sudut, gradasi terang→gelap
+      Sheet, menu, toast, filter, modal, dock, pil header, panel detail.
+      Hanya background-image (warna dasar & alpha dari ambient-glass.css tetap),
+      jadi slider transparansi (--lg) dan fallback "reduce transparency" tetap berlaku.
+   ========================================================================== */
+html body.authed[data-amb][data-amb][data-amb][data-amb] :is(
+  .npv-sheet, .npv-pop, .toast, .ur-snack, .px-glass, .v5-tip,
+  #export-menu, #filter-panel:not(.hidden), .v5-fbar,
+  .modal-overlay:not(#image-zoom-modal) > .glass,
+  #sp-modal .sp-sheet, #v22-recap > [role="dialog"]
+) {
+  /* longhand terpisah: sintaks "posisi / ukuran" tidak sah di dalam background-image */
+  background-image:
+    /* garis champagne di tepi atas, hanya sisi kiri */
+    linear-gradient(90deg, transparent 2%, var(--og-f1) 10%, var(--og-f2) 28%, var(--og-f4) 46%, transparent 60%),
+    /* tangkapan di tepi kiri: turun dari sudut lalu hilang */
+    linear-gradient(180deg, var(--og-f2), var(--og-f4) 24%, transparent 44%),
+    /* sorot lunak di sudut kiri-atas */
+    radial-gradient(64% 58% at 4% -6%, var(--og-f3), transparent 70%),
+    /* atas lebih terang dari bawah */
+    linear-gradient(180deg, var(--og-white-top), rgba(255, 255, 255, .010) 34%, var(--og-white-bot) 100%);
+  background-size: 100% 1px, 1px 100%, 100% 100%, 100% 100%;
+  background-position: 0 0, 0 0, 0 0, 0 0;
+  background-repeat: no-repeat;
+}
+/* Dock, pil header, dan panel detail (.jd-panel) sengaja tidak diberi gradasi di sini:
+   isiannya sudah dipegang aturan lain (premium.css / spatial-layers.css) dan tidak boleh tertimpa.
+   Tepinya tetap ikut model cahaya lewat token --sl-rim / --sl-lit di bagian 0. */
+
+
+/* ==========================================================================
+   4. KARTU DATA PADAT — hanya tepi (tidak ada pantulan emas: angka yang menonjol)
+      Garis tepi kini dua lapis halus berarah; sorot atas ikut --amb-solid-edge.
+      Tidak ada aturan tambahan: token di bagian 0 sudah dipakai ambient-glass.css.
+   ========================================================================== */
+
+
+/* ==========================================================================
+   5. HOVER TILE — pantulan hangat di tepi atas saja (bukan cincin emas rata)
+   ========================================================================== */
+html body.authed[data-amb][data-amb][data-amb] #app > main .hm-tile:hover {
+  border-color: transparent;
+  box-shadow:
+    0 -1px 0 0 rgba(var(--og-champ), calc(.14 + var(--og-g) * .10)),
+    inset 0 1px 0 rgba(var(--og-champ), calc(.30 + var(--og-g) * .16)),
+    inset 1px 0 0 rgba(var(--og-champ), .10),
+    inset 0 0 0 1px rgba(var(--og-champ), .05),
+    inset 0 -1px 0 rgba(0, 0, 0, .22),
+    var(--amb-solid-drop) !important;
+}
+
+
+/* ==========================================================================
+   6. AKSESIBILITAS & FALLBACK
+   ========================================================================== */
+/* kontras tinggi: tepi lebih tegas, tetap berarah */
+@media (prefers-contrast: more) {
+  html body.authed[data-amb] {
+    --amb-solid-edge:
+      0 -1px 0 0 rgba(255, 255, 255, .16),
+      inset 0 1px 0 rgba(255, 255, 255, .24),
+      inset 1px 0 0 rgba(255, 255, 255, .10),
+      inset 0 0 0 1px rgba(255, 255, 255, .10),
+      inset 0 -1px 0 rgba(255, 255, 255, .06);
+    --amb-rim:
+      inset 0 1px 0 rgba(255, 255, 255, .36),
+      inset 0 0 0 1px rgba(255, 255, 255, .16),
+      inset 0 -1px 0 rgba(255, 255, 255, .08);
+  }
+  html body.light.authed[data-amb] {
+    --amb-solid-edge: inset 0 0 0 1px rgba(34, 31, 24, .28), inset 0 1px 0 #fff;
+    --amb-rim:        inset 0 0 0 1px rgba(34, 31, 24, .30), inset 0 1px 0 #fff;
+  }
+}
+/* mode warna paksa: border sistem kembali, tanpa lukisan */
+@media (forced-colors: active) {
+  html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb] :is(
+    #app > main :is(.hm-card, .hm-tile, .stat-card, .v5-card, .v5-kpi, .stx-card, .stx-hero, .calx-shell, .glass),
+    .npv-dock, .npv-sheet, .npv-pop, .toast, .modal-card, #export-menu, #filter-panel, .v5-fbar
+  ) { border-color: CanvasText; }
+}
+/* HP hemat & efek rendah: gradasi statis murah, tidak ada yang dihitung ulang — tetap dipakai */

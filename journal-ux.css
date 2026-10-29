@@ -1,0 +1,283 @@
+/* v16.43 · Trade Journal UX
+   Baris lebih mudah dipindai, status Profit/Loss/BE, pencarian + filter, panel detail.
+   Hanya tampilan; tidak mengubah hitungan statistik. */
+
+/* ---------- Toolbar: pencarian + status ---------- */
+.jr-toolbar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin: 0 0 12px; }
+.jr-search { position: relative; flex: 1 1 260px; min-width: 0; display: block; margin: 0; }
+.jr-search > svg { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); opacity: .5; pointer-events: none; }
+.jr-search .diary-input { width: 100%; padding-left: 40px; padding-right: 40px; height: 44px; border-radius: 16px; -webkit-appearance: none; appearance: none; }
+.jr-search .diary-input::-webkit-search-cancel-button { display: none; }
+.jr-search-x { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; border-radius: 12px; border: 0; background: transparent; color: var(--text-tertiary, rgba(235,235,245,.55)); font-size: 20px; line-height: 1; cursor: pointer; }
+.jr-search-x:hover { background: rgba(255,255,255,.08); }
+.jr-seg { display: inline-flex; padding: 4px; gap: 2px; border-radius: 16px; background: rgba(255,255,255,.05); border: 1px solid var(--border, rgba(255,255,255,.08)); }
+.jr-seg button { height: 36px; min-width: 60px; padding: 0 16px; border: 0; border-radius: 12px; background: transparent; color: var(--text-secondary, rgba(235,235,245,.65)); font-size: 13px; font-weight: 600; cursor: pointer; transition: background-color .18s, color .18s; }
+.jr-seg button:hover { color: var(--text-primary, #fff); }
+.jr-seg button.on { background: rgba(215,180,74,.18); color: #e8c766; box-shadow: inset 0 0 0 1px rgba(215,180,74,.35); }
+.jr-seg button[data-status="profit"].on { background: rgba(45,212,191,.16); color: #2dd4bf; box-shadow: inset 0 0 0 1px rgba(45,212,191,.4); }
+.jr-seg button[data-status="loss"].on { background: rgba(255,122,104,.16); color: #ff7a68; box-shadow: inset 0 0 0 1px rgba(255,122,104,.4); }
+body.light .jr-seg { background: rgba(0,0,0,.04); border-color: rgba(0,0,0,.08); }
+body.light .jr-seg button.on { color: #8a6a10; }
+body.light .jr-seg button[data-status="profit"].on { color: #0f766e; }
+body.light .jr-seg button[data-status="loss"].on { color: #b83526; }
+.jr-seg button:focus-visible, .jr-search-x:focus-visible, .jr:focus-visible, .jd-x:focus-visible, .jd-nav button:focus-visible, .jd-act button:focus-visible { outline: 2px solid #d7b44a; outline-offset: 2px; }
+
+/* ---------- Chip filter aktif ---------- */
+.jr-active { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: -2px 0 12px; }
+.jr-active[hidden] { display: none; }
+.jr-chip { display: inline-flex; align-items: center; gap: 4px; height: 30px; padding: 0 8px 0 12px; border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--text-secondary, rgba(235,235,245,.75)); background: rgba(215,180,74,.1); border: 1px solid rgba(215,180,74,.28); }
+.jr-chip button { width: 22px; height: 22px; border: 0; border-radius: 50%; background: transparent; color: inherit; font-size: 15px; line-height: 1; cursor: pointer; }
+.jr-chip button:hover { background: rgba(255,255,255,.12); }
+.jr-chip-reset { height: 30px; padding: 0 12px; border: 0; background: transparent; color: var(--text-tertiary, rgba(235,235,245,.55)); font-size: 13px; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.jr-chip-reset:hover { color: #e8c766; }
+body.light .jr-chip { color: #52525b; }
+
+/* ---------- Baris daftar ---------- */
+#journal-list .jr { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+#journal-list .jr:hover { background: rgba(255,255,255,.045); }
+#journal-list .jr:active { background: rgba(255,255,255,.07); }
+body.light #journal-list .jr:hover { background: rgba(0,0,0,.035); }
+#journal-list .jr { padding-top: 16px; padding-bottom: 16px; }
+#journal-list .jr-dir { justify-self: start; }
+#journal-list .jr-stat { flex-wrap: nowrap; }
+#journal-list .jr-main {
+  grid-template-columns: 96px minmax(84px, .8fr) 84px minmax(200px, 1.2fr) minmax(110px, .8fr) minmax(70px, 130px) 84px 104px 76px;
+  column-gap: 16px;
+}
+.jr-be { font-size: 12px; font-weight: 600; color: #e0b84a; }
+.jr-ind-row { display: flex; align-items: center; gap: 8px; min-width: 0; color: var(--text-tertiary, rgba(235,235,245,.5)); }
+.jr-ind { display: inline-flex; }
+.jr-ind-n { font-size: 12px; font-weight: 600; margin-left: -4px; font-variant-numeric: tabular-nums; }
+.jr-ind-tag { font-size: 12px; padding: 1px 8px; border-radius: 999px; background: rgba(215,180,74,.08); color: #d7b44a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px; }
+body.light .jr-ind-tag { color: #8a6a10; }
+
+/* Badge status: ikon + teks (tidak hanya warna) */
+.jr-res { display: flex; justify-content: flex-start; }
+.jr-status { display: inline-flex; align-items: center; gap: 8px; height: 26px; padding: 0 12px 0 8px; border-radius: 999px; font-size: 12px; font-weight: 600; letter-spacing: .01em; border: 1px solid transparent; white-space: nowrap; }
+.jr-status i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: none; }
+.jr-status.pos { color: #2dd4bf; background: rgba(45,212,191,.12); border-color: rgba(45,212,191,.28); }
+.jr-status.neg { color: #ff7a68; background: rgba(255,122,104,.12); border-color: rgba(255,122,104,.3); }
+.jr-status.neg i { border-radius: 2px; transform: rotate(45deg); }
+.jr-status.zero { color: #e0b84a; background: rgba(224,184,74,.1); border-color: rgba(224,184,74,.28); }
+.jr-status.zero i { height: 3px; border-radius: 2px; width: 10px; }
+body.light .jr-status.pos { color: #0f766e; } body.light .jr-status.neg { color: #b83526; } body.light .jr-status.zero { color: #8a6a10; }
+
+@media (max-width: 1100px) and (min-width: 721px) {
+  #journal-list .jr-main { grid-template-columns: 90px minmax(84px, 1fr) 80px minmax(150px, 1.2fr) 78px 100px 76px; }
+  .jr-sess, .jr-ind-row { display: none; }
+}
+@media (max-width: 720px) {
+  .jr-toolbar { gap: 8px; }
+  .jr-seg { width: 100%; } .jr-seg button { flex: 1; height: 40px; }
+  #journal-list .jr-main { grid-template-columns: minmax(0, 1fr) auto; row-gap: 8px;
+    grid-template-areas: "date pl" "sym res" "stat dir" "sess sess" "ind act"; }
+  #journal-list .jr-dir { justify-self: end; }
+  #journal-list .jr-stat { flex-wrap: wrap; }
+  #journal-list .jr-res { grid-area: res; justify-self: end; }
+  #journal-list .jr-ind-row { display: flex; grid-area: ind; }
+  #journal-list .jr-sess { display: flex; }
+  #journal-list .jr-ind-row:empty { display: block; }
+}
+
+/* ---------- Panel detail ---------- */
+.jd-ov { position: fixed; inset: 0; z-index: 54; background: rgba(0,0,0,.5); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); opacity: 0; transition: opacity .22s ease; }
+.jd-ov.on { opacity: 1; }
+.jd-panel { position: fixed; z-index: 54; display: flex; flex-direction: column; box-sizing: border-box; overflow: hidden; color: var(--text-primary, #fff);
+  top: 0; right: 0; bottom: 0; width: min(520px, 100vw); border-radius: 24px 0 0 24px;
+  background: linear-gradient(165deg, #1d1e22 0%, #131417 60%, #0f1012 100%); border-left: 1px solid var(--border-strong, rgba(255,255,255,.14));
+  box-shadow: -30px 0 60px -24px rgba(0,0,0,.7); transform: translateX(28px); opacity: 0; transition: transform .3s cubic-bezier(.2,.8,.2,1), opacity .22s ease; }
+.jd-panel.on { transform: none; opacity: 1; }
+body.light .jd-panel { background: linear-gradient(165deg, #fff 0%, #f6f4ee 100%); color: #27272a; border-left-color: rgba(0,0,0,.1); }
+.jd-head { padding: 20px 20px 16px; border-bottom: 1px solid var(--border, rgba(255,255,255,.08)); position: relative; }
+.jd-head::before { content: ''; position: absolute; left: 0; top: 0; right: 0; height: 3px; background: var(--jd-tone, #C8A96A); }
+.jd-panel.pos { --jd-tone: #2dd4bf; } .jd-panel.neg { --jd-tone: #ff7a68; } .jd-panel.zero { --jd-tone: #e0b84a; }
+.jd-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.jd-nav { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-tertiary, rgba(235,235,245,.55)); font-variant-numeric: tabular-nums; }
+.jd-nav button, .jd-x { width: 36px; height: 36px; border: 0; border-radius: 12px; background: rgba(255,255,255,.06); color: inherit; font-size: 17px; line-height: 1; cursor: pointer; }
+.jd-nav button:hover:not(:disabled), .jd-x:hover { background: rgba(255,255,255,.12); }
+.jd-nav button:disabled { opacity: .3; cursor: default; }
+body.light .jd-nav button, body.light .jd-x { background: rgba(0,0,0,.06); }
+.jd-title { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.jd-title h3 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: -.02em; }
+.jd-title small { display: block; margin-top: 2px; font-size: 13px; font-weight: 500; color: var(--text-tertiary, rgba(235,235,245,.55)); }
+.jd-pl { font-size: 28px; font-weight: 600; letter-spacing: -.03em; color: var(--jd-tone); font-variant-numeric: tabular-nums; }
+.jd-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; align-items: center; }
+.jd-body { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 16px 20px 20px; }
+.jd-body .tsum-inline { margin-top: 0; }
+.jd-sec { margin-top: 20px; } .jd-sec h4 { margin: 0 0 8px; font-size: 12px; letter-spacing: 0; text-transform:none; font-weight: 600; color: var(--text-tertiary, rgba(235,235,245,.5)); }
+.jd-outlook { margin-top: 20px; padding: 12px 16px; border-radius: 16px; background: rgba(255,255,255,.04); border: 1px solid var(--border, rgba(255,255,255,.08)); }
+body.light .jd-outlook { background: rgba(0,0,0,.03); }
+.jd-charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.jd-charts img { height: 120px !important; width: 100%; object-fit: cover; border-radius: 12px !important; }
+.jd-body .jr-sess { display: flex; }
+.jd-body .jr-notes { margin-top: 0; }
+.jd-empty { margin: 24px 0; text-align: center; font-size: 15px; color: var(--text-tertiary, rgba(235,235,245,.55)); }
+.jd-act { display: flex; gap: 8px; padding: 12px 20px calc(16px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--border, rgba(255,255,255,.08)); }
+.jd-act button { flex: 1; height: 46px; border-radius: 16px; border: 1px solid var(--border-strong, rgba(255,255,255,.14)); background: rgba(255,255,255,.05); color: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }
+.jd-act button:hover { background: rgba(255,255,255,.1); }
+.jd-act .jd-edit { background: linear-gradient(165deg, #f0cf70, #d4af37); color: #1a1405; border-color: transparent; }
+.jd-act .jd-del { flex: 0 0 auto; padding: 0 20px; color: #ff7a68; }
+body.light .jd-act button { background: rgba(0,0,0,.04); border-color: rgba(0,0,0,.12); }
+body.light .jd-act .jd-edit { background: linear-gradient(165deg, #f0cf70, #d4af37); }
+body.jd-lock { overflow: hidden; }
+
+@media (max-width: 720px) {
+  .jd-panel { top: auto; left: 0; right: 0; bottom: 0; width: 100%; max-height: 92vh; max-height: 92dvh; border-radius: 24px 24px 0 0; border-left: 0; border-top: 1px solid var(--border-strong, rgba(255,255,255,.14));
+    transform: translateY(40px); box-shadow: 0 -24px 50px -22px rgba(0,0,0,.7); }
+  .jd-panel.on { transform: none; }
+  .jd-panel::before { content: ''; display: block; width: 40px; height: 4px; border-radius: 4px; margin: 8px auto 0; background: rgba(255,255,255,.22); }
+  .jd-head { padding-top: 12px; }
+}
+@media (prefers-reduced-motion: reduce) { .jd-ov, .jd-panel, .jr-seg button { transition: none; } }
+
+/* v16.56 · Fix: panel/overlay detail yang sudah ditutup tidak boleh menahan sentuhan.
+   `display:flex` pada .jd-panel mengalahkan atribut [hidden], sehingga lembar transparan
+   (opacity:0) tetap menutupi layar dan memblokir semua tombol setelah riwayat dibuka. */
+.jd-ov[hidden], .jd-panel[hidden], body .jd-ov[hidden], body .jd-panel[hidden] { display: none !important; }
+.jd-ov:not(.on), .jd-panel:not(.on) { pointer-events: none !important; visibility: hidden; }
+.jd-ov.on, .jd-panel.on { pointer-events: auto; visibility: visible; }
+
+/* ---------- v16.58 · Halaman tanggal (susunan trade per hari) ---------- */
+#journal-list .jr-day { margin: 0 0 20px; }
+#journal-list .jr-day:last-child { margin-bottom: 0; }
+.jr-day-h { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 4px 12px; }
+.jr-day-t { min-width: 0; }
+.jr-day-t b { display: block; font-size: 15px; font-weight: 600; letter-spacing: -.01em; color: var(--text-primary, #fff); }
+.jr-day-t small { display: block; margin-top: 2px; font-size: 12px; color: var(--text-tertiary, rgba(235,235,245,.5)); }
+.jr-day-r { display: flex; align-items: center; gap: 12px; flex: none; }
+.jr-day-pl { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text-secondary, rgba(235,235,245,.7)); }
+.jr-day-pl.pos { color: var(--positive, #2dd4bf); }
+.jr-day-pl.neg { color: var(--negative, #ff7a68); }
+.jr-day-add { height: 34px; padding: 0 12px; border-radius: 12px; border: 1px solid rgba(215,180,74,.38); background: rgba(215,180,74,.1); color: #e8c766; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background-color .2s; -webkit-tap-highlight-color: transparent; }
+.jr-day-add:hover { background: rgba(215,180,74,.2); }
+.jr-day-add:focus-visible { outline: 2px solid #d7b44a; outline-offset: 2px; }
+.jr-day-list { display: flex; flex-direction: column; gap: 8px; }
+.jr-day-list > .jr { margin: 0; }
+#journal-list .jr-day .jr-date b { font-variant-numeric: tabular-nums; }
+body.light .jr-day-t b { color: #18181b; }
+body.light .jr-day-add { color: #8a6a10; background: rgba(215,180,74,.14); }
+.jd-act button.jd-add { color: #e8c766; border-color: rgba(215,180,74,.38); background: rgba(215,180,74,.08); }
+body.light .jd-act button.jd-add { color: #8a6a10; }
+
+/* ---------- Pemilih trade ---------- */
+.jr-pick-ov { position: fixed; inset: 0; z-index: 2600; display: flex; align-items: flex-end; justify-content: center; background: rgba(0,0,0,.55); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.jr-pick { width: min(480px, 100%); max-height: 80vh; display: flex; flex-direction: column; border-radius: 24px 24px 0 0; background: var(--surface-elevated, #17181b); border: 1px solid var(--border-strong, rgba(255,255,255,.14)); border-bottom: 0; padding-bottom: env(safe-area-inset-bottom, 0px); box-shadow: 0 -20px 50px -20px rgba(0,0,0,.7); }
+@media (min-width: 640px) { .jr-pick-ov { align-items: center; } .jr-pick { border-radius: 24px; border-bottom: 1px solid var(--border-strong, rgba(255,255,255,.14)); } }
+.jr-pick-h { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 20px 20px 12px; }
+.jr-pick-h b { display: block; font-size: 15px; font-weight: 600; color: var(--text-primary, #fff); }
+.jr-pick-h small { display: block; margin-top: 4px; font-size: 12px; color: var(--text-tertiary, rgba(235,235,245,.5)); }
+.jr-pick-x { width: 34px; height: 34px; border: 0; border-radius: 12px; background: transparent; color: var(--text-tertiary, rgba(235,235,245,.6)); font-size: 22px; line-height: 1; cursor: pointer; }
+.jr-pick-x:hover { background: rgba(255,255,255,.08); }
+.jr-pick-l { overflow-y: auto; padding: 4px 16px 16px; display: flex; flex-direction: column; gap: 8px; -webkit-overflow-scrolling: touch; }
+.jr-pick-i { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 12px 16px; border-radius: 16px; border: 1px solid var(--border, rgba(255,255,255,.1)); background: rgba(255,255,255,.04); color: inherit; cursor: pointer; transition: background-color .2s; }
+.jr-pick-i:hover { background: rgba(255,255,255,.09); }
+.jr-pick-i:focus-visible { outline: 2px solid #d7b44a; outline-offset: 2px; }
+.jr-pick-n { flex: none; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 12px; background: rgba(255,255,255,.07); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.jr-pick-m { flex: 1; min-width: 0; }
+.jr-pick-m b { display: block; font-size: 15px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.jr-pick-m small { display: block; margin-top: 2px; font-size: 12px; color: var(--text-tertiary, rgba(235,235,245,.5)); }
+.jr-pick-pl { flex: none; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.jr-pick-i.pos .jr-pick-pl { color: var(--positive, #2dd4bf); }
+.jr-pick-i.neg .jr-pick-pl { color: var(--negative, #ff7a68); }
+body.light .jr-pick { background: #fff; }
+body.light .jr-pick-h b { color: #18181b; }
+body.light .jr-pick-i { background: rgba(0,0,0,.03); }
+body.light .jr-pick-n { background: rgba(0,0,0,.06); }
+
+/* ---------- Detail hari di Kalender: susunan trade ---------- */
+.calx-trades { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+.calx-trade { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-radius: 12px; background: rgba(255,255,255,.04); }
+.calx-t-no { flex: none; min-width: 26px; font-size: 12px; font-weight: 600; color: var(--text-tertiary, rgba(235,235,245,.5)); font-variant-numeric: tabular-nums; }
+.calx-t-pair { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.calx-t-pair i { font-style: normal; font-weight: 500; font-size: 12px; color: var(--text-tertiary, rgba(235,235,245,.5)); margin-left: 4px; }
+.calx-trade b { flex: none; font-size: 13px; font-variant-numeric: tabular-nums; }
+.calx-t-edit { flex: none; height: 30px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--border, rgba(255,255,255,.12)); background: rgba(255,255,255,.05); color: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.calx-t-edit:hover { background: rgba(255,255,255,.1); }
+body.light .calx-trade { background: rgba(0,0,0,.035); }
+
+@media (max-width: 520px) {
+  .jr-day-h { flex-wrap: wrap; }
+  .jr-day-r { width: 100%; justify-content: space-between; }
+}
+
+/* =====================================================================
+   v16.62 · Viewer gambar (HP/portrait) + susunan Riwayat Journal rapi
+   ===================================================================== */
+
+/* ---------- Viewer screenshot ----------
+   Penyebab tombol tutup hilang: `.glass-pill{position:relative}` mengalahkan kelas `absolute`,
+   sehingga tombol ikut aliran flex dan tertutup gambar. Di sini diposisikan eksplisit (fixed). */
+#image-zoom-modal { z-index: 2147483200 !important; padding: 0 !important; background: rgba(0,0,0,.92) !important; overscroll-behavior: contain; }
+#image-zoom-modal #zoom-stage { position: absolute !important; inset: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; touch-action: none; }
+#image-zoom-modal #zoom-image { position: relative; max-width: 100vw !important; max-height: 100vh !important; max-height: 100dvh !important; width: auto; height: auto; object-fit: contain; transform-origin: 50% 50%; cursor: grab; user-select: none; -webkit-user-drag: none; touch-action: none; will-change: transform; }
+#image-zoom-modal #btn-close-image-zoom { position: fixed !important; z-index: 20; top: calc(env(safe-area-inset-top, 0px) + 12px); right: calc(env(safe-area-inset-right, 0px) + 12px); width: 48px; height: 48px; padding: 0; display: grid; place-items: center; border-radius: 50%; cursor: pointer; background: rgba(28,28,32,.78) !important; border: 1px solid rgba(255,255,255,.22); color: #fff; -webkit-tap-highlight-color: transparent; }
+#image-zoom-modal #btn-close-image-zoom:active { transform: scale(.94); }
+#image-zoom-modal #btn-close-image-zoom:focus-visible, #image-zoom-modal #zoom-controls button:focus-visible { outline: 2px solid #d7b44a; outline-offset: 2px; }
+#image-zoom-modal #zoom-controls { position: fixed !important; z-index: 20; left: 50%; transform: translateX(-50%); bottom: calc(env(safe-area-inset-bottom, 0px) + 16px); display: flex; align-items: center; gap: 4px; padding: 4px 8px; white-space: nowrap; background: rgba(28,28,32,.78) !important; border: 1px solid rgba(255,255,255,.18); }
+#image-zoom-modal #zoom-controls button { min-width: 40px; height: 40px; padding: 0 12px; border: 0; border-radius: 999px; background: transparent; color: #fff; font-size: 17px; line-height: 1; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+#image-zoom-modal #zoom-controls button#zoom-reset { font-size: 13px; font-weight: 600; }
+#image-zoom-modal #zoom-controls button:hover { color: #e8c766; }
+#image-zoom-modal #zoom-level { min-width: 46px; text-align: center; font-size: 13px; font-variant-numeric: tabular-nums; }
+body.zoom-lock { overflow: hidden; }
+
+/* ---------- Riwayat Journal: tablet & HP portrait memakai susunan kartu ----------
+   Susunan tabel hanya untuk layar lebar (>900px). Di bawahnya tiap trade = kartu 2-3 baris. */
+@media (max-width: 900px) {
+  #journal-list.space-y-4 { display: flex; flex-direction: column; gap: 12px; border: 0; background: none; border-radius: 0; overflow: visible; }
+  #journal-list .jr-day { margin: 0; }
+  #journal-list .jr-day-list { gap: 12px; }
+
+  /* header tanggal: judul di atas, "n trade" + total di bawahnya, tombol "+ Trade" di kanan */
+  .jr-day-h { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "t t add" "c pl add"; column-gap: 12px; row-gap: 4px; align-items: center; padding: 0 2px 12px; }
+  .jr-day-t, .jr-day-r { display: contents; }
+  .jr-day-t b { grid-area: t; display: block; min-width: 0; font-size: 15px; line-height: 1.3; overflow-wrap: anywhere; }
+  .jr-day-t small { grid-area: c; margin: 0; white-space: nowrap; }
+  .jr-day-pl { grid-area: pl; justify-self: start; white-space: nowrap; font-size: 15px; }
+  .jr-day-add { grid-area: add; align-self: center; height: 40px; padding: 0 16px; }
+
+  /* kartu */
+  #journal-list .jr { padding: 16px 16px 12px 20px; border: 1px solid var(--border, rgba(255,255,255,.08)); border-radius: 20px; background: var(--surface, rgba(255,255,255,.04)); overflow: hidden; }
+  #journal-list .jr:first-child { border-top: 1px solid var(--border, rgba(255,255,255,.08)); }
+  #journal-list .jr::before { top: 14px; bottom: 14px; }
+  body.light #journal-list .jr { border-color: rgba(0,0,0,.08); background: rgba(255,255,255,.65); }
+
+  #journal-list .jr-main {
+    display: grid; align-items: center; column-gap: 12px; row-gap: 12px;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-areas: "date date pl" "sym dir res" "stat stat stat" "sess sess sess" "ind ind act";
+  }
+  #journal-list .jr-date { grid-area: date; display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 8px; min-width: 0; }
+  #journal-list .jr-date b { display: inline; font-size: 15px; }
+  #journal-list .jr-date small { display: inline; margin: 0; font-size: 13px; }
+  #journal-list .jr-pl { grid-area: pl; align-self: center; font-size: 22px; line-height: 1.15; text-align: right; }
+  #journal-list .jr-sym { grid-area: sym; font-size: 17px; }
+  #journal-list .jr-dir { grid-area: dir; justify-self: end; }
+  #journal-list .jr-res { grid-area: res; justify-self: end; }
+  #journal-list .jr-stat { grid-area: stat; flex-wrap: wrap; gap: 8px; padding-top: 12px; border-top: 1px dashed var(--border, rgba(255,255,255,.08)); }
+  #journal-list .jr-sess { grid-area: sess; display: flex; }
+  #journal-list .jr-sess:empty { display: none; }
+  #journal-list .jr-ind-row { grid-area: ind; display: flex; flex-wrap: wrap; min-width: 0; }
+  #journal-list .jr-ind-row:empty { display: block; }
+  #journal-list .jr-act { grid-area: act; justify-content: flex-end; gap: 2px; margin: -8px -8px -8px 0; }
+  #journal-list .jr-btn { width: 44px; height: 44px; border-radius: 12px; }
+
+  #journal-list .jr-detail { flex-direction: column; gap: 12px; margin: 12px 0 8px; padding-top: 12px; }
+  #journal-list .jr-charts { width: 100%; flex-direction: row; }
+  #journal-list .jr-charts a { flex: 1; min-width: 0; }
+  #journal-list .jr-outlook { margin: 0 0 12px; }
+}
+
+/* HP sempit: kolom status turun ke bawah arah supaya tidak berdesakan */
+@media (max-width: 400px) {
+  #journal-list .jr { padding: 12px 12px 12px 16px; }
+  #journal-list .jr-main { grid-template-areas: "date date pl" "sym sym res" "dir stat stat" "sess sess sess" "ind ind act"; }
+  #journal-list .jr-dir { justify-self: start; }
+  #journal-list .jr-stat { padding-top: 0; border-top: 0; }
+  #journal-list .jr-pl { font-size: 20px; }
+  .jr-day-t b { font-size: 15px; }
+}
+
+/* 901-1100px: kolom status diberi lebar cukup agar badge "Profit/Loss" tidak menimpa kolom lain */
+@media (min-width: 901px) and (max-width: 1100px) {
+  #journal-list .jr-main { grid-template-columns: 90px minmax(84px, 1fr) 80px minmax(150px, 1.2fr) 104px 100px 76px; }
+}

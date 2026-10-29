@@ -1,0 +1,166 @@
+/* v16.44 · Mobile-First Floating UI
+   Penggunaan satu tangan di HP (<= 640px):
+   - Tombol tambah trade mengambang di zona jempol (kanan bawah), menyingkir saat menggulir turun
+   - Filter & Sort tampil sebagai bottom sheet (scrim, handle geser, tombol Reset / Lihat hasil)
+   - Kartu statistik ringkas: 4 kartu pertama + "Lihat n lainnya"; ketuk kartu untuk detail
+   Navigasi bawah mengambang (dock) sudah ada sejak v17 dan tidak diubah.
+   Hanya tampilan; tidak mengubah hitungan statistik. Desktop tidak berubah. */
+
+/* ---------- Elemen tambahan: tersembunyi di desktop ---------- */
+.mf-scrim, .mf-fs-head, .mf-fs-foot, .mf-kpi-more { display: none; }
+.mf-fs-body { display: contents; }
+.mf-fs-body > * + * { margin-top: .75rem; }
+.mf-fbadge { display: none; }
+#filter-panel.space-y-3 > .mf-fs-head, #filter-panel.space-y-3 > .mf-fs-body, #filter-panel.space-y-3 > .mf-fs-foot { margin-top: 0 !important; }
+
+/* Lencana jumlah filter lanjutan pada tombol "Filter & Sort" (semua ukuran layar) */
+.mf-fbadge.on {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 18px; padding: 0 4px; margin-left: 2px;
+  border-radius: 999px; font-size: 12px; font-weight: 600; line-height: 1;
+  color: #1a1405; background: #e8c766;
+}
+
+@media (max-width: 640px) {
+  :root { --mf-dock: calc(var(--mnav-h, 64px) + var(--mnav-gap, 12px) + env(safe-area-inset-bottom, 0px)); }
+
+  /* ===================== 1. Tombol tambah trade ===================== */
+  body.authed #btn-new-journal-fab {
+    left: auto !important;
+    right: max(16px, env(safe-area-inset-right, 0px)) !important;
+    bottom: calc(var(--mf-dock) + 14px) !important;
+    width: 56px; height: 56px;
+    z-index: 48;
+    transition: transform .28s cubic-bezier(.2, .9, .25, 1), opacity .2s ease, bottom .28s ease;
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  }
+  /* Menyingkir: gulir turun, keyboard, sheet/modal terbuka */
+  body.mf-fab-hide #btn-new-journal-fab,
+  body.npv-kb #btn-new-journal-fab,
+  body.npv-open #btn-new-journal-fab,
+  body.mf-sheet-open #btn-new-journal-fab,
+  body.jd-lock #btn-new-journal-fab,
+  body:has(#form-section:not(.hidden)) #btn-new-journal-fab {
+    transform: translateY(28px) scale(.82) !important;
+    opacity: 0; pointer-events: none;
+  }
+
+  /* ===================== 2. Filter sebagai bottom sheet ===================== */
+  .mf-scrim {
+    display: block; position: fixed; inset: 0; z-index: 59;
+    background: rgba(0, 0, 0, .52);
+    -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);
+    opacity: 0; visibility: hidden; pointer-events: none;
+    transition: opacity .24s ease, visibility 0s linear .24s;
+  }
+  body.mf-sheet-open .mf-scrim { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity .24s ease, visibility 0s; }
+  body.mf-sheet-open { overflow: hidden; }
+
+  #filter-panel:not(.hidden) {
+    position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 60;
+    margin: 0 auto !important; width: 100%; max-width: 560px;
+    max-height: min(86dvh, 86vh);
+    display: flex; flex-direction: column; padding: 0 !important; gap: 0;
+    border-radius: 24px 24px 0 0 !important;
+    background: rgba(24, 25, 28, .97);
+    -webkit-backdrop-filter: blur(28px) saturate(170%); backdrop-filter: blur(28px) saturate(170%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 -24px 60px -20px rgba(0, 0, 0, .75);
+    overflow: hidden;
+    animation: mfSheetIn .32s cubic-bezier(.2, .9, .25, 1);
+  }
+  body.light #filter-panel:not(.hidden) {
+    background: rgba(250, 249, 245, .98);
+    box-shadow: inset 0 1px 0 #fff, 0 -24px 60px -24px rgba(60, 48, 20, .4);
+  }
+  @keyframes mfSheetIn { from { transform: translateY(100%); } to { transform: none; } }
+
+  .mf-fs-head {
+    display: block; flex: none; position: relative;
+    padding: 8px 8px 12px 20px; touch-action: none; cursor: grab;
+  }
+  .mf-fs-grab { width: 40px; height: 5px; border-radius: 3px; margin: 0 auto 8px; background: rgba(255, 255, 255, .22); }
+  body.light .mf-fs-grab { background: rgba(0, 0, 0, .18); }
+  .mf-fs-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .mf-fs-title h3 { margin: 0; font-size: 17px; font-weight: 600; letter-spacing: -.01em; color: var(--text-primary, #fff); }
+  .mf-fs-x {
+    width: 44px; height: 44px; border: 0; border-radius: 50%; background: transparent;
+    color: var(--text-secondary, rgba(235, 235, 245, .65)); font-size: 28px; line-height: 1; cursor: pointer;
+  }
+  .mf-fs-x:active { background: rgba(255, 255, 255, .1); }
+
+  .mf-fs-body {
+    display: block; flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+    padding: 4px 20px 16px; -webkit-overflow-scrolling: touch;
+  }
+  /* Kolom lebih lega untuk jempol; 16px mencegah iOS memperbesar layar saat fokus */
+  #filter-panel .mf-fs-body > .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 12px; }
+  #filter-panel .mf-fs-body > .grid > * { min-width: 0; }
+  #filter-panel .mf-fs-body input[type="date"] { min-width: 0; width: 100%; max-width: 100%; box-sizing: border-box; }
+  #filter-panel:focus { outline: none; }
+  #filter-panel .mf-fs-body label { font-size: 13px; margin-bottom: 8px; }
+  #filter-panel .mf-fs-body .diary-input { min-height: 46px; font-size: 17px; border-radius: 16px; }
+  #filter-panel .mf-fs-body select#filter-sort { width: 100% !important; }
+  #filter-panel .mf-fs-body > div:last-child { flex-direction: column; align-items: stretch; }
+  #filter-panel #btn-filter-reset { display: none; } /* diganti tombol Reset di footer sheet */
+
+  .mf-fs-foot {
+    display: flex; flex: none; gap: 12px; align-items: center;
+    padding: 12px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid rgba(255, 255, 255, .08);
+    background: inherit;
+  }
+  body.light .mf-fs-foot { border-top-color: rgba(0, 0, 0, .08); }
+  .mf-fs-foot button { height: 50px; border-radius: 16px; font-size: 15px; font-weight: 700; cursor: pointer; border: 0; touch-action: manipulation; }
+  .mf-fs-reset { flex: 0 0 auto; padding: 0 20px; background: rgba(255, 255, 255, .07); color: var(--text-primary, #fff); }
+  body.light .mf-fs-reset { background: rgba(0, 0, 0, .06); color: #1c1c1e; }
+  .mf-fs-apply { flex: 1 1 auto; color: #1a1405; background: linear-gradient(110deg, #c99a3c, #ecd185 55%, #d7b44a); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5); }
+  .mf-fs-foot button:active { transform: scale(.97); }
+  .mf-fs-foot button:focus-visible, .mf-fs-x:focus-visible { outline: 2px solid #d7b44a; outline-offset: 2px; }
+
+  /* Sheet di atas dock; detail panel journal tetap di bawah snackbar undo (z 70) */
+  body.mf-sheet-open .npv-dock { transform: translateY(140%); opacity: 0; pointer-events: none; }
+
+  /* ===================== 3. Kartu statistik ringkas & dapat diperluas ===================== */
+  /* Kartu di luar 4 pertama tersembunyi sampai "Lihat n lainnya" ditekan */
+  .mf-kpi-grp:not(.mf-open) > .v5-kpi.mf-kpi-extra { display: none !important; }
+
+  .mf-kpi-more {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; min-height: 44px; margin: -2px 0 16px; padding: 0 16px;
+    border: 1px solid rgba(215, 180, 74, .28); border-radius: 16px;
+    background: rgba(215, 180, 74, .08); color: #e8c766;
+    font-size: 13px; font-weight: 600; cursor: pointer; touch-action: manipulation;
+  }
+  .mf-kpi-more::after {
+    content: ''; width: 7px; height: 7px; margin-top: -4px;
+    border-right: 1.8px solid currentColor; border-bottom: 1.8px solid currentColor;
+    transform: rotate(45deg); transition: transform .2s ease;
+  }
+  .mf-kpi-more[aria-expanded="true"]::after { transform: rotate(-135deg); margin-top: 4px; }
+  .mf-kpi-more:focus-visible, .v5-kpi.mf-x:focus-visible { outline: 2px solid #d7b44a; outline-offset: 2px; }
+  body.light .mf-kpi-more { color: #8a6a10; }
+
+  /* Ketuk kartu: detail (.s) muncul/hilang */
+  .v5-kpi.mf-x { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  .v5-kpi.mf-x:not(.mf-open) .s { display: none !important; }
+  .v5-kpi.mf-x.mf-open .s { animation: mfFade .22s ease; }
+  .v5-kpi.mf-x .l { display: flex; align-items: center; gap: 8px; }
+  .v5-kpi.mf-x .l::after {
+    content: ''; flex: none; width: 6px; height: 6px; margin-left: auto; margin-top: -4px; opacity: .45;
+    border-right: 1.6px solid currentColor; border-bottom: 1.6px solid currentColor;
+    transform: rotate(45deg); transition: transform .2s ease;
+  }
+  .v5-kpi.mf-x.mf-open .l::after { transform: rotate(-135deg); margin-top: 4px; }
+  @keyframes mfFade { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: none; } }
+}
+
+/* ---------- Preferensi pengguna ---------- */
+@media (max-width: 640px) and (prefers-reduced-motion: reduce) {
+  body.authed #btn-new-journal-fab, .mf-scrim, #filter-panel:not(.hidden), .mf-kpi-more::after,
+  .v5-kpi.mf-x .l::after, .v5-kpi.mf-x.mf-open .s { transition: none !important; animation: none !important; }
+}
+@media (max-width: 640px) and (prefers-reduced-transparency: reduce) {
+  #filter-panel:not(.hidden) { background: #1a1b1e; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  body.light #filter-panel:not(.hidden) { background: #faf9f5; }
+  .mf-scrim { -webkit-backdrop-filter: none; backdrop-filter: none; }
+}

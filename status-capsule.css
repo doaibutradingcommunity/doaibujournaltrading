@@ -1,0 +1,109 @@
+/* v16.92 · Live Activity Status Capsule — gaya untuk status-capsule.js. Dimuat setelah glass-tiers.css.
+   Komponen web (bukan Live Activity native iOS). Kapsul kecil di atas layar untuk aktivitas yang sedang berjalan:
+   simpan journal, sinkronisasi, ekspor. Tidak memblokir sentuhan saat berjalan.
+   Untuk membatalkan: hapus tautan css & js. Bagian "OVERLAY LAMA" di bawah bisa dihapus sendiri bila overlay gelap ingin dipertahankan.
+
+   Penyetelan cepat: blok token tepat di bawah ini. */
+.lsc {
+  --lsc-bg: rgba(22, 22, 25, .8);
+  --lsc-fg: #f4f2ec;
+  --lsc-mute: rgba(244, 242, 236, .62);
+  --lsc-edge: rgba(255, 255, 255, .14);
+  --lsc-spec: rgba(255, 255, 255, .2);
+  --lsc-shadow: 0 10px 28px -10px rgba(0, 0, 0, .65), 0 2px 6px rgba(0, 0, 0, .25);
+  --lsc-run: #d7b44a;        /* berjalan + selesai: aksen emas aplikasi */
+  --lsc-on-run: #1c1608;     /* tanda centang di atas emas */
+  --lsc-err: #ff7a68;
+  --lsc-warn: #f0a24b;
+  --lsc-idle: rgba(244, 242, 236, .72);
+  --lsc-blur: blur(22px) saturate(170%);
+  --lsc-h: 36px;
+}
+body.light .lsc {
+  --lsc-bg: rgba(255, 255, 255, .86);
+  --lsc-fg: #1c1b18;
+  --lsc-mute: rgba(28, 27, 24, .6);
+  --lsc-edge: rgba(0, 0, 0, .1);
+  --lsc-spec: rgba(255, 255, 255, .9);
+  --lsc-shadow: 0 10px 28px -12px rgba(0, 0, 0, .3), 0 2px 6px rgba(0, 0, 0, .08);
+  --lsc-run: #8a6a10;
+  --lsc-on-run: #ffffff;
+  --lsc-err: #b83526;
+  --lsc-warn: #a85d00;
+  --lsc-idle: rgba(28, 27, 24, .62);
+}
+
+/* ---------- Kapsul ---------- */
+.lsc {
+  position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 10px);
+  z-index: calc(var(--z-toast, 70) + 1);            /* di atas overlay (50), modal (60), toast (70) */
+  box-sizing: border-box; display: inline-flex; align-items: center; gap: 8px;
+  height: var(--lsc-h); max-width: min(380px, calc(100vw - 24px)); padding: 0 14px 0 9px; overflow: hidden;
+  border-radius: 999px; color: var(--lsc-fg); font: 600 13px/1 var(--font-sans, Inter, system-ui, -apple-system, sans-serif);
+  letter-spacing: .005em; white-space: nowrap; pointer-events: none; -webkit-tap-highlight-color: transparent;
+  background: var(--lsc-bg);
+  -webkit-backdrop-filter: var(--lsc-blur); backdrop-filter: var(--lsc-blur);
+  box-shadow: inset 0 1px 0 var(--lsc-spec), inset 0 0 0 1px var(--lsc-edge), var(--lsc-shadow);
+  opacity: 0; visibility: hidden; transform: translate(-50%, -12px) scale(.92); transform-origin: 50% 0;
+  transition: opacity .2s ease, transform .34s cubic-bezier(.2, .9, .25, 1.1), visibility 0s linear .34s, width .34s cubic-bezier(.2, .8, .2, 1);
+}
+.lsc[data-open="1"] { opacity: 1; visibility: visible; transform: translate(-50%, 0) scale(1); transition-delay: 0s; }
+.lsc[data-sticky="1"] { pointer-events: auto; cursor: pointer; }     /* offline / gagal: ketuk untuk menutup */
+
+/* ---------- Ikon utama (cincin, centang, tanda seru, awan) ---------- */
+.lsc-ic { flex: none; position: relative; width: 22px; height: 22px; display: grid; place-items: center; color: var(--lsc-run); }
+.lsc[data-state="err"] .lsc-ic { color: var(--lsc-err); }
+.lsc[data-state="warn"] .lsc-ic { color: var(--lsc-warn); }
+.lsc[data-state="off"] .lsc-ic { color: var(--lsc-idle); }
+.lsc-ic svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.lsc-ic.pop svg { animation: lscPop .32s cubic-bezier(.2, .9, .3, 1.3); }
+.lsc-ring .lsc-trk { opacity: .22; }
+.lsc-ring .lsc-arc { stroke-dasharray: 26 74; transform-origin: 50% 50%; animation: lscSpin .9s linear infinite; }
+.lsc-ring[data-det="1"] .lsc-arc { animation: none; transform: rotate(-90deg); transition: stroke-dasharray .25s ease; }
+.lsc-ok-disc { fill: var(--lsc-run); stroke: none; }
+.lsc-ok-tick { stroke: var(--lsc-on-run); stroke-width: 2.2; }
+
+/* ---------- Teks ---------- */
+.lsc-tx { min-width: 0; flex: 0 1 auto; display: flex; align-items: baseline; gap: 6px; }
+.lsc-l { flex: none; max-width: 100%; }                 /* label diprioritaskan; detail yang mengalah */
+.lsc-d { min-width: 0; overflow: hidden; text-overflow: ellipsis; font-weight: 500; font-size: 12px; color: var(--lsc-mute); font-variant-numeric: tabular-nums; }
+.lsc-d:empty, .lsc-n:empty { display: none; }
+.lsc-n { flex: none; min-width: 18px; padding: 3px 6px; border-radius: 999px; font-size: 11px; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums;
+  color: var(--lsc-mute); background: color-mix(in srgb, var(--lsc-fg) 10%, transparent); }
+
+.lsc-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+@keyframes lscSpin { to { transform: rotate(360deg); } }
+@keyframes lscPop { 0% { transform: scale(.55); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+/* ---------- Layar sangat sempit ---------- */
+@media (max-width: 360px) { .lsc-d { display: none; } }
+
+/* ---------- Fallback ---------- */
+html.mo-lite .lsc, .lsc.lsc-solid { -webkit-backdrop-filter: none; backdrop-filter: none; background: #1b1b1e; }
+html.mo-lite body.light .lsc, body.light .lsc.lsc-solid { background: #f6f4ee; }
+@media (prefers-reduced-transparency: reduce) {
+  .lsc { -webkit-backdrop-filter: none; backdrop-filter: none; background: #1b1b1e; }
+  body.light .lsc { background: #f6f4ee; }
+}
+@media (prefers-contrast: more) { .lsc { box-shadow: inset 0 0 0 1.5px var(--lsc-fg), var(--lsc-shadow); } }
+@media (prefers-reduced-motion: reduce) {
+  .lsc { transition: opacity .15s ease, visibility 0s linear .15s; transform: translate(-50%, 0); }
+  .lsc[data-open="1"] { transform: translate(-50%, 0); }
+  .lsc-ic.pop svg { animation: none; }
+  .lsc-ring:not([data-det="1"]) .lsc-arc { animation: lscPulse 1.6s ease-in-out infinite; stroke-dasharray: 100 0; }
+}
+@keyframes lscPulse { 0%, 100% { opacity: .3; } 50% { opacity: 1; } }
+@media (forced-colors: active) {
+  .lsc { background: Canvas; color: CanvasText; border: 1px solid CanvasText; box-shadow: none; }
+  .lsc-ic, .lsc-ok-tick { color: Highlight; stroke: currentColor; }
+  .lsc-ok-disc { fill: Highlight; }
+  .lsc-d { color: GrayText; }
+}
+
+/* ---------- OVERLAY LAMA ----------
+   Saat journal disimpan, kapsul yang memberi tahu prosesnya. Layar gelap + kartu pemintal lama tidak perlu lagi,
+   tetapi lapisannya tetap menangkap sentuhan supaya tombol tidak terketuk dua kali saat proses berjalan.
+   Hanya aktif selama kapsul simpan berjalan (html.lsc-save); overlay lain di aplikasi tidak berubah. */
+html.lsc-save #loading { background: transparent; -webkit-backdrop-filter: none; backdrop-filter: none; }
+html.lsc-save #loading > * { visibility: hidden; }

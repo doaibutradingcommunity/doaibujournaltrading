@@ -1,0 +1,194 @@
+/* v16.71 · Premium Sheet System
+   Satu bahasa untuk semua sheet/modal di HP: handle yang bisa ditarik, tombol tutup yang sama,
+   judul + isi (satu-satunya yang menggulir) + tombol aksi yang selalu di tempat yang sama,
+   tinggi mengikuti isi, aman dari notch / gesture bar / keyboard.
+   Lapisan tampilan saja. Semua dikunci ke html.ss-on (dipasang sheet-system.js); data dan logika tidak diubah.
+   Membatalkan: hapus <link href="sheet-system.css"> dan <script src="sheet-system.js">. */
+
+/* ============ 1. Token ============ */
+html.ss-on {
+  --ss-r: 28px;            /* sudut atas sheet */
+  --ss-pad: 20px;          /* jarak sisi isi */
+  --ss-hit: 44px;          /* target sentuh minimum */
+  --ss-gap: 32px;          /* sisa layar di atas sheet tertinggi (tirai tetap terlihat) */
+  --ss-ease: cubic-bezier(.22, 1, .36, 1);
+  --ss-in: .36s;
+  --ss-vvh: 100dvh;        /* tinggi area yang benar-benar terlihat (diisi JS: memperhitungkan keyboard) */
+  --ss-kb: 0px;            /* tinggi keyboard yang menutupi bagian bawah layar (diisi JS) */
+  --ss-max: calc(var(--ss-vvh) - var(--ss-gap) - env(safe-area-inset-top, 0px));
+  --ss-x-icon: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.6' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E");
+}
+/* warna mengikuti tema: didefinisikan di body karena body.light yang mengganti --mdl-* */
+html.ss-on body {
+  --ss-hair: var(--mdl-hair, rgba(255, 255, 255, .10));
+  --ss-soft: var(--mdl-soft, rgba(255, 255, 255, .07));
+  --ss-soft-h: var(--mdl-soft-h, rgba(255, 255, 255, .12));
+  --ss-grab: var(--mdl-grab, rgba(255, 255, 255, .28));
+  --ss-on-gold: #e7c85a;
+  --ss-chip-on: rgba(212, 175, 55, .16);
+  --ss-chip-ln: rgba(212, 175, 55, .55);
+}
+html.ss-on body.light { --ss-on-gold: #7a5c08; --ss-chip-on: rgba(160, 124, 20, .14); --ss-chip-ln: rgba(160, 124, 20, .5); }
+
+@keyframes ssRise { from { transform: translateY(100%); } to { transform: none; } }
+
+/* Kunci gulir halaman di belakang sheet (HP/tablet saja; desktop tidak bergeser karena scrollbar) */
+@media (max-width: 900px) {
+  html.ss-on.ss-locked, html.ss-on.ss-locked body { overflow: hidden !important; overscroll-behavior: none; }
+}
+
+/* ============ 2. Handle (bukan hiasan: bisa ditarik) ============ */
+.ss-grab { display: none; }
+
+@media (max-width: 640px) {
+  html.ss-on .ss-sheet { position: relative; }
+  html.ss-on .ss-sheet > .ss-grab {
+    display: block; position: absolute; z-index: 6; top: 0; left: 50%; width: 96px; height: 30px; margin-left: -48px;
+    touch-action: none; cursor: grab; -webkit-tap-highlight-color: transparent;
+  }
+  html.ss-on .ss-sheet > .ss-grab::before {
+    content: ""; position: absolute; top: 9px; left: 50%; width: 40px; height: 5px; margin-left: -20px; border-radius: 999px;
+    background: var(--ss-grab); transition: background .2s ease, width .2s var(--ss-ease), margin-left .2s var(--ss-ease);
+  }
+  html.ss-on .ss-sheet.ss-dragging > .ss-grab::before { width: 52px; margin-left: -28px; }
+  /* header ikut bisa ditarik (tombol di dalamnya tetap bisa diketuk) */
+  html.ss-on .ss-sheet .ss-drag-zone { touch-action: none; }
+  html.ss-on .ss-sheet.ss-dragging { transition: none !important; animation: none !important; will-change: transform; }
+
+  /* satu handle saja: hiasan lama dimatikan di sheet yang sudah punya handle nyata */
+  html.ss-on :is(#profile-modal, #reminder-modal, #calendar-entry-modal, #form-section) > .glass.ss-sheet::after,
+  html.ss-on #v22-recap > .ss-sheet::after,
+  html.ss-on #sp-modal .ss-sheet::before { display: none !important; }
+  /* handle milik filter & detail trade (sudah bisa ditarik oleh kodenya sendiri): ukuran dan warna disamakan */
+  html.ss-on #filter-panel .mf-fs-grab { width: 40px; height: 5px; background: var(--ss-grab); }
+  html.ss-on .jd-panel::before { width: 40px; height: 5px; border-radius: 999px; margin: 8px auto 0; background: var(--ss-grab); }
+}
+
+/* ============ 3. Tombol tutup: satu bentuk, satu tempat (kanan atas), 44px ============ */
+@media (max-width: 640px) {
+  html.ss-on .ss-x {
+    position: relative; flex: none; display: inline-flex !important; align-items: center; justify-content: center; gap: 8px;
+    min-width: var(--ss-hit); width: auto !important; height: var(--ss-hit) !important; padding: 0 16px 0 12px !important; margin: 0 !important;
+    border: 0 !important; border-radius: 999px !important; background: var(--ss-soft) !important; color: inherit !important; opacity: .94 !important;
+    box-shadow: none !important; font-size: 0 !important; line-height: 0 !important; text-indent: 0; cursor: pointer;
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent; transition: background .2s ease, transform .2s var(--ss-ease);
+  }
+  html.ss-on .ss-x > * { display: none !important; }       /* ikon/teks bawaan disembunyikan; nama aksesibel tetap dari tombolnya */
+  html.ss-on .ss-x::before {
+    content: ""; flex: none; width: 16px; height: 16px; background: currentColor;
+    -webkit-mask: var(--ss-x-icon) center / contain no-repeat; mask: var(--ss-x-icon) center / contain no-repeat;
+  }
+  html.ss-on .ss-x::after { content: attr(data-ss-label); font-size: 15px; font-weight: 700; line-height: 1; letter-spacing: 0; }
+  html.ss-on .ss-x:active { background: var(--ss-soft-h) !important; transform: scale(.96); }
+  html.ss-on .ss-x:focus-visible { outline: 2px solid #d7b44a; outline-offset: 2px; }
+}
+@media (max-width: 359px) {
+  html.ss-on .ss-x { padding: 0 !important; width: var(--ss-hit) !important; }
+  html.ss-on .ss-x::after { display: none; }
+}
+/* Detail trade: sheet sampai 720px */
+@media (min-width: 641px) and (max-width: 720px) {
+  html.ss-on .jd-panel .ss-x {
+    flex: none; display: inline-flex !important; align-items: center; justify-content: center; gap: 8px; min-width: var(--ss-hit); width: auto !important;
+    height: var(--ss-hit) !important; padding: 0 16px 0 12px !important; border: 0 !important; border-radius: 999px !important; background: var(--ss-soft) !important;
+    color: inherit !important; font-size: 0 !important; line-height: 0 !important;
+  }
+  html.ss-on .jd-panel .ss-x > * { display: none !important; }
+  html.ss-on .jd-panel .ss-x::before { content: ""; flex: none; width: 16px; height: 16px; background: currentColor; -webkit-mask: var(--ss-x-icon) center / contain no-repeat; mask: var(--ss-x-icon) center / contain no-repeat; }
+  html.ss-on .jd-panel .ss-x::after { content: attr(data-ss-label); font-size: 15px; font-weight: 700; line-height: 1; }
+}
+
+/* ============ 4. Anatomi: judul tetap | isi menggulir | aksi tetap ============ */
+@media (max-width: 640px) {
+  /* sheet formulir sederhana (Profil, Pengingat, Input Kalender): disusun ulang oleh JS menjadi head / body / foot */
+  html.ss-on :is(#profile-modal, #reminder-modal, #calendar-entry-modal) > .glass.ss-sheet {
+    display: flex !important; flex-direction: column; padding: 0 !important; overflow: hidden !important;
+    max-height: var(--ss-max) !important; border-radius: var(--ss-r) var(--ss-r) 0 0 !important;
+    animation: ssRise var(--ss-in) var(--ss-ease) both !important;
+  }
+  html.ss-on :is(#profile-modal, #reminder-modal, #calendar-entry-modal) > .glass.ss-sheet > .ss-head {
+    flex: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 !important;
+    padding: 24px max(var(--ss-pad), env(safe-area-inset-left, 0px)) 12px max(var(--ss-pad), env(safe-area-inset-right, 0px));
+  }
+  html.ss-on .ss-sheet > .ss-body {
+    flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+    padding: 8px max(var(--ss-pad), env(safe-area-inset-left, 0px)) 20px max(var(--ss-pad), env(safe-area-inset-right, 0px)); scroll-padding-bottom: 24px;
+  }
+  html.ss-on .ss-sheet > .ss-foot {
+    flex: none; display: flex; align-items: stretch; gap: 12px; border-top: 1px solid var(--ss-hair);
+    padding: 12px max(var(--ss-pad), env(safe-area-inset-left, 0px)) calc(16px + env(safe-area-inset-bottom, 0px)) max(var(--ss-pad), env(safe-area-inset-right, 0px));
+  }
+  /* tombol aksi: aksi sekunder di kiri, aksi utama (emas) di kanan, tinggi sama */
+  html.ss-on .ss-sheet > .ss-foot > * { flex: 1 1 0; min-width: 0; min-height: 48px; margin: 0 !important; border-radius: 16px !important; font-size: 15px; font-weight: 700; touch-action: manipulation; }
+  html.ss-on .ss-sheet > .ss-foot > .btn-gold, html.ss-on .ss-sheet > .ss-foot > [type="submit"] { flex-grow: 1.4; }
+
+  /* Form Jurnal: sudah punya header / isi / footer sendiri; samakan sudut, tinggi, ruang aman */
+  html.ss-on #form-section:not(.jw-kb) > #jw-card.ss-sheet {
+    border-radius: var(--ss-r) var(--ss-r) 0 0 !important; max-height: min(var(--ss-max), 100dvh) !important;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important; animation: ssRise var(--ss-in) var(--ss-ease) both !important;
+  }
+
+  /* Rekap evaluasi, daftar trade, picker, workspace: tinggi isi, batas atas sama, animasi sama */
+  html.ss-on #v22-recap > .ss-sheet { max-height: var(--ss-max) !important; border-radius: var(--ss-r) var(--ss-r) 0 0 !important; animation: ssRise var(--ss-in) var(--ss-ease) both !important; }
+  html.ss-on #sp-modal .ss-sheet { max-height: var(--ss-max) !important; border-radius: var(--ss-r) var(--ss-r) 0 0 !important; animation: ssRise var(--ss-in) var(--ss-ease) both !important; }
+  html.ss-on .jr-pick.ss-sheet, html.ss-on .v23-pn.ss-sheet { max-height: var(--ss-max) !important; border-radius: var(--ss-r) var(--ss-r) 0 0 !important; }
+  html.ss-on #v22-recap > .ss-sheet .rc-h, html.ss-on #sp-modal .ss-sheet .sp-mh, html.ss-on .jr-pick-h, html.ss-on .v23-hd { padding-top: 28px; align-items: center; }
+  /* tombol tutup di kanan, tidak mengecil oleh judul panjang */
+  html.ss-on .rc-h .ss-x, html.ss-on .sp-mh .ss-x, html.ss-on .jr-pick-h .ss-x, html.ss-on .v23-hd .ss-x { margin-left: auto !important; }
+
+  /* Filter & Sort: tombol tutup + footer sama dengan sheet lain */
+  html.ss-on #filter-panel:not(.hidden) { border-radius: var(--ss-r) var(--ss-r) 0 0 !important; max-height: min(var(--ss-max), 92dvh); }
+  html.ss-on #filter-panel .mf-fs-head { padding-left: max(var(--ss-pad), env(safe-area-inset-left, 0px)); padding-right: max(var(--ss-pad), env(safe-area-inset-right, 0px)); }
+  html.ss-on #filter-panel .mf-fs-foot { padding-left: max(var(--ss-pad), env(safe-area-inset-left, 0px)); padding-right: max(var(--ss-pad), env(safe-area-inset-right, 0px)); }
+  html.ss-on #filter-panel .mf-fs-foot button { min-height: 48px; height: 48px; border-radius: 16px; }
+  html.ss-on #filter-panel .mf-fs-reset { order: 0; }
+  html.ss-on #filter-panel .mf-fs-apply { order: 1; }
+}
+
+/* Detail trade: aksi utama (Edit) di kanan, yang merusak (Hapus) paling kiri, sama dengan sheet lain */
+@media (max-width: 720px) {
+  html.ss-on .jd-act { padding-left: max(var(--ss-pad), env(safe-area-inset-left, 0px)); padding-right: max(var(--ss-pad), env(safe-area-inset-right, 0px)); }
+  html.ss-on .jd-act button { height: 48px; border-radius: 16px; }
+  html.ss-on .jd-act .jd-del { order: 1; }
+  html.ss-on .jd-act .jd-add { order: 2; }
+  html.ss-on .jd-act .jd-edit { order: 3; flex-grow: 1.4; }
+  html.ss-on .jd-panel { max-height: min(var(--ss-max), 92dvh); border-radius: var(--ss-r) var(--ss-r) 0 0; }
+}
+
+/* ============ 5. Filter: pilihan yang mudah disentuh ============ */
+.ss-chips { display: none; }
+@media (max-width: 640px) {
+  html.ss-on #filter-panel .mf-fs-body > .grid { grid-auto-flow: row dense; }
+  html.ss-on #filter-panel .ss-has-chips { grid-column: 1 / -1; }
+  html.ss-on #filter-panel select.ss-chipped { display: none !important; }
+  html.ss-on #filter-panel .ss-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  html.ss-on .ss-chip {
+    flex: 0 1 auto; min-height: var(--ss-hit); padding: 0 16px; border-radius: 16px; border: 1px solid var(--ss-hair); background: var(--ss-soft);
+    color: inherit; font: inherit; font-size: 15px; font-weight: 600; line-height: 1.2; cursor: pointer; touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent; transition: background .18s ease, border-color .18s ease, color .18s ease, transform .18s var(--ss-ease);
+  }
+  html.ss-on .ss-chip:active { transform: scale(.96); }
+  html.ss-on .ss-chip[aria-pressed="true"] { background: var(--ss-chip-on); border-color: var(--ss-chip-ln); color: var(--ss-on-gold); }
+  html.ss-on .ss-chip:focus-visible { outline: 2px solid #d7b44a; outline-offset: 2px; }
+  /* baris "Urutkan": label di atas, pilihan penuh lebar */
+  html.ss-on #filter-panel .mf-fs-body > div:last-child > div { width: 100%; }
+}
+
+/* ============ 6. Keyboard: sheet naik di atas keyboard, tingginya mengikuti area terlihat ============ */
+html.ss-on.ss-kb :is(#profile-modal, #reminder-modal, #calendar-entry-modal, #v22-recap, #sp-modal, .jr-pick-ov, .v23-ov) { bottom: var(--ss-kb) !important; }
+html.ss-on.ss-kb .jd-panel { bottom: var(--ss-kb) !important; }
+html.ss-on.ss-kb :is(#profile-modal, #reminder-modal, #calendar-entry-modal) > .glass.ss-sheet { animation: none !important; }
+@media (max-width: 640px) {
+  html.ss-on.ss-kb .ss-sheet > .ss-foot { padding-bottom: 12px; }   /* ruang gesture bar tidak perlu saat keyboard terbuka */
+}
+
+/* ============ 7. Preferensi perangkat ============ */
+@media (prefers-reduced-motion: reduce) {
+  html.ss-on :is(#profile-modal, #reminder-modal, #calendar-entry-modal, #form-section) > .ss-sheet,
+  html.ss-on #v22-recap > .ss-sheet, html.ss-on #sp-modal .ss-sheet { animation: none !important; }
+  html.ss-on .ss-chip, html.ss-on .ss-x, html.ss-on .ss-grab::before { transition: none; }
+}
+@media (forced-colors: active) {
+  html.ss-on .ss-x::before { background: CanvasText; }
+  html.ss-on .ss-chip[aria-pressed="true"] { outline: 2px solid Highlight; }
+}

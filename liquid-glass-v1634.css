@@ -1,0 +1,259 @@
+/* ============================================================================
+   DOA IBU JOURNAL TRADING v16.34 — PREMIUM LIQUID GLASS EXPERIENCE
+   Additive visual layer. Loaded after ds.css and premium.css; no data or app
+   behavior is reimplemented here. Keep surfaces selective for readable content.
+   ============================================================================ */
+:root {
+  --di-bg: #0b0c0f;
+  --di-surface-1: rgba(26, 27, 31, .88);
+  --di-surface-2: rgba(31, 32, 36, .72);
+  --di-surface-3: rgba(255, 255, 255, .035);
+  --di-gold-1: #f3dfa2;
+  --di-gold-2: #d8b45e;
+  --di-gold-3: #a9822e;
+  --di-text: #f4f0e6;
+  --di-muted: #b3b0a8;
+  --di-faint: #898780;
+  --di-border: rgba(255, 255, 255, .105);
+  --di-highlight: rgba(255, 255, 255, .16);
+  --di-shadow: 0 18px 44px -28px rgba(0, 0, 0, .82);
+  --di-radius-xl: 24px;
+  --di-radius-lg: 20px;
+  --di-radius-md: 16px;
+  --di-space: 16px;
+  --di-glass-blur: 18px;
+  --di-motion: 180ms;
+}
+body.light {
+  --di-bg: #f3f1eb;
+  --di-surface-1: rgba(255, 254, 250, .94);
+  --di-surface-2: rgba(255, 254, 250, .82);
+  --di-surface-3: rgba(30, 28, 22, .035);
+  --di-gold-1: #a8801a;
+  --di-gold-2: #8a6a10;
+  --di-gold-3: #6e530b;
+  --di-text: #27272a;
+  --di-muted: #626168;
+  --di-faint: #77757a;
+  --di-border: rgba(34, 31, 24, .12);
+  --di-highlight: rgba(255, 255, 255, .9);
+  --di-shadow: 0 18px 40px -28px rgba(62, 50, 23, .32);
+}
+body.px {
+  color: var(--di-text);
+  background-color: var(--di-bg);
+  background-image: radial-gradient(ellipse at 12% -8%, rgba(216,180,94,.075), transparent 36%),
+                    radial-gradient(ellipse at 92% 18%, rgba(114,125,154,.055), transparent 30%);
+}
+body.light.px {
+  background-image: radial-gradient(ellipse at 8% -10%, rgba(168,128,26,.075), transparent 38%),
+                    radial-gradient(ellipse at 95% 16%, rgba(120,112,92,.045), transparent 32%);
+}
+/* Shared panels: restrained tint + top-edge reflection, with a solid fallback. */
+body.px .glass,
+body.px .hm-card,
+body.px .hm-tile,
+body.px .v5 .v5-card,
+body.px .jw-form,
+body.px #calendar-section .calx-shell,
+body.px .modal-card {
+  border: 1px solid var(--di-border);
+  background-color: var(--di-surface-1);
+  box-shadow: inset 0 1px 0 var(--di-highlight), var(--di-shadow);
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  body.px .hm-card,
+  body.px .hm-tile,
+  body.px .px-glass,
+  body.px .px-range,
+  body.px .toast,
+  body.px .v5 .v5-tip,
+  body.px.npv.authed .npv-dock {
+    -webkit-backdrop-filter: blur(var(--di-glass-blur)) saturate(145%);
+    backdrop-filter: blur(var(--di-glass-blur)) saturate(145%);
+  }
+}
+/* Beranda: preserve the existing information architecture; refine material and rhythm. */
+body.px #view-home .hm { gap: 16px; }
+body.px #view-home .hm-card {
+  border-radius: var(--di-radius-xl);
+  background-image: linear-gradient(145deg, rgba(255,255,255,.035), transparent 54%);
+}
+body.px #view-home .hm-hero { padding: clamp(20px, 3vw, 32px); }
+body.px #view-home .hm-h { letter-spacing: -.035em; }
+body.px #view-home .hm-next { border: 1px solid rgba(216,180,94,.18); }
+body.px #view-home .hm-stat { border: 1px solid var(--di-border); background: var(--di-surface-3); }
+body.px #view-home .hm-tile { transition: transform var(--di-motion) ease, border-color var(--di-motion) ease, background-color var(--di-motion) ease; }
+body.px #view-home .hm-tile:hover { border-color: rgba(216,180,94,.38); }
+/* Navigation and action controls share the same tactile language. */
+body.px button,
+body.px [role="button"],
+body.px a { -webkit-tap-highlight-color: transparent; }
+body.px button:focus-visible,
+body.px a:focus-visible,
+body.px [role="button"]:focus-visible,
+body.px input:focus-visible,
+body.px select:focus-visible,
+body.px textarea:focus-visible {
+  outline: 2px solid var(--px-gold);
+  outline-offset: 3px;
+}
+body.px input,
+body.px select,
+body.px textarea {
+  accent-color: var(--px-gold);
+  scroll-margin-bottom: 24px;
+}
+body.px input::placeholder,
+body.px textarea::placeholder { color: var(--di-faint); opacity: 1; }
+body.px .hm-btn,
+body.px .v5-btn,
+body.px .px-state-act { transition-duration: var(--di-motion); }
+/* Small screens: prevent grid children and large figures from forcing overflow. */
+body.px #view-home,
+body.px #dashboard-section,
+body.px #calendar-section,
+body.px #gallery-section,
+body.px #statistik-section,
+body.px #monthly-section { min-width: 0; }
+body.px #view-home .hm-quick { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+body.px #view-home .hm-stat dd { overflow-wrap: anywhere; }
+@media (max-width: 380px) {
+  body.px #view-home .hm-card { padding: 16px; border-radius: 20px; }
+  body.px #view-home .hm-hero { padding: 16px 16px; }
+  body.px #view-home .hm-quick { gap: 8px; }
+  body.px #view-home .hm-tile { padding: 12px 8px; border-radius: 16px; }
+  body.px #view-home .hm-tt { font-size: 13px; overflow-wrap: anywhere; }
+  body.px #view-home .hm-stats { gap: 8px; }
+  body.px #view-home .hm-stat { padding: 12px 8px; }
+  body.px #view-home .hm-stat dt { font-size: 12px; }
+  body.px #view-home .hm-stat dd { font-size: 15px; }
+}
+@media (min-width: 900px) {
+  body.px #view-home .hm { gap: 20px; }
+  body.px #view-home .hm-card { padding: 24px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.px *, body.px *::before, body.px *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  body.px .glass,
+  body.px .hm-card,
+  body.px .hm-tile,
+  body.px .px-glass,
+  body.px .px-range,
+  body.px .toast,
+  body.px .v5 .v5-tip,
+  body.px.npv.authed .npv-dock {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    background-image: none !important;
+    background-color: var(--di-surface-1) !important;
+  }
+}
+@media (prefers-contrast: more) {
+  :root { --di-border: rgba(255,255,255,.28); --di-muted: #d3d0c8; --di-faint: #bcb9b1; }
+  body.light { --di-border: rgba(0,0,0,.28); --di-muted: #44434a; --di-faint: #59575e; }
+}
+
+/* v16.35 — Dashboard hierarchy refinement (additive, no data logic changes) */
+body.px .v5 .v5-kpis { align-items: stretch; gap: clamp(8px, 1.5vw, 16px); }
+body.px .v5 .v5-kpis > .v5-kpi:first-child {
+  position: relative; padding: clamp(20px, 3vw, 28px); margin: 0 0 2px;
+  border: 1px solid rgba(216,180,94,.22); border-radius: 24px;
+  background: radial-gradient(ellipse at 92% 0%, rgba(216,180,94,.11), transparent 48%), linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.012));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.11), 0 16px 34px -28px rgba(0,0,0,.8);
+}
+body.px .v5 .v5-kpis > .v5-kpi:first-child::before { content: 'Ringkasan P/L'; }
+body.px .v5 .v5-kpis > .v5-kpi:nth-child(n+2):nth-child(-n+4) { background: var(--di-surface-2); border-color: var(--di-border); box-shadow: inset 0 1px 0 rgba(255,255,255,.045), 0 10px 26px -24px rgba(0,0,0,.8); }
+body.px .v5 .v5-kpis > .v5-kpi:nth-child(n+5) { border-color: rgba(255,255,255,.075); }
+body.px #btn-new-journal-fab { min-width: 56px; min-height: 56px; box-shadow: inset 0 1px 0 rgba(255,255,255,.42), 0 10px 26px -10px rgba(216,180,94,.58); transition: transform 160ms ease, box-shadow 180ms ease, filter 180ms ease; }
+body.px #btn-new-journal-fab:active { transform: scale(.94); filter: brightness(1.06); }
+body.px .v5 .v5-chart, body.px .v5 .v5-chart-card, body.px .v5 .v5-equity { border-radius: 20px; border: 1px solid var(--di-border); background: var(--di-surface-2); box-shadow: inset 0 1px 0 rgba(255,255,255,.045); }
+@media (max-width: 640px) {
+ body.px .v5 .v5-kpis { gap: 8px; }
+ body.px .v5 .v5-kpis > .v5-kpi:first-child { padding: 20px 16px 24px; border-radius: 20px; }
+ body.px .v5 .v5-kpis > .v5-kpi:nth-child(n+2):nth-child(-n+4) { padding: 16px 12px; border-radius: 16px; }
+ body.px .v5 .v5-kpis > .v5-kpi:nth-child(n+2):nth-child(-n+4) .v { font-size: clamp(28px, 7vw, 34px); }
+ body.px #btn-new-journal-fab { width: 56px; height: 56px; bottom: calc(var(--mnav-h, 0px) + var(--mnav-gap, 0px) + 14px + env(safe-area-inset-bottom, 0px)); }
+}
+body.light.px .v5 .v5-kpis > .v5-kpi:first-child { background: radial-gradient(ellipse at 92% 0%, rgba(168,128,26,.10), transparent 48%), linear-gradient(145deg, rgba(255,255,255,.98), rgba(250,248,241,.92)); border-color: rgba(168,128,26,.22); }
+@media (prefers-reduced-transparency: reduce) { body.px .v5 .v5-kpis > .v5-kpi:first-child, body.px .v5 .v5-kpis > .v5-kpi:nth-child(n+2):nth-child(-n+4) { background-image: none; } }
+
+/* v16.37 — Mature Liquid Glass: selective transparency, crisp content, shared rhythm */
+:root {
+  --di-glass-blur: 10px;
+  --di-radius-xl: 24px;
+  --di-radius-lg: 20px;
+  --di-radius-md: 16px;
+  --di-border: rgba(255,255,255,.12);
+  --di-shadow: 0 14px 34px -26px rgba(0,0,0,.78);
+}
+body.light.px {
+  --di-border: rgba(34,31,24,.14);
+  --di-shadow: 0 14px 30px -26px rgba(62,50,23,.28);
+}
+/* Content cards stay opaque enough to keep labels and numbers sharp. */
+body.px .glass,
+body.px .hm-card,
+body.px .hm-tile,
+body.px .v5 .v5-card,
+body.px .jw-form,
+body.px #calendar-section .calx-shell,
+body.px .modal-card,
+body.px .v5 .v5-chart,
+body.px .v5 .v5-chart-card,
+body.px .v5 .v5-equity {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background-color: var(--di-surface-1);
+  border-color: var(--di-border);
+}
+/* Reserve glass blur for floating surfaces where depth actually helps. */
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  body.px .px-glass,
+  body.px .px-range,
+  body.px .toast,
+  body.px .v5 .v5-tip,
+  body.px.npv.authed .npv-dock {
+    -webkit-backdrop-filter: blur(var(--di-glass-blur)) saturate(125%);
+    backdrop-filter: blur(var(--di-glass-blur)) saturate(125%);
+  }
+}
+/* Gold is an accent for primary actions and the main P/L summary only. */
+body.px #view-home .hm-next,
+body.px .v5 .v5-kpis > .v5-kpi:first-child {
+  border-color: rgba(216,180,94,.22);
+}
+body.px .v5 .v5-kpis > .v5-kpi:first-child {
+  background-image: linear-gradient(145deg, rgba(216,180,94,.055), transparent 60%);
+}
+body.px .v5 .v5-t-pl.pos,
+body.px .px-eqv.pos { color: var(--px-profit, #2dd4bf); text-shadow: none; }
+body.px .v5 .v5-t-pl.neg,
+body.px .px-eqv.neg { color: var(--px-loss, #ff7a68); text-shadow: none; }
+/* One consistent radius and spacing language for secondary panels. */
+body.px .hm-stat,
+body.px .v5 .v5-kpis > .v5-kpi:nth-child(n+2),
+body.px .v5 .v5-chart,
+body.px .v5 .v5-chart-card,
+body.px .v5 .v5-equity,
+body.px .px-state,
+body.px .px-range { border-radius: var(--di-radius-lg); }
+body.px :is(.hm-card,.v5 .v5-card,.modal-card,.jw-form) {
+  box-shadow: inset 0 1px 0 var(--di-highlight), var(--di-shadow);
+}
+body.px :is(p,small,.muted,.hint,.subtext) { text-wrap: pretty; }
+@media (max-width: 640px) {
+  body.px { --di-glass-blur: 8px; }
+  body.px .hm-card,
+  body.px .v5 .v5-card { box-shadow: inset 0 1px 0 var(--di-highlight), 0 10px 26px -24px rgba(0,0,0,.7); }
+}
+@media (prefers-reduced-transparency: reduce) {
+  body.px .px-glass, body.px .px-range, body.px .toast,
+  body.px .v5 .v5-tip, body.px.npv.authed .npv-dock {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    background-color: var(--di-surface-1) !important;
+  }
+}

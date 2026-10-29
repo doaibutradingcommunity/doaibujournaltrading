@@ -1,0 +1,226 @@
+/* ==========================================================================
+   DOA IBU — v16.76  SMART GLASS TRANSPARENCY
+   --------------------------------------------------------------------------
+   Yang membedakan desain cantik dari desain yang benar-benar nyaman dipakai:
+   transparansi tidak sama rata. Ia mengikuti PERAN permukaan.
+
+     NAV    dock, header, tab           paling transparan  (kaca tipis, konten terlihat lewat)
+     FLOAT  menu, sheet, toast, filter  transparan         (kaca melayang di atas halaman)
+     FORM   modal berisi formulir       hampir padat       (mengisi data = butuh latar tenang)
+     DATA   kartu P/L, KPI, grafik      padat, bening tipis (angka harus terbaca)
+            tabel & header tabel        padat
+
+   Teks tetap kontras di atas grafik / latar bergerak:
+     • lantai alpha per tingkat (slider "Transparansi kaca" --lg hanya menggeser DI ATAS lantai)
+     • lapisan di belakang kaca diredupkan (tema gelap) / diangkat (tema terang) lewat
+       brightness() pada backdrop-filter, sehingga teks tidak pernah bertemu latar terang penuh
+     • label nav & toast memakai text-shadow tipis dan warna label tidak aktif lebih terang
+     • rasio kontras terburuk dihitung (skrip terlampir di CHANGELOG-v16.76.md): ≥ 4.4:1
+       untuk teks utama pada latar putih penuh; ≥ 7:1 pada latar realistis.
+
+   Fallback tanpa blur — SATU rangkaian token menangani semuanya:
+     prefers-reduced-transparency · html.mo-lite (HP hemat) · data-ui-effects="low" ·
+     browser tanpa backdrop-filter · prefers-contrast: more.
+     Di mode ini alpha naik ke 0.95–1 dan backdrop-filter menjadi none, jadi tidak ada
+     kaca setengah-transparan tanpa blur (yang justru paling sulit dibaca).
+
+   Cara kerja: aditif, dimuat paling akhir (setelah glass-nav.css). Hanya mengganti
+   token yang sudah dibaca lapisan lama (--amb-bar-a, --amb-float-a, --gn-bar-bg) dan
+   menambah backdrop-filter berbasis token. Tidak ada markup / JS / logika data baru.
+   Hanya body.authed. Membatalkan: hapus <link href="smart-glass.css">.
+   ========================================================================== */
+
+
+/* ==========================================================================
+   0. TOKEN  (alpha: 0 = bening … 1 = padat; semuanya masih mengikuti slider --lg)
+   ========================================================================== */
+html body.authed {
+  /* alpha per tingkat (tema gelap) */
+  --sgt-nav-a:   calc(.46 + var(--lg, .55) * .24);   /* .46 – .70  (lantai .46) */
+  --sgt-float-a: calc(.54 + var(--lg, .55) * .26);   /* .54 – .80 */
+  --sgt-form-a:  calc(.88 + var(--lg, .55) * .08);   /* .88 – .96 */
+  --sgt-data-a:  calc(.92 + var(--lg, .55) * .06);   /* .92 – .98 */
+
+  /* backdrop-filter utuh per tingkat; brightness < 1 meredupkan apa pun di belakang kaca */
+  --sgt-nav-bf:   blur(26px) saturate(170%) brightness(.74);
+  --sgt-float-bf: blur(32px) saturate(165%) brightness(.78);
+  --sgt-form-bf:  blur(24px) saturate(140%) brightness(.86);
+  --sgt-data-bf:  blur(10px) saturate(120%);
+
+  /* teks di atas kaca tipis */
+  --sgt-label-off: rgba(255, 255, 255, .78);          /* label nav tidak aktif (dasarnya .62 → terlalu redup di atas grafik) */
+  --sgt-text-shadow: 0 1px 2px rgba(0, 0, 0, .42);
+
+  /* formulir di atas kaca: kolom input lebih padat daripada panelnya */
+  --sgt-ctl-bg: rgba(255, 255, 255, .075);
+
+  /* kaitkan ke token lapisan lama */
+  --amb-bar-a:   var(--sgt-nav-a);
+  --amb-float-a: var(--sgt-float-a);
+  --gn-bar-bg:   rgba(var(--amb-glass-rgb, 22, 23, 26), var(--sgt-nav-a));
+}
+
+html body.light.authed {
+  /* tema terang: latar di belakang diangkat, jadi alpha boleh lebih rendah di NAV */
+  --sgt-nav-a:   calc(.52 + var(--lg, .55) * .26);
+  --sgt-float-a: calc(.64 + var(--lg, .55) * .24);
+  --sgt-form-a:  calc(.90 + var(--lg, .55) * .07);
+  --sgt-data-a:  calc(.94 + var(--lg, .55) * .05);
+
+  --sgt-nav-bf:   blur(26px) saturate(170%) brightness(1.08);
+  --sgt-float-bf: blur(32px) saturate(165%) brightness(1.06);
+  --sgt-form-bf:  blur(24px) saturate(140%) brightness(1.04);
+  --sgt-data-bf:  blur(10px) saturate(115%);
+
+  --sgt-label-off: rgba(0, 0, 0, .72);
+  --sgt-text-shadow: 0 1px 0 rgba(255, 255, 255, .55);
+  --sgt-ctl-bg: rgba(255, 255, 255, .88);
+}
+
+/* HP: kartu data tanpa blur (puluhan kartu × blur = berat); alpha dinaikkan agar tetap terbaca */
+@media (max-width: 640px) {
+  html body.authed        { --sgt-data-a: .985; --sgt-data-bf: none; }
+  html body.light.authed  { --sgt-data-a: .99;  --sgt-data-bf: none; }
+}
+
+
+/* ==========================================================================
+   1. NAV — dock, header, tab (paling transparan)
+      Warna & alpha datang dari --amb-bar-a (ambient-glass.css) / --gn-bar-bg (glass-nav.css);
+      di sini hanya backdrop-filter berbasis token.
+   ========================================================================== */
+@media (min-width: 641px) {
+  html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > header.app-header {
+    -webkit-backdrop-filter: var(--sgt-nav-bf); backdrop-filter: var(--sgt-nav-bf);
+  }
+  html body.authed.authed.authed #app > header.app-header .glass-pill.nav-wrap {
+    -webkit-backdrop-filter: var(--sgt-nav-bf); backdrop-filter: var(--sgt-nav-bf);
+  }
+  html body.authed.authed.authed #app .glass-pill.nav-wrap .nav-pill-btn:not(.active) {
+    text-shadow: var(--sgt-text-shadow);
+  }
+  /* label tab tidak aktif: lebih terang dari dasarnya (.62 gelap / .58 terang); hover & aktif tidak disentuh */
+  html body.authed.authed.authed #app .glass-pill.nav-wrap .nav-pill-btn:not(.active):not(:hover) {
+    color: var(--sgt-label-off);
+  }
+}
+@media (max-width: 640px) {
+  html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > header.app-header::before,
+  html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] :is(.npv-dock, #app > header.app-header > div:nth-child(2)) {
+    -webkit-backdrop-filter: var(--sgt-nav-bf); backdrop-filter: var(--sgt-nav-bf);
+  }
+  /* label dock tidak aktif: lebih terang; semua label: bayang tipis agar tetap terbaca di atas grafik */
+  html body.npv.authed.authed.authed .npv-dock .npv-item:not([aria-current="page"]) span { color: var(--sgt-label-off); }
+  html body.npv.authed.authed.authed .npv-dock .npv-item span { text-shadow: var(--sgt-text-shadow); }
+}
+
+
+/* ==========================================================================
+   2. FLOAT — menu, sheet, popover, toast, filter, modal umum (transparan)
+   ========================================================================== */
+html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] :is(
+  .npv-sheet, .npv-pop, .toast, .ur-snack, .px-glass, .v5-tip,
+  #export-menu, #filter-panel:not(.hidden), .v5-fbar,
+  .modal-overlay:not(#image-zoom-modal) > .glass,
+  #sp-modal .sp-sheet, #v22-recap > [role="dialog"]
+) {
+  -webkit-backdrop-filter: var(--sgt-float-bf); backdrop-filter: var(--sgt-float-bf);
+}
+html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] :is(.toast, .ur-snack) {
+  text-shadow: var(--sgt-text-shadow);
+}
+
+
+/* ==========================================================================
+   3. FORM — modal yang berisi formulir (hampir padat, input lebih padat dari panelnya)
+      Dua pemilih terpisah: :has() yang tidak dikenal browser lama tidak boleh
+      membatalkan pemilih berbasis id.
+   ========================================================================== */
+html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] :is(
+  #form-section > .glass, #sp-modal .sp-sheet, #jw-card
+) {
+  --amb-float-a: var(--sgt-form-a);
+  -webkit-backdrop-filter: var(--sgt-form-bf); backdrop-filter: var(--sgt-form-bf);
+}
+@supports selector(:has(a)) {
+  html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] .modal-overlay:not(#image-zoom-modal):has(input:not([type="hidden"]), select, textarea) > .glass {
+    --amb-float-a: var(--sgt-form-a);
+    -webkit-backdrop-filter: var(--sgt-form-bf); backdrop-filter: var(--sgt-form-bf);
+  }
+}
+/* kolom input di dalam panel formulir: latar sendiri yang lebih padat, tanpa blur ganda */
+html body.authed :is(#form-section, #sp-modal, #jw-card, .modal-overlay > .glass) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea) {
+  --ctl-bg: var(--sgt-ctl-bg);
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+
+
+/* ==========================================================================
+   4. DATA — kartu P/L, KPI, grafik, kalender, statistik (padat, bening tipis)
+      Menggantikan "solid 100% tanpa blur" v16.66 dengan solid 92–98% + blur 10px,
+      sehingga kartu menangkap sedikit cahaya latar tetapi angka tidak pernah
+      bertemu latar yang bergerak. Hero tetap padat penuh (aturan optical-glass.css).
+      color-mix() diperlukan; tanpa itu kartu tetap padat 100% seperti sebelumnya.
+   ========================================================================== */
+/* Catatan spesifisitas: ambient-glass.css memakai :not(#export-menu):not(#filter-panel) pada .glass umum,
+   yang menghitung dua id. Tiga :not(#sgt-…) (id yang tidak pernah ada) menaikkan aturan ini di atasnya. */
+@supports (background: color-mix(in srgb, red 10%, transparent)) {
+  html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > main:not(#sgt-1):not(#sgt-2):not(#sgt-3) :is(
+    .hm-card:not(.hm-hero), .hm-tile, .stat-card, .v5-card, .v5-kpi, .v5-chart, .v5-chart-card, .v5-equity,
+    .stx-card, .glass.ms-card, .px-range
+  ),
+  html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > main:not(#sgt-1):not(#sgt-2):not(#sgt-3) .glass:not(#export-menu):not(#filter-panel):not(.v5-fbar):not(.v5-tip):not(.calx-sheet):not([role="dialog"]):not([role="menu"]):not(.hm-hero):not(.pf-hero):not(.v5-eqcard):not(.stx-hero):not(.calx-shell):not(.modal-overlay > .glass) {
+    background:
+      linear-gradient(180deg, var(--amb-solid-sheen), transparent 38%),
+      color-mix(in srgb, var(--amb-solid) calc(var(--sgt-data-a) * 100%), transparent) !important;
+    -webkit-backdrop-filter: var(--sgt-data-bf) !important;
+            backdrop-filter: var(--sgt-data-bf) !important;
+  }
+}
+
+/* tabel: header lengket harus padat, kalau tidak baris yang digulir tembus di bawah judul kolom */
+html body.authed table :is(thead.sticky, th.sticky, thead.sticky th) {
+  background-color: color-mix(in srgb, var(--amb-solid, #17181B) 94%, rgb(128, 128, 128) 6%);
+}
+@supports not (background: color-mix(in srgb, red 10%, transparent)) {
+  html body.authed table :is(thead.sticky, th.sticky, thead.sticky th) { background-color: var(--amb-solid, #17181B); }
+}
+
+
+/* ==========================================================================
+   5. FALLBACK TANPA BLUR — satu rangkaian token untuk semua kasus
+      Alpha naik (≥ .95), backdrop-filter none. Selektor ×3 `.authed` agar menang
+      atas definisi tema terang di atas (html body.light.authed).
+   ========================================================================== */
+/* a) pengguna meminta transparansi dikurangi */
+@media (prefers-reduced-transparency: reduce) {
+  html body.authed.authed.authed {
+    --sgt-nav-a: .96; --sgt-float-a: .97; --sgt-form-a: .99; --sgt-data-a: 1;
+    --sgt-nav-bf: none; --sgt-float-bf: none; --sgt-form-bf: none; --sgt-data-bf: none;
+  }
+}
+/* b) HP hemat & efek rendah (motion-system.js menandai html.mo-lite) */
+html.mo-lite body.authed.authed.authed,
+html[data-ui-effects="low"] body.authed.authed.authed {
+  --sgt-nav-a: .95; --sgt-float-a: .96; --sgt-form-a: .98; --sgt-data-a: 1;
+  --sgt-nav-bf: none; --sgt-float-bf: none; --sgt-form-bf: none; --sgt-data-bf: none;
+}
+/* c) browser tanpa backdrop-filter */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  html body.authed.authed.authed {
+    --sgt-nav-a: .95; --sgt-float-a: .96; --sgt-form-a: .98; --sgt-data-a: 1;
+    --sgt-nav-bf: none; --sgt-float-bf: none; --sgt-form-bf: none; --sgt-data-bf: none;
+  }
+}
+/* d) kontras tinggi: blur tetap, tetapi lantai alpha dinaikkan */
+@media (prefers-contrast: more) {
+  html body.authed.authed.authed {
+    --sgt-nav-a: .90; --sgt-float-a: .92; --sgt-form-a: .98; --sgt-data-a: 1;
+  }
+}
+/* e) mode warna paksa: sistem yang memegang warna; kaca dimatikan */
+@media (forced-colors: active) {
+  html body.authed.authed.authed {
+    --sgt-nav-bf: none; --sgt-float-bf: none; --sgt-form-bf: none; --sgt-data-bf: none;
+  }
+}

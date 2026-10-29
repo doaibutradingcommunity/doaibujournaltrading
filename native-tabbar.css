@@ -1,0 +1,214 @@
+/* v16.85 · Native Floating Tab Bar (+ tombol tambah journal bulat)
+   Dock bawah (HP) dibuat seperti tab bar mengambang iOS:
+   - kapsul transparan dengan lapisan kaca (blur + pantulan tipis di tepi atas)
+   - ikon bergaya SF Symbols (garis seragam; aktif = terisi lembut)
+   - label singkat
+   - item aktif = kapsul kaca netral yang meluncur, BUKAN kotak/garis/cahaya emas
+   - posisi mengikuti safe area (bawah, kiri, kanan)
+   - tombol tambah journal: lingkaran kaca melayang di atas dock (bukan pil emas berlabel); mengikuti opsi sisi kiri
+   Lapisan tampilan saja: tanpa markup baru, tanpa JS baru, logika navigasi tidak diubah.
+   Dimuat paling akhir (setelah signature-glass.css). Hapus <link> ini untuk kembali ke v16.84.
+
+   Spesifisitas: lapisan lama memakai selektor berantai + !important (glass-nav, signature-glass, smart-glass).
+   Selektor di sini diulang (.authed x9) agar menang tanpa menyentuh berkas lama.
+
+   Penyetelan cepat (hanya token di bawah):
+   --nt-tint     warna ikon aktif (default: aksen aplikasi; ganti ke putih bila ingin netral penuh)
+   --nt-label-on warna label aktif (teks utama, agar kontras terjaga)
+   --nt-cap      warna kapsul aktif
+   --nt-bg       warna kaca bar
+   --nt-blur     kekuatan blur */
+
+:root {
+  --nt-fab: 56px;                                      /* tombol tambah: lingkaran kaca melayang di atas dock */
+  --nt-fab-gap: 12px;                                  /* jarak tombol ke dock */
+  --nt-edge: max(14px, calc((100vw - 440px) / 2));     /* tepi dock (maks 440, terpusat); tombol rata dengan tepi kanan dock */
+  --nt-h: var(--mnav-h, 64px);
+  --nt-tint: var(--accent-text, #C8A96A);             /* ikon aktif */
+  --nt-label-on: var(--text-primary, rgba(255, 255, 255, .96));   /* label aktif: teks utama (kontras terjaga di atas konten terang) */
+  --nt-ink: var(--sgt-label-off, rgba(255, 255, 255, .78));   /* ikon + label tidak aktif (token keterbacaan smart-glass) */
+  --nt-shadow: var(--sgt-text-shadow, none);
+  --nt-bg: rgba(20, 21, 24, .70);
+  --nt-sheen: linear-gradient(180deg, rgba(255, 255, 255, .13) 0%, rgba(255, 255, 255, .03) 46%, rgba(255, 255, 255, .06) 100%);
+  --nt-rim:
+    inset 0 .5px 0 rgba(255, 255, 255, .42),          /* pantulan tepi atas */
+    inset 0 0 0 1px rgba(255, 255, 255, .11),         /* cincin kaca */
+    inset 0 -.5px 0 rgba(255, 255, 255, .10),         /* pantulan tepi bawah */
+    inset 0 10px 18px -12px rgba(255, 255, 255, .14);
+  --nt-drop: 0 1px 2px rgba(0, 0, 0, .22), 0 10px 24px -8px rgba(0, 0, 0, .50), 0 22px 44px -18px rgba(0, 0, 0, .55);
+  --nt-blur: 26px;
+  --nt-sat: 180%;
+  --nt-bright: .72;                                    /* menggelapkan latar yang terang agar label tetap terbaca */
+  --nt-cap: rgba(255, 255, 255, .11);
+  --nt-cap-sheen: linear-gradient(180deg, rgba(255, 255, 255, .15), rgba(255, 255, 255, .03) 60%, rgba(255, 255, 255, .06));
+  --nt-cap-rim: inset 0 .5px 0 rgba(255, 255, 255, .55), inset 0 0 0 1px rgba(255, 255, 255, .13), 0 2px 8px -2px rgba(0, 0, 0, .28);
+}
+body.light {
+  --nt-tint: var(--accent-text, #7E5F17);
+  --nt-label-on: rgba(0, 0, 0, .90);
+  --nt-ink: var(--sgt-label-off, rgba(0, 0, 0, .72));
+  --nt-bright: 1.06;
+  --nt-bg: rgba(255, 255, 255, .56);
+  --nt-sheen: linear-gradient(180deg, rgba(255, 255, 255, .70) 0%, rgba(255, 255, 255, .10) 50%, rgba(255, 255, 255, .22) 100%);
+  --nt-rim:
+    inset 0 .5px 0 #fff,
+    inset 0 0 0 1px rgba(60, 48, 20, .08),
+    inset 0 -.5px 0 rgba(255, 255, 255, .7),
+    inset 0 10px 18px -12px rgba(255, 255, 255, .8);
+  --nt-drop: 0 1px 2px rgba(60, 48, 20, .10), 0 10px 24px -8px rgba(60, 48, 20, .22), 0 22px 44px -18px rgba(60, 48, 20, .28);
+  --nt-cap: rgba(60, 48, 20, .06);
+  --nt-cap-sheen: linear-gradient(180deg, rgba(255, 255, 255, .55), rgba(255, 255, 255, .10) 60%, rgba(60, 48, 20, .03));
+  --nt-cap-rim: inset 0 .5px 0 #fff, inset 0 0 0 1px rgba(60, 48, 20, .09), 0 2px 8px -2px rgba(60, 48, 20, .16);
+}
+
+body.an-compact { --nt-h: 52px; }                     /* dock memadat (v16.65): tombol ikut turun */
+
+@media (max-width: 640px) {
+
+  /* ---------- 1. Bar: kapsul kaca mengambang ---------- */
+  html body.npv.authed.authed.authed.authed.authed.authed.authed.authed.authed .npv-dock {
+    border-radius: 999px;
+    padding: 0 4px;
+    background-color: var(--nt-bg) !important;
+    background-image: var(--nt-sheen) !important;
+    -webkit-backdrop-filter: blur(var(--nt-blur)) saturate(var(--nt-sat)) brightness(var(--nt-bright)) !important;
+            backdrop-filter: blur(var(--nt-blur)) saturate(var(--nt-sat)) brightness(var(--nt-bright)) !important;
+    box-shadow: var(--nt-rim), var(--nt-drop) !important;
+    border: 0;
+    /* safe area: kiri/kanan untuk landscape + notch; bawah untuk home indicator (aturan lama dipertahankan, ditegaskan di sini) */
+    left: max(14px, env(safe-area-inset-left, 0px));
+    right: max(14px, env(safe-area-inset-right, 0px));
+    bottom: calc(var(--mnav-gap, 12px) + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* ---------- 2. Item: ikon di atas, label singkat di bawah ---------- */
+  html body.npv.authed.authed.authed.authed.authed.authed.authed.authed.authed .npv-dock .npv-item {
+    gap: 3px; padding: 0 2px;
+    color: var(--nt-ink);
+    font-size: 11px; font-weight: 500; letter-spacing: -.005em; line-height: 1.1;
+    border-radius: 999px;
+    text-shadow: var(--nt-shadow);
+  }
+  html body.npv.authed.authed.authed.authed.authed.authed.authed.authed.authed .npv-dock .npv-item span {
+    color: inherit; text-shadow: var(--nt-shadow); max-width: 100%;
+  }
+  html body.npv.authed.authed.authed.authed.authed.authed.authed.authed.authed .npv-dock .npv-item svg {
+    width: 24px; height: 24px;
+    fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
+    filter: none; transform: none;
+    transition: fill .2s ease, stroke-width .2s ease, transform .12s ease;
+  }
+
+    /* ---------- 3. Aktif: ikon terisi lembut + warna tint, label tebal; tanpa glow / garis emas ---------- */
+  html body.npv.authed.authed.authed.authed.authed.authed.authed.authed.authed .npv-dock .npv-item[aria-current="page"] {
+    color: var(--nt-tint); font-weight: 600;
+  }
+  html body.npv.authed.authed.authed.authed.authed.authed.authed.authed.authed .npv-dock .npv-item[aria-current="page"] span {
+    color: var(--nt-label-on); font-weight: 600;
+  }
+  html body.npv.authed.authed.authed.authed.authed.authed.authed.authed.authed .npv-dock .npv-item[aria-current="page"] svg {
+    fill: currentColor; fill-opacity: .24; stroke-width: 1.9;
+    filter: none; transform: none;
+  }
+  html body.npv.authed.authed.authed.authed.authed.authed.authed.authed.authed .npv-dock .npv-item:active svg { transform: scale(.9); }
+
+  /* ---------- 4. Indikator: kapsul kaca netral selebar slot, meluncur antar tab ---------- */
+  html body.npv.authed.authed.authed.authed.authed.authed.authed.authed.authed .npv-dock .npv-ind {
+    top: 0; height: 100%;
+  }
+  html body.npv.authed.authed.authed.authed.authed.authed.authed.authed.authed .npv-dock .npv-ind::before {
+    content: ''; position: absolute; pointer-events: none;
+    inset: 4px 2px; width: auto; height: auto; margin: 0;
+    border-radius: 999px;
+    background-color: var(--nt-cap); background-image: var(--nt-cap-sheen);
+    box-shadow: var(--nt-cap-rim);
+  }
+  /* garis emas di tepi atas + pantulan kecil lama dimatikan */
+  html body.npv.authed.authed.authed.authed.authed.authed.authed.authed.authed .npv-dock .npv-ind::after { display: none !important; }
+
+  /* dock memadat saat gulir turun (v16.65): kapsul mengikuti tinggi bar */
+  html body.an-compact.npv.authed.authed.authed.authed.authed.authed.authed.authed.authed .npv-dock .npv-ind::before { inset: 3px 2px; top: 3px; bottom: 3px; }
+
+  /* ---------- 5. Tombol tambah journal: lingkaran kaca melayang di atas dock ----------
+     Menggantikan pil emas berlabel. Bahan, blur, dan tepi sama dengan bar; ikon "+" memakai tint. */
+  html body.npv.authed.authed.authed.authed.authed.authed.authed.authed.authed #btn-new-journal-fab {
+    left: auto !important;
+    right: max(var(--nt-edge), env(safe-area-inset-right, 0px)) !important;
+    bottom: calc(var(--mnav-gap, 12px) + env(safe-area-inset-bottom, 0px) + var(--nt-h) + var(--nt-fab-gap)) !important;
+    width: var(--nt-fab) !important; height: var(--nt-fab) !important; min-width: 0 !important; min-height: 0 !important;
+    padding: 0 !important; gap: 0 !important; overflow: visible;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50% !important; border: 0;
+    color: var(--nt-tint) !important;
+    background-color: var(--nt-bg) !important;
+    background-image: var(--nt-sheen) !important;
+    -webkit-backdrop-filter: blur(var(--nt-blur)) saturate(var(--nt-sat)) brightness(var(--nt-bright)) !important;
+            backdrop-filter: blur(var(--nt-blur)) saturate(var(--nt-sat)) brightness(var(--nt-bright)) !important;
+    box-shadow: var(--nt-rim), var(--nt-drop) !important;
+    filter: none; animation: none !important;
+    transition: bottom .3s cubic-bezier(.3, .8, .3, 1),
+                transform .28s cubic-bezier(.2, .9, .25, 1), opacity .2s ease;
+  }
+  html body.npv.authed.authed.authed.authed.authed.authed.authed.authed.authed.gu-fab-left #btn-new-journal-fab {
+    right: auto !important;
+    left: max(var(--nt-edge), env(safe-area-inset-left, 0px)) !important;
+  }
+  /* tanpa label dan tanpa kilap kubah emas */
+  html body.npv.authed.authed.authed.authed.authed.authed.authed.authed.authed #btn-new-journal-fab::after { display: none !important; }
+  html body.npv.authed.authed.authed.authed.authed.authed.authed.authed.authed #btn-new-journal-fab::before { display: none !important; }
+  html body.npv.authed.authed.authed.authed.authed.authed.authed.authed.authed #btn-new-journal-fab svg {
+    width: 26px; height: 26px; flex: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round;
+  }
+  /* gulir turun: tetap utuh (dock memadat, tombol ikut mengecil), tidak lagi "istirahat" mengecil terpisah dari bar */
+  html body.npv.authed.authed.authed.authed.authed.authed.authed.authed.authed.mf-fab-hide:not(.npv-kb):not(.npv-open):not(.mf-sheet-open):not(.jd-lock):not(:has(#form-section:not(.hidden))) #btn-new-journal-fab:not(:active),
+  html body.npv.authed.authed.authed.authed.authed.authed.authed.authed.authed.px:not(.npv-kb):not(.npv-open):not(.mf-sheet-open):not(.jd-lock):not(:has(#form-section:not(.hidden))) #btn-new-journal-fab.px-hide:not(:active) {
+    transform: none !important; opacity: 1 !important; pointer-events: auto !important;
+  }
+  html body.npv.authed.authed.authed.authed.authed.authed.authed.authed.authed #btn-new-journal-fab:active { transform: scale(.92) !important; }
+  html body.npv.authed.authed.authed.authed.authed.authed.authed.authed.authed #btn-new-journal-fab:focus-visible { outline: 2px solid var(--nt-tint); outline-offset: 3px; }
+}
+
+/* ---------- Fallback ---------- */
+/* HP hemat: tanpa blur, kaca padat (warna sama, hanya latar yang dipadatkan) */
+@media (max-width: 640px) {
+  html.mo-lite body.npv.authed.authed.authed.authed.authed.authed.authed.authed.authed :is(.npv-dock, #btn-new-journal-fab) {
+    -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+    background-color: #24252a !important; background-image: var(--nt-sheen) !important;
+  }
+  html.mo-lite body.light.npv.authed.authed.authed.authed.authed.authed.authed.authed.authed .npv-dock,
+  html.mo-lite body.light.npv.authed.authed.authed.authed.authed.authed.authed.authed.authed #btn-new-journal-fab { background-color: #f6f4ee !important; }
+}
+/* Transparansi dikurangi */
+@media (max-width: 640px) and (prefers-reduced-transparency: reduce) {
+  html body.npv.authed.authed.authed.authed.authed.authed.authed.authed.authed :is(.npv-dock, #btn-new-journal-fab) {
+    -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+    background-color: #24252a !important; background-image: none !important;
+  }
+  html body.light.npv.authed.authed.authed.authed.authed.authed.authed.authed.authed :is(.npv-dock, #btn-new-journal-fab) { background-color: #f6f4ee !important; }
+}
+/* Kontras lebih tinggi: tepi tegas, kapsul aktif bergaris */
+@media (max-width: 640px) and (prefers-contrast: more) {
+  html body.npv.authed.authed.authed.authed.authed.authed.authed.authed.authed .npv-dock {
+    --nt-ink: rgba(255, 255, 255, .88);
+    box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .5), var(--nt-drop) !important;
+  }
+  html body.npv.authed.authed.authed.authed.authed.authed.authed.authed.authed #btn-new-journal-fab { box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .5), var(--nt-drop) !important; }
+  html body.light.npv.authed.authed.authed.authed.authed.authed.authed.authed.authed #btn-new-journal-fab { box-shadow: inset 0 0 0 1.5px rgba(0, 0, 0, .55), var(--nt-drop) !important; }
+  html body.light.npv.authed.authed.authed.authed.authed.authed.authed.authed.authed .npv-dock {
+    --nt-ink: rgba(0, 0, 0, .86);
+    box-shadow: inset 0 0 0 1.5px rgba(0, 0, 0, .55), var(--nt-drop) !important;
+  }
+  html body.npv.authed.authed.authed.authed.authed.authed.authed.authed.authed .npv-dock .npv-ind::before {
+    box-shadow: inset 0 0 0 1.5px currentColor;
+  }
+}
+/* Mode warna paksa: kapsul menjadi garis sistem */
+@media (max-width: 640px) and (forced-colors: active) {
+  html body.npv.authed.authed.authed.authed.authed.authed.authed.authed.authed :is(.npv-dock, #btn-new-journal-fab) { background: Canvas !important; box-shadow: none !important; border: 1px solid CanvasText; color: CanvasText !important; }
+  html body.npv.authed.authed.authed.authed.authed.authed.authed.authed.authed .npv-dock .npv-ind::before { background: transparent; box-shadow: none; border: 1px solid Highlight; }
+  html body.npv.authed.authed.authed.authed.authed.authed.authed.authed.authed .npv-dock .npv-item[aria-current="page"] { color: Highlight; }
+}
+/* Gerak dikurangi */
+@media (prefers-reduced-motion: reduce) {
+  html body.npv.authed.authed.authed.authed.authed.authed.authed.authed.authed .npv-dock .npv-item svg { transition: none !important; }
+}

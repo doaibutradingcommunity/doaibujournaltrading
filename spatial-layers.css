@@ -1,0 +1,323 @@
+/* v16.46 · Spatial Layered Interface
+   Konten disusun dalam lima lapisan kedalaman, bukan kumpulan kotak datar:
+
+     L0  Latar          halaman itu sendiri
+     L1  Panel sekunder kartu statistik, tile, alat bantu       (rendah, sedikit masuk ke dalam)
+     L2  Panel utama    grafik ekuitas, hero beranda, kalender   (paling dominan di halaman)
+     L3  Mengambang     header, dock, menu, filter, ekspor, FAB  (terlepas dari halaman)
+     L4  Lapisan atas   detail trade dan modal; halaman di bawahnya mundur
+
+   Aturan yang dipegang file ini:
+   - Kedalaman dibangun dari bayangan berlapis (kontak + sekitar), bukan dari satu bayangan besar.
+   - Transparansi hanya untuk L3 dan L4, mengikuti slider "Transparansi kaca" (--lg).
+     Panel isi (L1/L2) tetap padat agar angka terbaca.
+   - Tidak ada rotate/skew/perspective pada elemen yang berisi teks atau angka.
+     Satu-satunya transform adalah translate/scale kecil (<1%) pada halaman yang mundur.
+   - Hanya tampilan. Tidak mengubah data, statistik, atau logika filter.
+   Untuk menonaktifkan seluruhnya: hapus tautan spatial-layers.css (dan .js) dari index.html. */
+
+/* ==========================================================================
+   0. TOKEN KEDALAMAN
+   ========================================================================== */
+:root {
+  /* Cahaya datang dari kiri atas: tepi atas/kiri sedikit terang, bawah/kanan gelap */
+  --sl-lit:      inset 1px 1px 0 rgba(255, 255, 255, .055), inset 0 1px 0 rgba(255, 255, 255, .06);
+  --sl-lit-hi:   inset 1px 1px 0 rgba(255, 255, 255, .085), inset 0 1px 0 rgba(255, 255, 255, .10);
+  --sl-rim:      inset 0 0 0 1px rgba(255, 255, 255, .075);
+  --sl-rim-hi:   inset 0 0 0 1px rgba(255, 255, 255, .11);
+
+  /* Bayangan: [kontak] + [sekitar] (+ [jatuh jauh] untuk lapisan tinggi) */
+  --sl-s1: 0 1px 1px rgba(0, 0, 0, .30), 0 6px 14px -10px rgba(0, 0, 0, .55);
+  --sl-s2: 0 1px 2px rgba(0, 0, 0, .30), 0 14px 28px -14px rgba(0, 0, 0, .62), 0 36px 64px -36px rgba(0, 0, 0, .60);
+  --sl-s3: 0 2px 6px rgba(0, 0, 0, .30), 0 18px 38px -14px rgba(0, 0, 0, .72), 0 2px 0 rgba(255, 255, 255, .02);
+  --sl-s4: 0 6px 14px rgba(0, 0, 0, .32), 0 30px 70px -18px rgba(0, 0, 0, .82);
+
+  /* Permukaan. L1 sedikit masuk (lebih gelap dari latar kartu biasa), L2 sedikit terangkat */
+  --sl-fill-1: rgba(255, 255, 255, .030);
+  --sl-fill-2: linear-gradient(180deg, rgba(255, 255, 255, .060), rgba(255, 255, 255, .022) 46%, rgba(255, 255, 255, .030));
+  --sl-solid-2: #17181b;
+
+  /* L3/L4: kaca. Alpha mengikuti slider transparansi (0 jernih … 1 pekat), tapi tidak pernah di bawah batas baca */
+  --sl-glass-a: calc(.72 + var(--lg, .55) * .24);
+  --sl-glass-3: rgba(25, 26, 30, var(--sl-glass-a));
+  --sl-glass-4: rgba(22, 23, 27, calc(.80 + var(--lg, .55) * .17));
+  --sl-blur-3:  blur(calc(14px + var(--lg, .55) * 12px)) saturate(165%);
+  --sl-blur-4:  blur(calc(22px + var(--lg, .55) * 14px)) saturate(170%);
+
+  --sl-scrim:   rgba(6, 6, 8, .52);
+  --sl-ease:    cubic-bezier(.2, .8, .2, 1);
+  --sl-recede:  .992;               /* halaman mundur: <1%, tanpa rotasi */
+}
+body.light {
+  --sl-lit:      inset 1px 1px 0 rgba(255, 255, 255, .95), inset 0 1px 0 #fff;
+  --sl-lit-hi:   inset 1px 1px 0 #fff, inset 0 1px 0 #fff;
+  --sl-rim:      inset 0 0 0 1px rgba(34, 31, 24, .085);
+  --sl-rim-hi:   inset 0 0 0 1px rgba(34, 31, 24, .12);
+
+  --sl-s1: 0 1px 1px rgba(62, 50, 23, .10), 0 6px 14px -10px rgba(62, 50, 23, .24);
+  --sl-s2: 0 1px 2px rgba(62, 50, 23, .10), 0 14px 28px -14px rgba(62, 50, 23, .26), 0 36px 64px -38px rgba(62, 50, 23, .30);
+  --sl-s3: 0 2px 6px rgba(62, 50, 23, .10), 0 18px 38px -16px rgba(62, 50, 23, .34);
+  --sl-s4: 0 6px 14px rgba(62, 50, 23, .14), 0 30px 70px -20px rgba(62, 50, 23, .42);
+
+  --sl-fill-1: rgba(255, 253, 246, .62);
+  --sl-fill-2: linear-gradient(180deg, #fffefb, #fbf9f2);
+  --sl-solid-2: #fffdf6;
+
+  --sl-glass-3: rgba(255, 254, 250, var(--sl-glass-a));
+  --sl-glass-4: rgba(252, 251, 246, calc(.84 + var(--lg, .55) * .13));
+  --sl-scrim:   rgba(30, 26, 12, .30);
+}
+
+/* ==========================================================================
+   1. L1 · PANEL SEKUNDER — rendah, rapat ke halaman
+   Kartu statistik, KPI, tile beranda, kartu pendukung, alat bantu.
+   Tanpa kilap tepi tebal: mereka mendukung, bukan memimpin.
+   ========================================================================== */
+body .stat-card,
+body .v5 .v5-kpi,
+body .v5 .v5-card:not(.v5-eqcard),
+body .v5-tools .glass,
+body .hm-tile,
+body .hm-card:not(.hm-hero),
+body #statistik-section .stx-card {
+  box-shadow: var(--sl-rim), var(--sl-lit), var(--sl-s1);
+}
+body .v5 .v5-kpi { background: var(--sl-fill-1); }
+
+/* ==========================================================================
+   2. L2 · PANEL UTAMA — dominan
+   Satu per halaman: grafik ekuitas (Dashboard), hero (Beranda), kalender, hero Statistik.
+   Lebih terang di tepi atas, bayangan lebih dalam, dan sedikit lebih besar napasnya.
+   ========================================================================== */
+body .v5 .v5-eqcard,
+body .v5 .v5-eqcard.glass,
+body .hm-hero,
+body #calendar-section .calx-shell,
+body #statistik-section .stx-hero {
+  box-shadow: var(--sl-rim-hi), var(--sl-lit-hi), var(--sl-s2);
+}
+body .v5 .v5-eqcard { padding-block: 28px 24px; }
+body .hm-hero.hm-card { padding-block: 28px 24px; }
+
+/* Panel utama tidak ikut menumpuk blur di belakang angka: isi dibuat padat */
+body .v5 .v5-eqcard.glass,
+body .hm-hero.hm-card {
+  -webkit-backdrop-filter: none;
+          backdrop-filter: none;
+  background-color: var(--sl-solid-2);
+}
+
+/* Jarak antar-lapisan: panel utama diberi ruang lebih besar di bawahnya */
+body .v5 .v5-eqcard + * { margin-top: 4px; }
+
+/* ==========================================================================
+   3. L3 · MENGAMBANG — header, nav, dock, menu, filter, ekspor, FAB
+   Terlepas dari halaman: kaca dengan bayangan jatuh yang jelas.
+   ========================================================================== */
+/* 3a. Header & navigasi atas */
+body #app > header.app-header .glass#header-right-block,
+body #app > header.app-header .glass#header-left-block,
+body #app > header.app-header .glass-pill.nav-wrap {
+  box-shadow: var(--sl-rim), var(--sl-lit), var(--sl-s3);
+  transition: box-shadow .25s var(--sl-ease);
+}
+/* Saat halaman digulir, kontrol atas terangkat lebih tinggi dari konten yang lewat di bawahnya */
+body.sl-scrolled #app > header.app-header .glass#header-right-block,
+body.sl-scrolled #app > header.app-header .glass#header-left-block,
+body.sl-scrolled #app > header.app-header .glass-pill.nav-wrap {
+  box-shadow: var(--sl-rim-hi), var(--sl-lit-hi), var(--sl-s4);
+}
+
+/* 3b. Dock & sheet menu (HP) */
+body.npv.authed .npv-dock {
+  box-shadow: var(--sl-rim-hi), var(--sl-lit-hi), 0 4px 10px rgba(0, 0, 0, .30), 0 22px 44px -12px rgba(0, 0, 0, .78);
+}
+body.light.npv.authed .npv-dock {
+  box-shadow: var(--sl-rim-hi), var(--sl-lit-hi), 0 4px 10px rgba(62, 50, 23, .12), 0 20px 40px -14px rgba(62, 50, 23, .36);
+}
+body.npv.authed .npv-sheet {
+  box-shadow: var(--sl-lit-hi), 0 -2px 8px rgba(0, 0, 0, .28), 0 -30px 70px -22px rgba(0, 0, 0, .85);
+}
+body.light.npv.authed .npv-sheet {
+  box-shadow: var(--sl-lit-hi), 0 -2px 8px rgba(62, 50, 23, .10), 0 -30px 70px -24px rgba(62, 50, 23, .42);
+}
+/* Tile dalam sheet menu: lapisan kecil di atas sheet */
+body.npv .npv-sheet .npv-tile { box-shadow: var(--sl-lit), 0 1px 2px rgba(0, 0, 0, .22); }
+body.light.npv .npv-sheet .npv-tile { box-shadow: var(--sl-lit), 0 1px 2px rgba(62, 50, 23, .10); }
+body.npv .npv-sheet .npv-tile[aria-current="page"] { box-shadow: var(--sl-lit-hi), 0 4px 12px -6px rgba(0, 0, 0, .45); }
+
+/* 3c. Filter, urutan, dan menu ekspor */
+body #export-menu.glass {
+  background: var(--sl-glass-4);
+  -webkit-backdrop-filter: var(--sl-blur-3);
+          backdrop-filter: var(--sl-blur-3);
+  box-shadow: var(--sl-rim-hi), var(--sl-lit-hi), var(--sl-s4);
+  transform-origin: 100% 0;
+}
+body .jr-seg {
+  box-shadow: var(--sl-rim), var(--sl-s1);
+}
+body .jr-search .diary-input {
+  box-shadow: var(--sl-rim), inset 0 1px 2px rgba(0, 0, 0, .22);   /* kolom cari: sedikit masuk */
+}
+body.light .jr-search .diary-input { box-shadow: var(--sl-rim), inset 0 1px 2px rgba(62, 50, 23, .10); }
+
+body .v5 .v5-fbar {
+  background: var(--sl-glass-3);
+  -webkit-backdrop-filter: var(--sl-blur-3);
+          backdrop-filter: var(--sl-blur-3);
+  box-shadow: var(--sl-rim-hi), var(--sl-lit-hi), var(--sl-s3);
+}
+/* Panel Filter & Sort versi desktop (inline): terangkat dari daftar di bawahnya */
+@media (min-width: 641px) {
+  body #filter-panel:not(.hidden) {
+    background: var(--sl-glass-3);
+    -webkit-backdrop-filter: var(--sl-blur-3);
+            backdrop-filter: var(--sl-blur-3);
+    box-shadow: var(--sl-rim-hi), var(--sl-lit-hi), var(--sl-s3);
+  }
+}
+/* Versi bottom sheet (HP) */
+@media (max-width: 640px) {
+  body #filter-panel:not(.hidden) {
+    box-shadow: var(--sl-lit-hi), 0 -2px 8px rgba(0, 0, 0, .28), 0 -30px 70px -22px rgba(0, 0, 0, .85);
+  }
+  body.light #filter-panel:not(.hidden) {
+    box-shadow: var(--sl-lit-hi), 0 -2px 8px rgba(62, 50, 23, .10), 0 -30px 70px -24px rgba(62, 50, 23, .42);
+  }
+}
+
+/* 3d. Tombol tambah trade */
+body #btn-new-journal-fab {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), inset 0 -2px 3px rgba(120, 88, 12, .25),
+              0 3px 6px rgba(0, 0, 0, .30), 0 14px 26px -8px rgba(0, 0, 0, .62);
+}
+
+/* ==========================================================================
+   4. L4 · LAPISAN ATAS — detail trade dan modal
+   Detail trade adalah lembar di atas halaman: scrim menggelapkan, halaman di bawahnya
+   mundur sedikit (skala <1%), lembar punya tepi atas yang terang dan bayangan terdalam.
+   ========================================================================== */
+body .jd-ov {
+  background: var(--sl-scrim);
+  -webkit-backdrop-filter: blur(5px) saturate(115%);
+          backdrop-filter: blur(5px) saturate(115%);
+}
+body .jd-panel {
+  background: linear-gradient(168deg, rgba(31, 32, 37, .985) 0%, rgba(20, 21, 24, .985) 58%, rgba(15, 16, 18, .99) 100%);
+  border-left-color: rgba(255, 255, 255, .12);
+  box-shadow: var(--sl-lit-hi), -2px 0 8px rgba(0, 0, 0, .30), -44px 0 80px -26px rgba(0, 0, 0, .85);
+  /* masuk dari tepi layar: geser + sedikit membesar, tanpa rotasi */
+  transform: translateX(32px) scale(.992);
+  transform-origin: 100% 50%;
+  transition: transform .34s var(--sl-ease), opacity .24s ease;
+}
+body .jd-panel.on { transform: none; }
+body.light .jd-panel {
+  background: linear-gradient(168deg, #fffefb 0%, #f8f6ef 100%);
+  border-left-color: rgba(34, 31, 24, .10);
+  box-shadow: var(--sl-lit-hi), -2px 0 8px rgba(62, 50, 23, .10), -44px 0 80px -28px rgba(62, 50, 23, .45);
+}
+/* Kepala lembar: sedikit terangkat dari isinya agar P/L dan tombol navigasi tetap jelas */
+body .jd-head {
+  background: linear-gradient(180deg, rgba(255, 255, 255, .045), rgba(255, 255, 255, 0));
+}
+body.light .jd-head { background: linear-gradient(180deg, rgba(255, 255, 255, .8), rgba(255, 255, 255, 0)); }
+/* Bar aksi di bawah: terpisah sebagai lapisan sendiri */
+body .jd-act { box-shadow: 0 -14px 20px -16px rgba(0, 0, 0, .55); background: rgba(255, 255, 255, .02); }
+body.light .jd-act { box-shadow: 0 -14px 20px -16px rgba(62, 50, 23, .22); background: rgba(255, 255, 255, .5); }
+/* Isi detail: kotak kecil jadi lapisan rendah di atas lembar */
+body .jd-outlook { box-shadow: var(--sl-rim), var(--sl-s1); }
+
+/* Modal (form journal, profil, pengingat, entri kalender) */
+body .modal-overlay:not(#image-zoom-modal) {
+  background: var(--sl-scrim);
+}
+body .modal-overlay:not(#image-zoom-modal) > .glass {
+  box-shadow: var(--sl-rim-hi), var(--sl-lit-hi), var(--sl-s4);
+}
+
+/* Halaman di bawah lembar mundur. Hanya skala, tanpa rotasi; origin di atas agar header tidak bergeser.
+   Dikecualikan saat bottom sheet filter terbuka: sheet itu `position: fixed` di dalam <main>. */
+body #app > main {
+  transition: transform .34s var(--sl-ease);
+}
+body.jd-lock:not(.mf-sheet-open) #app > main,
+body:has(.modal-overlay:not(.hidden):not(#image-zoom-modal)):not(.mf-sheet-open) #app > main {
+  transform: scale(var(--sl-recede));
+  transform-origin: 50% 0;
+}
+
+/* ==========================================================================
+   5. KETERBACAAN ANGKA
+   Angka tidak boleh ikut bergeser, miring, atau kabur: lebar tetap, tanpa transform.
+   ========================================================================== */
+body .tnum,
+body [data-money],
+body .jd-pl,
+body .v5 .v5-kpi .v,
+body .v5 .v5-read,
+body .stat-card p,
+body .hm-card .hm-stat,
+body .calx-amt,
+body .stx-val {
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  transform: none;
+}
+/* Teks di atas permukaan kaca L3/L4 tetap di lapisan sendiri, tanpa blur ikut ke teks */
+body .jd-panel, body .npv-sheet, body #filter-panel, body #export-menu { -webkit-font-smoothing: antialiased; }
+
+/* ==========================================================================
+   6. FALLBACK & AKSESIBILITAS
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  body .jd-panel,
+  body #app > main,
+  body #app > header.app-header .glass#header-right-block,
+  body #app > header.app-header .glass#header-left-block,
+  body #app > header.app-header .glass-pill.nav-wrap { transition: none; }
+  body.jd-lock:not(.mf-sheet-open) #app > main,
+  body:has(.modal-overlay:not(.hidden):not(#image-zoom-modal)):not(.mf-sheet-open) #app > main { transform: none; }
+  body .jd-panel { transform: none; }
+}
+/* Tanpa transparansi: L3/L4 jadi padat, kedalaman tetap lewat bayangan */
+@media (prefers-reduced-transparency: reduce) {
+  :root { --sl-glass-3: #1b1c20; --sl-glass-4: #1b1c20; --sl-blur-3: none; --sl-blur-4: none; }
+  body.light { --sl-glass-3: #fffdf6; --sl-glass-4: #fffdf6; }
+  body .jd-ov { -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root { --sl-glass-3: #1b1c20; --sl-glass-4: #1b1c20; }
+  body.light { --sl-glass-3: #fffdf6; --sl-glass-4: #fffdf6; }
+}
+/* HP: bayangan jatuh jauh dikurangi agar scroll tetap ringan di perangkat lemah */
+@media (max-width: 640px) {
+  :root {
+    --sl-s2: 0 1px 2px rgba(0, 0, 0, .30), 0 12px 24px -14px rgba(0, 0, 0, .62);
+    --sl-s4: 0 6px 14px rgba(0, 0, 0, .32), 0 24px 52px -18px rgba(0, 0, 0, .80);
+  }
+  body.light {
+    --sl-s2: 0 1px 2px rgba(62, 50, 23, .10), 0 12px 24px -14px rgba(62, 50, 23, .26);
+    --sl-s4: 0 6px 14px rgba(62, 50, 23, .14), 0 24px 52px -18px rgba(62, 50, 23, .40);
+  }
+}
+/* Detail trade jadi bottom sheet di <=720px (sama dengan journal-ux.css): masuk dari bawah */
+@media (max-width: 720px) {
+  body .jd-panel { transform: translateY(44px) scale(.994); transform-origin: 50% 100%;
+    box-shadow: var(--sl-lit-hi), 0 -2px 8px rgba(0, 0, 0, .30), 0 -30px 70px -22px rgba(0, 0, 0, .85); }
+  body.light .jd-panel { box-shadow: var(--sl-lit-hi), 0 -2px 8px rgba(62, 50, 23, .10), 0 -30px 70px -24px rgba(62, 50, 23, .42); }
+  body .jd-panel.on { transform: none; }
+}
+@media (forced-colors: active) {
+  body .jd-panel, body .v5 .v5-eqcard, body .hm-hero, body #calendar-section .calx-shell,
+  body #export-menu.glass, body #filter-panel:not(.hidden), body.npv.authed .npv-dock {
+    box-shadow: none; border: 1px solid CanvasText;
+  }
+}
+@media print {
+  body .stat-card, body .v5 .v5-kpi, body .v5 .v5-card, body .v5 .v5-eqcard, body .hm-card { box-shadow: none; }
+  body #app > main { transform: none !important; }
+}

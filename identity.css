@@ -1,0 +1,191 @@
+/* ==========================================================================
+   v16.99 · DOA IBU Signature Identity — "Lengkung Doa"
+   --------------------------------------------------------------------------
+   Satu bahasa visual, tiga bentuk dasar, semuanya GAMBAR (garis, bentuk, pola), bukan efek:
+
+     LENGKUNG  Dua telapak tangan yang berdoa membentuk lengkung runcing (lancet). Lengkung ini adalah
+               monogram, bentuk indikator (gauge), penanda ujung grafik, dan tanda profit/loss di kalender.
+     GARIS     Garis buku besar: aturan ganda (═) di bawah judul kartu, garis nol bertitik, garis pindah halaman.
+               Pemisah antar area memakai garis, bukan kabut.
+     ANAK TANGGA  Journal itu harian, jadi kurva equity digambar bertahap (hari demi hari), bukan dihaluskan.
+               Area di bawahnya diarsir seperti cetakan, bukan gradasi.
+
+   Angka: huruf sistem (SF Pro / Roboto / Segoe UI; sejak v17.00, sebelumnya Newsreader), lining + tabular hanya untuk angka besar; tanda +/− dan mata uang
+   dikecilkan dan diangkat, desimal diredupkan. Teks dan angka kecil tetap Inter.
+
+   TIDAK ADA backdrop-filter, blur, atau glow di berkas ini. Identitas tetap terbaca bila kaca dimatikan
+   (html.mo-lite, Reduce Transparency, atau backdrop-filter dicabut). Di mode itu arsiran dan garis dipertebal.
+
+   Dimuat PALING AKHIR. Dikunci ke html.id-on (dipasang identity.js). Membatalkan: hapus <link identity.css> dan
+   <script identity.js>; tidak ada markup bawaan yang diubah.
+   ========================================================================== */
+
+/* ---------- 0. TOKEN ---------- */
+:root {
+  --id-num: "SF Pro Display", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;  /* v17.00: SF Pro Display (angka besar); Text untuk angka kecil diatur di action-surface.css */
+  --id-ink: #c8a96a;
+  --id-rule: rgba(200, 169, 106, .34);
+  --id-rule-strong: rgba(200, 169, 106, .66);
+  --id-hatch-a: .40;
+  --id-dur: 260ms;
+  --id-ease: cubic-bezier(.2, .7, .2, 1);
+}
+body.light {
+  --id-ink: #8a6a10;
+  --id-rule: rgba(138, 106, 16, .32);
+  --id-rule-strong: rgba(138, 106, 16, .64);
+  --id-hatch-a: .52;
+}
+/* tanpa kaca: garis dan arsiran memikul identitas, jadi dipertebal */
+html.mo-lite { --id-hatch-a: .56; --id-rule: rgba(200, 169, 106, .46); }
+html.mo-lite body.light { --id-hatch-a: .64; --id-rule: rgba(138, 106, 16, .44); }
+@media (prefers-reduced-transparency: reduce) {
+  :root { --id-hatch-a: .56; --id-rule: rgba(200, 169, 106, .46); }
+  body.light { --id-hatch-a: .64; --id-rule: rgba(138, 106, 16, .44); }
+}
+@media (prefers-contrast: more) {
+  :root { --id-hatch-a: .7; --id-rule: var(--id-rule-strong); }
+}
+
+
+/* ---------- 1. MONOGRAM — lengkung + anak tangga + garis ganda ---------- */
+.id-mark { display: inline-block; flex: none; width: var(--id-ms, 28px); height: calc(var(--id-ms, 28px) * 1.1667); color: var(--id-ink); line-height: 0; }
+.id-mark svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.id-mark .m-arch, .id-mark .m-step { fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linejoin: miter; stroke-linecap: butt; }
+.id-mark .m-base { stroke: currentColor; stroke-width: 2.6; }
+.id-mark .m-rule { stroke: currentColor; stroke-width: 1.2; opacity: .7; }
+.id-mark .m-dot { fill: currentColor; }
+
+/* pemuat: monogram menggambar dirinya sendiri (lengkung dulu, lalu anak tangga, lalu titik) */
+.id-mark.id-draw .m-arch, .id-mark.id-draw .m-step { stroke-dasharray: 100; stroke-dashoffset: 100; animation: id-draw 1.5s cubic-bezier(.4, 0, .2, 1) infinite; }
+.id-mark.id-draw .m-step { animation-delay: .22s; }
+.id-mark.id-draw .m-dot { opacity: 0; animation: id-dot 1.5s ease infinite .22s; }
+@keyframes id-draw { 0% { stroke-dashoffset: 100; } 50%, 78% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: -100; } }
+@keyframes id-dot { 0%, 44% { opacity: 0; transform: scale(.4); } 56%, 78% { opacity: 1; transform: scale(1); } 100% { opacity: 0; } }
+.id-mark.id-draw .m-dot { transform-box: fill-box; transform-origin: center; }
+#loading .id-mark { --id-ms: 26px; }
+
+/* header (≥640px): monogram di kiri nama */
+@media (min-width: 640px) {
+  html.id-on .app-brand { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 10px; align-items: center; }
+  html.id-on .app-brand .id-mark { grid-row: 1 / span 2; --id-ms: 27px; }
+}
+/* beranda: monogram menggantikan segel kecil (segel penuh tetap di landing, login, dan Tentang) */
+html.id-on .hm-top .hm-logo { display: none; }
+html.id-on .hm-top .id-mark { --id-ms: 34px; }
+html.id-on .ed-top .id-mark { --id-ms: 30px; margin-bottom: 14px; }   /* hero editorial (mode aktif) */
+
+
+/* ---------- 2. ANGKA — huruf angka khusus, tanda diangkat, desimal diredupkan ---------- */
+/* huruf angka khusus HANYA untuk angka besar (≥ 20px). Angka kecil (tile statistik) tetap Inter, tapi ikut perlakuan tanda/desimal. */
+html.id-on body :is(.pf-val, .de-fig, .ed-fig, .hm-pl) {
+  font-family: var(--id-num) !important;
+  font-variant-numeric: lining-nums tabular-nums;
+  font-feature-settings: "lnum" 1, "tnum" 1;
+  font-optical-sizing: auto;
+  font-weight: 500;
+  letter-spacing: -.018em;
+}
+html.id-on .id-s, html.id-on .id-c { font-size: .5em; font-weight: 500; letter-spacing: 0; position: relative; top: -.46em; opacity: .78; }
+html.id-on .id-s { margin-right: .1em; }
+html.id-on .id-c { margin-right: .08em; }
+html.id-on .id-d, html.id-on .id-u { font-size: .6em; font-weight: 500; letter-spacing: 0; opacity: .6; }
+html.id-on .id-d { margin-left: .03em; }
+html.id-on .id-u { margin-left: .12em; }
+/* angka besar di kartu hero bertumpu pada garis dasar: garis tipis emas di bawahnya */
+html.id-on .v5 .pf-valbox .pf-val { padding-bottom: 6px; background: linear-gradient(var(--id-rule), var(--id-rule)) left bottom / 36px 1px no-repeat; }
+html.id-on .v5 .pf-valbox .pf-val.pf-wrap { background: none; }
+
+
+/* ---------- 3. BENTUK INDIKATOR ---------- */
+/* 3a. perubahan periode: panji (pennant) berujung runcing, bar tegas di sisi kiri */
+html.id-on .v5 .pf-cb {
+  position: relative;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 8px 24px 8px 15px;
+  clip-path: polygon(0 0, calc(100% - 13px) 0, 100% 50%, calc(100% - 13px) 100%, 0 100%);
+  background:
+    linear-gradient(to right, currentColor 0, currentColor 3px, transparent 3px),
+    color-mix(in srgb, currentColor 17%, transparent);
+}
+html.id-on body.light .v5 .pf-cb { background: linear-gradient(to right, currentColor 0, currentColor 3px, transparent 3px), color-mix(in srgb, currentColor 13%, transparent); }
+
+/* 3b. gauge lengkung (win rate, checklist): hasil upgrade identity.js dari cincin bulat */
+svg.id-arch path { fill: none; stroke-width: 4.2; stroke-linejoin: miter; }
+svg.id-arch .a { stroke-linecap: butt; }
+.hm-ring svg.id-arch { transform: none; }
+.hm-ring svg.id-arch ~ b { font-size: 13px; padding-top: 3px; }
+#statistik-section .stx-ring.id-arch { width: 30px; height: 34px; }
+#statistik-section .stx-ring.id-arch path { stroke-width: 5; }
+
+/* 3c. kalender: bentuk menyertai warna (aksesibel untuk buta warna). Profit = segitiga naik, loss = segitiga turun.
+       Warna bentuk = warna teks sel, jadi kontras di atas tint profit maupun loss. */
+html.id-on .v5 .v5-cell { position: relative; }
+html.id-on .v5 .v5-cell[style*="--wr"]::after,
+html.id-on .v5 .v5-cell[style*="--lr"]::after {
+  content: ""; position: absolute; top: 4px; right: 4px; width: 8px; height: 7px; background: var(--tx, currentColor); opacity: .9; pointer-events: none;
+}
+html.id-on .v5 .v5-cell[style*="--wr"]::after { clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+html.id-on .v5 .v5-cell[style*="--lr"]::after { clip-path: polygon(0 0, 100% 0, 50% 100%); }
+
+/* 3d. aturan ganda di bawah judul kartu: pemisah berupa garis, bukan kabut */
+html.id-on .v5 .pf-head, html.id-on .v5 .v5-ch, html.id-on .hm-ch {
+  padding-bottom: 10px;
+  border-bottom: 3px double var(--id-rule);
+}
+
+
+/* ---------- 4. GRAFIK — anak tangga, arsiran, garis nol bertitik, penanda lengkung ---------- */
+html.id-on .v5-eq svg .v5-grid-l { stroke-opacity: .11; stroke-dasharray: none; }
+html.id-on .v5-eq svg .v5-zero { stroke: var(--id-ink) !important; stroke-opacity: .75 !important; stroke-width: 1.5; stroke-dasharray: 1 5; stroke-linecap: round; }
+html.id-on .v5-eq svg path[fill="url(#v5g)"] { fill: url(#idHatchUp); }
+html.id-on .v5-eq svg:has(path[stroke="var(--loss)"]) path[fill="url(#v5g)"] { fill: url(#idHatchDn); }
+html.id-on .v5-eq svg path[stroke] { stroke-linejoin: miter; stroke-linecap: butt; }
+html.id-on .v5-eq svg .id-end { pointer-events: none; }
+html.id-on .v5-eq svg .id-end .pin { stroke: var(--bg, #0e0f11); stroke-width: 1.5; }
+html.id-on .v5-eq svg .id-end .pt { stroke: var(--bg, #0e0f11); stroke-width: 2; }
+#id-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+#id-defs .h-up line { stroke: var(--win, #2dd4bf); }
+#id-defs .h-dn line { stroke: var(--loss, #ff7a68); }
+#id-defs .h-up line, #id-defs .h-dn line { stroke-width: 1.3; stroke-opacity: var(--id-hatch-a); }
+
+
+/* ---------- 5. PINDAH HALAMAN — "halaman dibuka": garis emas ditarik, isi mengendap bertahap ---------- */
+#id-rule {
+  position: fixed; left: 0; right: 0; top: var(--id-rule-top, 64px); height: 2px; z-index: 41; pointer-events: none;
+  transform-origin: left center; transform: scaleX(0); opacity: 0;
+  background: linear-gradient(90deg, transparent, var(--id-ink) 10%, var(--id-ink) 90%, transparent);
+}
+#id-rule.go { animation: id-rule 560ms var(--id-ease) both; }
+@keyframes id-rule { 0% { transform: scaleX(0); opacity: 0; } 14% { opacity: 1; } 68% { transform: scaleX(1); opacity: 1; } 100% { transform: scaleX(1); opacity: 0; } }
+@keyframes id-settle { from { opacity: 0; transform: translate3d(0, 8px, 0); } to { opacity: 1; transform: none; } }
+html[data-id-tr] [id^="view-"]:not(.hidden):not(#view-home) > * {
+  animation: id-settle var(--id-dur) var(--id-ease) both;
+  animation-delay: calc(var(--id-i, 0) * 46ms);
+}
+html.mo-lite[data-id-tr] [id^="view-"]:not(.hidden):not(#view-home) > * { animation-duration: 120ms; animation-delay: 0s; }
+
+@media (prefers-reduced-motion: reduce) {
+  #id-rule.go { animation: none; }
+  html[data-id-tr] [id^="view-"]:not(.hidden) > * { animation: none !important; }
+  .id-mark.id-draw .m-arch, .id-mark.id-draw .m-step { animation: none; stroke-dashoffset: 0; }
+  .id-mark.id-draw .m-dot { animation: none; opacity: 1; }
+}
+
+/* ---------- 6. CETAK / KONTRAS TINGGI ---------- */
+@media (forced-colors: active) {
+  .id-mark { color: CanvasText; }
+  html.id-on .v5 .pf-cb { background: none; border: 1px solid currentColor; clip-path: none; }
+}
+
+
+/* ---------- 7. SPARKLINE BERANDA (hero editorial): anak tangga + penanda lengkung ---------- */
+html.id-on.ed-on .ed-sp-path { stroke-linejoin: miter; stroke-linecap: butt; }
+html.id-on.ed-on .ed-sp-zero { stroke: var(--id-ink); stroke-opacity: .7; stroke-dasharray: 1 5; stroke-linecap: round; stroke-width: 1.5; }
+/* titik bulat -> lengkung runcing yang berdiri di atas titik data (loss: tergantung di bawahnya) */
+html.id-on.ed-on .ed-sp-dot {
+  width: 10px; height: 15px; margin: -15px 0 0 -5px; border-radius: 0; box-shadow: none;
+  clip-path: polygon(0 100%, 0 46%, 8% 28%, 50% 0, 92% 28%, 100% 46%, 100% 100%);
+}
+html.id-on.ed-on .ed-spark.down .ed-sp-dot { margin: 0 0 0 -5px; transform: scaleY(-1); }

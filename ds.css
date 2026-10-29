@@ -1,0 +1,648 @@
+/* ==========================================================================
+   DOA IBU Design System — v1  ("Apple Stocks × iOS 26 × Luxury Finance")
+   --------------------------------------------------------------------------
+   ADITIF: file ini hanya berisi
+     1) design token (CSS custom property) di :root / body.light
+     2) komponen ber-prefix .ds-*
+   Tidak ada selector global (button, input, body, *, .glass, dll.), jadi
+   memuat file ini TIDAK mengubah tampilan halaman yang sudah ada.
+   Halaman lama baru berubah ketika markup-nya diberi kelas .ds-* (tahap berikutnya).
+
+   Isi:
+     1. Tokens (dark = default, light = body.light atau [data-ds-theme="light"])
+     2. Typography
+     3. Glass surface & card
+     4. Button
+     5. Input / select / textarea / field
+     6. Badge
+     7. Icon
+     8. Fallback & aksesibilitas (reduced motion / transparency / contrast)
+   ========================================================================== */
+
+
+/* ==========================================================================
+   1. TOKENS
+   ========================================================================== */
+:root,
+[data-ds-theme="dark"] {
+  /* ---- Warna dasar: graphite (netral hangat-dingin, bukan hitam murni) ---- */
+  --bg:                #0E0F11;                  /* background */
+  --bg-raised:         #17181B;                  /* panel solid (fallback tanpa blur) */
+  --surface:           rgba(255, 255, 255, .040);/* surface */
+  --surface-elevated:  rgba(255, 255, 255, .070);/* elevated surface */
+  --surface-pressed:   rgba(255, 255, 255, .100);
+  --border:            rgba(255, 255, 255, .080);
+  --border-strong:     rgba(255, 255, 255, .160);
+
+  /* ---- Teks (putih hangat-netral, 3 tingkat) ---- */
+  --text-primary:      rgba(255, 255, 255, .94);
+  --text-secondary:    rgba(235, 235, 245, .62);
+  --text-tertiary:     rgba(235, 235, 245, .40); /* placeholder / disabled / dekorasi. BUKAN untuk teks penting */
+
+  /* ---- Aksen emas: sangat terbatas (tombol utama, indikator aktif, fokus) ---- */
+  --accent:            #C8A96A;                  /* champagne gold, tidak jenuh */
+  --accent-hover:      #D4B87F;
+  --accent-pressed:    #B09357;
+  --accent-text:       #C8A96A;
+  --accent-soft:       rgba(200, 169, 106, .10);
+  --accent-border:     rgba(200, 169, 106, .26);
+  --on-accent:         #17120A;                  /* teks di atas isi emas */
+
+  /* ---- Semantik (success / danger; info & warning tetap) ---- */
+  --positive:          #2dd4bf;
+  --positive-soft:     rgba(45, 212, 191, .13);
+  --positive-border:   rgba(45, 212, 191, .28);
+  --negative:          #ff7a68;
+  --negative-soft:     rgba(255, 122, 104, .13);
+  --negative-border:   rgba(255, 122, 104, .30);
+  --success:           var(--positive);          /* alias */
+  --success-soft:      var(--positive-soft);
+  --success-border:    var(--positive-border);
+  --danger:            var(--negative);          /* alias */
+  --danger-soft:       var(--negative-soft);
+  --danger-border:     var(--negative-border);
+  --info:              #64A8FF;
+  --info-soft:         rgba(100, 168, 255, .14);
+  --info-border:       rgba(100, 168, 255, .30);
+  --warning:           #FF9F0A;
+  --warning-soft:      rgba(255, 159, 10, .14);
+  --warning-border:    rgba(255, 159, 10, .30);
+
+  /* ---- Material kaca ---- */
+  --glass-blur:        24px;
+  --glass-saturate:    160%;
+  --glass-highlight:   inset 0 1px 0 rgba(255, 255, 255, .05);   /* pantulan tepi atas */
+
+  /* ---- Bayangan ---- */
+  --shadow-1:          0 1px 2px rgba(0, 0, 0, .40);
+  --shadow-2:          0 10px 28px -10px rgba(0, 0, 0, .60);
+  --shadow-3:          0 28px 64px -18px rgba(0, 0, 0, .75);
+  --focus-ring:        0 0 0 2px var(--bg), 0 0 0 4px var(--accent);   /* satu-satunya fokus beremas */
+
+  /* ---- Tipografi: Apple-first, skala mengikuti iOS Dynamic Type ---- */
+  --font-sans:          var(--font-family);
+  --font-display:       var(--font-family);   /* ≥ 20px */
+  --font-text:          var(--font-family);      /* < 20px */
+  --font-family:       "Inter",-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,system-ui,sans-serif;
+  --font-mono:         ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Ukuran (padanan iOS) */
+  --fs-hero:           clamp(30px, 5vw, 34px);   /* Large Title 34 */
+  --fs-section:        clamp(20px, 2.6vw, 22px); /* Title 2 22 */
+  --fs-card:           17px;                     /* Headline 17 */
+  --fs-body:           15px;                     /* Subheadline 15 */
+  --fs-button:         15px;
+  --fs-label:          13px;                     /* Footnote 13 */
+  --fs-caption:        12px;                     /* Caption 1 12 */
+
+  --fw-regular:        400;
+  --fw-medium:         400;
+  --fw-semibold:       700;
+  --fw-bold:           700;                      /* batas atas. 800 tidak dipakai */
+
+  --lh-tight:          1.15;
+  --lh-snug:           1.3;
+  --lh-body:           1.47;
+
+  /* Tracking (SF: rapat di ukuran besar, longgar di ukuran kecil) */
+  --ls-hero:           -.026em;
+  --ls-section:        -.019em;
+  --ls-card:           -.014em;
+  --ls-body:           -.010em;
+  --ls-button:         -.012em;
+  --ls-label:          -.004em;
+  --ls-caption:        .004em;
+  --ls-overline:       .06em;
+  --ls-num:            -.012em;
+
+  /* ---- Radius (hanya skala ini) ---- */
+  --radius-sm:         12px;
+  --radius-md:         16px;
+  --radius-lg:         20px;
+  --radius-xl:         24px;
+  --radius-2xl:        28px;
+  --radius-pill:       999px;                    /* khusus badge / pill / FAB */
+
+  /* ---- Spasi (grid 4px) ---- */
+  --space-1: 4px;   --space-2: 8px;   --space-3: 12px;  --space-4: 16px;
+  --space-5: 20px;  --space-6: 24px;  --space-8: 32px;  --space-10: 40px;
+
+  /* ---- Gerak ---- */
+  --dur-fast:          140ms;
+  --dur:               220ms;
+  --dur-slow:          320ms;
+  --ease:              cubic-bezier(.25, .1, .25, 1);   /* kurva standar Apple */
+  --transition:        var(--dur) var(--ease);          /* shorthand */
+
+  /* ---- Layout halaman global ---- */
+  --page-max:          1120px;                   /* lebar konten maksimum */
+  --page-gutter:       20px;                     /* margin horizontal (mobile) */
+  --page-pt:           28px;                     /* jarak atas konten dari header */
+  --page-pb:           112px;                    /* jarak bawah (memberi ruang untuk FAB) */
+  --section-gap:       40px;                     /* jarak antar section tingkat atas */
+
+  /* ---- Skala z-index bernama (untuk tahap shell/modal) ---- */
+  --z-base: 0;  --z-sticky: 20;  --z-header: 30;  --z-fab: 40;
+  --z-overlay: 50;  --z-modal: 60;  --z-toast: 70;
+}
+
+/* ---- Mode terang: memakai mekanisme tema yang sudah ada (body.light) ---- */
+body.light,
+[data-ds-theme="light"] {
+  --bg:                #F4F3EF;
+  --bg-raised:         #FFFFFF;
+  --surface:           rgba(255, 255, 255, .62);
+  --surface-elevated:  rgba(255, 255, 255, .86);
+  --surface-pressed:   rgba(0, 0, 0, .06);
+  --border:            rgba(0, 0, 0, .08);
+  --border-strong:     rgba(0, 0, 0, .18);
+
+  --text-primary:      rgba(0, 0, 0, .90);
+  --text-secondary:    rgba(0, 0, 0, .62);
+  --text-tertiary:     rgba(0, 0, 0, .40);
+
+  --accent:            #C9A45C;
+  --accent-hover:      #BC9650;
+  --accent-pressed:    #A98543;
+  --accent-text:       #7E5F17;                  /* emas gelap agar kontras di atas bg terang */
+  --accent-soft:       rgba(176, 138, 52, .14);
+  --accent-border:     rgba(150, 112, 30, .34);
+  --on-accent:         #17120A;
+
+  --success:           var(--positive);
+  --success-soft:      var(--positive-soft);
+  --success-border:    var(--positive-border);
+  --danger:            var(--negative);
+  --danger-soft:       var(--negative-soft);
+  --danger-border:     var(--negative-border);
+
+  --positive:          #0f766e;
+  --positive-soft:     rgba(15, 118, 110, .11);
+  --positive-border:   rgba(15, 118, 110, .30);
+  --negative:          #b83526;
+  --negative-soft:     rgba(184,53,38, .09);
+  --negative-border:   rgba(184,53,38, .30);
+  --info:              #1D5FBF;
+  --info-soft:         rgba(29, 95, 191, .10);
+  --info-border:       rgba(29, 95, 191, .28);
+  --warning:           #8F5400;
+  --warning-soft:      rgba(143, 84, 0, .11);
+  --warning-border:    rgba(143, 84, 0, .30);
+
+  --glass-highlight:   inset 0 1px 0 rgba(255, 255, 255, .85);
+  --shadow-1:          0 1px 2px rgba(60, 48, 20, .10);
+  --shadow-2:          0 8px 24px -10px rgba(60, 48, 20, .22);
+  --shadow-3:          0 24px 56px -18px rgba(60, 48, 20, .30);
+}
+
+
+/* ==========================================================================
+   2. TYPOGRAPHY
+   ========================================================================== */
+.ds-hero,
+.ds-section-title,
+.ds-title,
+.ds-body,
+.ds-caption,
+.ds-overline {
+  font-family: var(--font-text);
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+.ds-hero, .ds-section-title { font-family: var(--font-display); }
+
+.ds-hero          { font-size: var(--fs-hero);    font-weight: var(--fw-bold);     line-height: var(--lh-tight); letter-spacing: var(--ls-hero); color: var(--text-primary); }
+.ds-section-title { font-size: var(--fs-section); font-weight: var(--fw-semibold); line-height: var(--lh-snug);  letter-spacing: var(--ls-section); color: var(--text-primary); }
+.ds-title         { font-size: var(--fs-card);    font-weight: var(--fw-semibold); line-height: var(--lh-snug);  letter-spacing: var(--ls-card); color: var(--text-primary); }
+.ds-body          { font-size: var(--fs-body);    font-weight: var(--fw-regular);  line-height: var(--lh-body);  letter-spacing: var(--ls-body); color: var(--text-secondary); }
+.ds-caption       { font-size: var(--fs-caption); font-weight: var(--fw-regular);  line-height: var(--lh-snug);  letter-spacing: var(--ls-caption); color: var(--text-secondary); }
+.ds-overline      { font-size: var(--fs-caption); font-weight: var(--fw-semibold); line-height: 1.2; letter-spacing: var(--ls-overline); text-transform:none; color: var(--text-secondary); }
+
+/* angka keuangan: lebar digit sama agar kolom rapi */
+.ds-num           { font-family: var(--font-display); font-variant-numeric: tabular-nums lining-nums; font-feature-settings: "tnum" 1, "lnum" 1; letter-spacing: var(--ls-num); }
+.ds-num--hero     { font-size: var(--fs-hero); font-weight: var(--fw-bold); line-height: var(--lh-tight); letter-spacing: var(--ls-hero); color: var(--text-primary); }
+
+.ds-text-primary   { color: var(--text-primary); }
+.ds-text-secondary { color: var(--text-secondary); }
+.ds-text-tertiary  { color: var(--text-tertiary); }
+.ds-text-accent    { color: var(--accent-text); }
+.ds-text-positive  { color: var(--positive); }
+.ds-text-negative  { color: var(--negative); }
+
+
+/* ==========================================================================
+   3. GLASS SURFACE & CARD
+   ========================================================================== */
+.ds-surface {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--glass-highlight), var(--shadow-2);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+          backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+}
+
+/* varian */
+.ds-surface--elevated { background: var(--surface-elevated); box-shadow: var(--glass-highlight), var(--shadow-3); }
+.ds-surface--flat     { box-shadow: var(--glass-highlight); }                       /* tanpa bayangan jatuh */
+.ds-surface--solid    { background: var(--bg-raised); -webkit-backdrop-filter: none; backdrop-filter: none; }
+
+/* radius */
+.ds-r-sm  { border-radius: var(--radius-sm); }
+.ds-r-md  { border-radius: var(--radius-md); }
+.ds-r-lg  { border-radius: var(--radius-lg); }
+.ds-r-xl  { border-radius: var(--radius-xl); }
+.ds-r-2xl { border-radius: var(--radius-2xl); }
+
+/* kartu = surface + padding */
+.ds-card         { padding: var(--space-5); }
+.ds-card--tight  { padding: var(--space-4); }
+.ds-card--roomy  { padding: var(--space-6); }
+
+/* permukaan yang bisa diklik / disorot: elevasi halus */
+.ds-surface--interactive {
+  cursor: pointer;
+  transition: transform var(--dur) var(--ease),
+              background-color var(--dur) var(--ease),
+              border-color var(--dur) var(--ease),
+              box-shadow var(--dur) var(--ease);
+}
+.ds-surface--interactive:hover {
+  background: var(--surface-elevated);
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+  box-shadow: var(--glass-highlight), var(--shadow-3);
+}
+.ds-surface--interactive:active {
+  background: var(--surface-pressed);
+  transform: translateY(0) scale(.992);
+  transition-duration: var(--dur-fast);
+}
+.ds-surface--interactive:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+.ds-divider { height: 1px; border: 0; margin: var(--space-4) 0; background: var(--border); }
+
+
+/* ==========================================================================
+   4. BUTTON
+   Varian: --primary | --secondary | --ghost | --destructive
+   Ukuran: --sm | (default md) | --lg     Bentuk: --icon, --block
+   ========================================================================== */
+.ds-btn {
+  --_h: 44px;
+  --_px: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  box-sizing: border-box;
+  min-height: var(--_h);
+  padding: 0 var(--_px);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-family: var(--font-text);
+  font-size: var(--fs-button);
+  font-weight: var(--fw-semibold);
+  line-height: 1;
+  letter-spacing: var(--ls-button);
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  transition: background-color var(--dur) var(--ease),
+              border-color var(--dur) var(--ease),
+              color var(--dur) var(--ease),
+              box-shadow var(--dur) var(--ease),
+              transform var(--dur-fast) var(--ease);
+}
+.ds-btn:active:not(:disabled):not([aria-disabled="true"]) { transform: scale(.975); }
+.ds-btn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.ds-btn:disabled,
+.ds-btn[aria-disabled="true"] { opacity: .42; cursor: not-allowed; }
+
+/* ukuran */
+.ds-btn--sm    { --_h: 36px; --_px: 14px; font-size: 15px; border-radius: var(--radius-sm); }
+.ds-btn--lg    { --_h: 52px; --_px: 24px; font-size: var(--fs-card); border-radius: var(--radius-lg); }
+.ds-btn--block { display: flex; width: 100%; }
+.ds-btn--icon  { --_px: 0; width: var(--_h); padding: 0; border-radius: var(--radius-pill); }
+
+/* primary — satu aksi utama per layar. Satu-satunya tombol berisi emas. */
+.ds-btn--primary {
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28), var(--shadow-1);
+}
+.ds-btn--primary:hover:not(:disabled):not([aria-disabled="true"])  { background: var(--accent-hover); }
+.ds-btn--primary:active:not(:disabled):not([aria-disabled="true"]) { background: var(--accent-pressed); }
+
+/* secondary — kaca netral */
+.ds-btn--secondary {
+  background: var(--surface-elevated);
+  border-color: var(--border);
+  color: var(--text-primary);
+  box-shadow: var(--glass-highlight);
+}
+.ds-btn--secondary:hover:not(:disabled):not([aria-disabled="true"])  { background: var(--surface-pressed); border-color: var(--border-strong); }
+.ds-btn--secondary:active:not(:disabled):not([aria-disabled="true"]) { background: var(--surface-pressed); }
+
+/* ghost — tanpa wadah sampai di-hover */
+.ds-btn--ghost {
+  background: transparent;
+  color: var(--text-secondary);
+}
+.ds-btn--ghost:hover:not(:disabled):not([aria-disabled="true"])  { background: var(--surface); color: var(--text-primary); }
+.ds-btn--ghost:active:not(:disabled):not([aria-disabled="true"]) { background: var(--surface-pressed); color: var(--text-primary); }
+
+/* destructive — merah lembut; hover menjadi merah penuh agar aksi berbahaya terasa disengaja */
+.ds-btn--destructive {
+  background: var(--negative-soft);
+  border-color: var(--negative-border);
+  color: var(--negative);
+}
+.ds-btn--destructive:hover:not(:disabled):not([aria-disabled="true"])  { background: var(--negative); border-color: var(--negative); color: #fff; }
+.ds-btn--destructive:active:not(:disabled):not([aria-disabled="true"]) { background: var(--negative); border-color: var(--negative); color: #fff; filter: brightness(.92); }
+.ds-btn--destructive:focus-visible { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--negative); }
+
+/* ikon di dalam tombol mengikuti warna teks */
+.ds-btn .ds-icon { flex: none; }
+
+
+/* ==========================================================================
+   5. INPUT / SELECT / TEXTAREA / FIELD
+   ========================================================================== */
+.ds-field   { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.ds-label   { font-family: var(--font-text); font-size: var(--fs-label); font-weight: var(--fw-medium); line-height: 1.3; letter-spacing: var(--ls-label); color: var(--text-secondary); }
+.ds-hint    { font-family: var(--font-text); letter-spacing: var(--ls-caption); font-size: var(--fs-caption); line-height: 1.35; color: var(--text-secondary); }
+.ds-error   { font-family: var(--font-text); letter-spacing: var(--ls-caption); font-size: var(--fs-caption); line-height: 1.35; color: var(--negative); }
+
+.ds-input,
+.ds-select,
+.ds-textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  padding: 0 var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);                 /* 16px */
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 17px;                                 /* 16px mencegah auto-zoom iOS Safari saat fokus */
+  line-height: 1.4;
+  letter-spacing: -.01em;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .025);
+  -webkit-appearance: none;
+          appearance: none;
+  transition: background-color var(--dur) var(--ease),
+              border-color var(--dur) var(--ease),
+              box-shadow var(--dur) var(--ease);
+}
+.ds-input::placeholder,
+.ds-textarea::placeholder { color: var(--text-tertiary); }
+
+.ds-input:hover:not(:disabled),
+.ds-select:hover:not(:disabled),
+.ds-textarea:hover:not(:disabled) { background: var(--surface-elevated); border-color: var(--border-strong); }
+
+.ds-input:focus,
+.ds-select:focus,
+.ds-textarea:focus {
+  outline: none;
+  background: var(--surface-elevated);
+  border-color: var(--accent-border);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.ds-input:focus-visible,
+.ds-select:focus-visible,
+.ds-textarea:focus-visible { box-shadow: 0 0 0 3px var(--accent-soft), 0 0 0 1px var(--accent); }
+
+.ds-input:disabled,
+.ds-select:disabled,
+.ds-textarea:disabled { opacity: .45; cursor: not-allowed; }
+
+.ds-input[aria-invalid="true"],
+.ds-select[aria-invalid="true"],
+.ds-textarea[aria-invalid="true"] { border-color: var(--negative-border); background: var(--negative-soft); }
+.ds-input[aria-invalid="true"]:focus,
+.ds-select[aria-invalid="true"]:focus,
+.ds-textarea[aria-invalid="true"]:focus { box-shadow: 0 0 0 3px var(--negative-soft), 0 0 0 1px var(--negative); }
+
+.ds-textarea { padding: var(--space-3) var(--space-4); min-height: 96px; resize: vertical; }
+
+.ds-select {
+  padding-right: 40px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+}
+.ds-select option { background: var(--bg-raised); color: var(--text-primary); }
+
+/* kontrol native (picker tanggal, scrollbar select) ikut tema — hanya di dalam komponen ds */
+.ds-input, .ds-select, .ds-textarea { color-scheme: dark; }
+body.light .ds-input, body.light .ds-select, body.light .ds-textarea,
+[data-ds-theme="light"] .ds-input, [data-ds-theme="light"] .ds-select, [data-ds-theme="light"] .ds-textarea { color-scheme: light; }
+.ds-input[type="date"]::-webkit-calendar-picker-indicator { opacity: .7; cursor: pointer; }
+
+
+/* ==========================================================================
+   6. BADGE
+   WIN · LOSS · OPEN · LONG · SHORT  (+ netral)
+   Warna arah (LONG/SHORT) sengaja BERBEDA dari hasil (WIN/LOSS)
+   agar "Long yang rugi" tidak terbaca hijau.
+   ========================================================================== */
+.ds-badge {
+  --_c: var(--text-secondary);
+  --_bg: var(--surface-elevated);
+  --_bd: var(--border);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  height: 24px;
+  padding: 0 12px;
+  border: 1px solid var(--_bd);
+  border-radius: var(--radius-pill);
+  background: var(--_bg);
+  color: var(--_c);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: var(--fw-semibold);
+  line-height: 1;
+  letter-spacing: 0;
+  text-transform:none;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.ds-badge::before {                                /* titik status; dibuang dengan .ds-badge--plain */
+  content: "";
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+.ds-badge--plain::before { display: none; }
+
+.ds-badge--win   { --_c: var(--positive); --_bg: var(--positive-soft); --_bd: var(--positive-border); }
+.ds-badge--loss  { --_c: var(--negative); --_bg: var(--negative-soft); --_bd: var(--negative-border); }
+.ds-badge--open  { --_c: var(--accent-text); --_bg: var(--accent-soft); --_bd: var(--accent-border); }
+.ds-badge--long  { --_c: var(--info);     --_bg: var(--info-soft);     --_bd: var(--info-border); }
+.ds-badge--short { --_c: var(--warning);  --_bg: var(--warning-soft);  --_bd: var(--warning-border); }
+.ds-badge--sm    { height: 20px; padding: 0 8px; font-size: 12px; }
+
+
+/* ==========================================================================
+   7. ICON
+   Tidak menambah library. Proyek sudah memakai SVG inline bergaya outline
+   (viewBox 24, stroke currentColor). Kelas ini menyeragamkannya:
+   garis tipis, ujung membulat, ukuran dari skala.
+   Pemakaian:  <svg class="ds-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="…"/></svg>
+   ========================================================================== */
+.ds-icon {
+  width: 20px; height: 20px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.ds-icon--sm { width: 16px; height: 16px; }
+.ds-icon--lg { width: 24px; height: 24px; }
+.ds-icon--xl { width: 28px; height: 28px; stroke-width: 1.5; }
+.ds-icon--accent    { color: var(--accent-text); }
+.ds-icon--secondary { color: var(--text-secondary); }
+
+
+/* ==========================================================================
+   8. FALLBACK & AKSESIBILITAS
+   ========================================================================== */
+
+/* Browser tanpa backdrop-filter → permukaan solid agar teks tetap terbaca */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .ds-surface            { background: var(--bg-raised); }
+  .ds-surface--elevated  { background: var(--bg-raised); }
+}
+
+/* Layout: gutter & ritme vertikal lebih lega di layar besar */
+@media (min-width: 640px)  { :root { --page-gutter: 28px; --page-pt: 36px; --section-gap: 48px; } }
+@media (min-width: 1024px) { :root { --page-gutter: 36px; --page-pt: 44px; --section-gap: 56px; } }
+
+/* Preferensi sistem: kurangi transparansi → solid */
+@media (prefers-reduced-transparency: reduce) {
+  .ds-surface,
+  .ds-surface--elevated  { background: var(--bg-raised); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+
+/* Preferensi sistem: kontras tinggi */
+@media (prefers-contrast: more) {
+  :root, [data-ds-theme="dark"]  { --border: rgba(255, 255, 255, .28); --text-secondary: rgba(255, 255, 255, .80); --text-tertiary: rgba(255, 255, 255, .60); }
+  body.light, [data-ds-theme="light"] { --border: rgba(0, 0, 0, .40);   --text-secondary: rgba(0, 0, 0, .78);       --text-tertiary: rgba(0, 0, 0, .60); }
+}
+
+/* Preferensi sistem: kurangi gerak → tanpa transisi/transform */
+@media (prefers-reduced-motion: reduce) {
+  .ds-surface--interactive,
+  .ds-btn,
+  .ds-input,
+  .ds-select,
+  .ds-textarea { transition: none; }
+  .ds-surface--interactive:hover,
+  .ds-surface--interactive:active,
+  .ds-btn:active:not(:disabled):not([aria-disabled="true"]) { transform: none; }
+}
+
+/* Windows High Contrast / forced-colors */
+@media (forced-colors: active) {
+  .ds-btn, .ds-input, .ds-select, .ds-textarea, .ds-badge, .ds-surface { border: 1px solid CanvasText; }
+  .ds-btn:focus-visible, .ds-input:focus-visible, .ds-select:focus-visible, .ds-textarea:focus-visible { outline: 2px solid Highlight; }
+}
+
+/* ============ Guided Flow: form journal 4 langkah ============ */
+#jw-card { padding-bottom: 16px; }
+.jw-form { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
+.jw-progress { flex: 0 0 auto; margin-bottom: 16px; }
+.jw-count { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 8px; font-size: 12px; font-weight: 600; color: #d4af37; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+.jw-count-name { font-weight: 500; color: #9ca3af; }
+.jw-bars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.jw-chip { appearance: none; background: none; border: 0; padding: 0; cursor: pointer; text-align: left; display: flex; flex-direction: column; gap: 4px; color: #6b7280; -webkit-tap-highlight-color: transparent; }
+.jw-chip::before { content: ""; display: block; height: 4px; border-radius: 4px; background: rgba(255,255,255,.12); transition: background .3s, box-shadow .3s; }
+.jw-chip i { font-style: normal; font-size: 12px; font-weight: 600; letter-spacing: .01em; display: none; }
+.jw-chip b { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: color .2s; }
+.jw-chip.is-done::before { background: rgba(212,175,55,.55); }
+.jw-chip.is-done b { color: #9ca3af; }
+.jw-chip.is-active::before { background: #d4af37; box-shadow: 0 0 10px rgba(212,175,55,.5); }
+.jw-chip.is-active b { color: #e7c85a; }
+.jw-chip:focus-visible { outline: 2px solid rgba(212,175,55,.7); outline-offset: 3px; border-radius: 6px; }
+@media (min-width: 480px) { .jw-chip i { display: inline; } .jw-chip { flex-direction: column; } .jw-chip b { display: inline; } }
+.jw-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 2px 2px 8px; margin: 0 -2px; }
+.jw-step { animation: jwIn .32s cubic-bezier(.2,.8,.2,1) both; }
+.jw-step[hidden] { display: none; }
+.jw-step.jw-back { animation-name: jwInBack; }
+@keyframes jwIn { from { opacity: 0; transform: translateX(18px); } to { opacity: 1; transform: none; } }
+@keyframes jwInBack { from { opacity: 0; transform: translateX(-18px); } to { opacity: 1; transform: none; } }
+.jw-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+.jw-num { flex: 0 0 auto; font-size: 28px; line-height: 1; font-weight: 600; color: rgba(212,175,55,.85); font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+.jw-title { font-size: 17px; font-weight: 600; color: #f3f4f6; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.jw-opt { font-size: 12px; font-weight: 600; color: #9ca3af; border: 1px solid rgba(255,255,255,.14); border-radius: 999px; padding: 1px 8px; }
+.jw-sub { font-size: 12px; color: #6b7280; margin-top: 2px; }
+.jw-foot { flex: 0 0 auto; display: flex; gap: 12px; padding-top: 12px; margin-top: 4px; border-top: 1px solid rgba(255,255,255,.08); }
+.jw-foot [hidden] { display: none !important; }
+.jw-btn-next { flex: 1; padding: 12px 16px; border-radius: 16px; }
+.jw-btn-back { padding: 12px 20px; border-radius: 16px; font-size: 15px; font-weight: 600; color: #d1d5db; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); cursor: pointer; transition: background .2s; }
+.jw-btn-back:hover { background: rgba(255,255,255,.1); }
+.jw-btn-back[hidden] { display: none; }
+.jw-shake { animation: jwShake .35s; }
+@keyframes jwShake { 20%,60% { transform: translateX(-4px); } 40%,80% { transform: translateX(4px); } }
+body.light .jw-chip::before { background: rgba(0,0,0,.12); }
+body.light .jw-chip.is-done::before { background: rgba(160,124,20,.55); }
+body.light .jw-chip.is-active::before { background: #a07c14; box-shadow: none; }
+body.light .jw-chip.is-active b { color: #7a5c08; }
+body.light .jw-count, body.light .jw-num { color: #a07c14; }
+body.light .jw-title { color: #1f1b0d; }
+body.light .jw-foot { border-top-color: rgba(0,0,0,.08); }
+body.light .jw-btn-back { color: #374151; background: rgba(0,0,0,.05); border-color: rgba(0,0,0,.12); }
+@media (prefers-reduced-motion: reduce) { .jw-step, .jw-step.jw-back, .jw-shake { animation: none; } }
+
+/* Tab Pre-Market / Journal Trade (satu pintu +) */
+.jw-date { flex: 0 0 auto; margin-bottom: 12px; }
+.jw-tabs { flex: 0 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin-bottom: 16px; border-radius: 16px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); }
+.jw-tab { appearance: none; border: 0; background: transparent; cursor: pointer; padding: 8px 8px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 1px; color: #9ca3af; transition: background .25s, color .25s, box-shadow .25s; -webkit-tap-highlight-color: transparent; }
+.jw-tab b { font-size: 13px; font-weight: 600; }
+.jw-tab small { font-size: 12px; opacity: .8; }
+.jw-tab.is-active { background: rgba(212,175,55,.16); color: #e7c85a; box-shadow: inset 0 0 0 1px rgba(212,175,55,.45); }
+.jw-tab:focus-visible { outline: 2px solid rgba(212,175,55,.7); outline-offset: 2px; }
+.jw-progress[hidden] { display: none; }
+body.light .jw-tabs { background: rgba(0,0,0,.04); border-color: rgba(0,0,0,.08); }
+body.light .jw-tab { color: #6b7280; }
+body.light .jw-tab.is-active { background: rgba(160,124,20,.14); color: #7a5c08; box-shadow: inset 0 0 0 1px rgba(160,124,20,.4); }
+
+/* ===== Form Journal Baru v16.14.1: semua bagian ikut scroll, tombol aksi tetap di bawah, spasi lega, aman dari keyboard ===== */
+#jw-card { max-height: 88vh; max-height: min(88dvh, calc(var(--jw-vh, 100dvh) - 24px)); }
+.jw-form { overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; scroll-padding: 16px 0 96px; padding: 2px 2px 0; margin: 0 -2px; }
+.jw-form > * { flex-shrink: 0; }
+.jw-body { flex: 0 0 auto; overflow: visible; padding: 4px 2px 20px; margin: 0 -2px; }
+.jw-date { margin-bottom: 20px; }
+.jw-tabs { gap: 8px; padding: 8px; margin-bottom: 24px; border-radius: 20px; }
+.jw-tab { padding: 12px 8px; gap: 4px; border-radius: 12px; }
+.jw-tab b { font-size: 15px; }
+.jw-tab small { font-size: 12px; }
+.jw-progress { margin-bottom: 24px; }
+.jw-foot { position: sticky; bottom: 0; z-index: 3; margin-top: 0; padding: 12px 0 2px; background: rgba(26,25,21,.97); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); box-shadow: 0 -14px 14px -6px rgba(26,25,21,.97); }
+body.light .jw-foot { background: rgba(255,253,246,.97); box-shadow: 0 -14px 14px -6px rgba(255,253,246,.97); }
+#form-section.jw-vv { bottom: auto; top: var(--jw-top, 0px); height: var(--jw-vh, 100%); }
+#form-section.jw-kb { padding: 8px; align-items: flex-start; }
+#form-section.jw-kb #jw-card { padding: 16px 16px 12px; border-radius: 24px; max-height: calc(var(--jw-vh, 100dvh) - 16px); }
+#form-section.jw-kb #jw-card > .flex { margin-bottom: 8px; }
+#form-section.jw-kb .jw-sub, #form-section.jw-kb .jw-tab small { display: none; }
+#form-section.jw-kb .jw-tabs { margin-bottom: 16px; }
+#form-section.jw-kb .jw-progress { margin-bottom: 16px; }
+@media (max-width: 479px) { .jw-tabs { margin-bottom: 20px; } .jw-date { margin-bottom: 16px; } }

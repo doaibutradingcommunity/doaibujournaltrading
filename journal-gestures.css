@@ -1,0 +1,84 @@
+/* v16.91 · Gesture-Driven Journal List — gaya untuk journal-gestures.js. Dimuat setelah gesture-ui.css.
+   Untuk membatalkan: hapus tautan css & js (dan baris data-jg di index.html tidak berpengaruh). */
+
+/* ---------- Elemen yang hanya dipakai di layar kecil ---------- */
+.jr-more, .jg-tray { display: none; }
+.jr-check { display: none; }
+.jg-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- Tombol "Pilih" di toolbar + tanda centang (semua ukuran) ---------- */
+#btn-select-mode[aria-pressed="true"] { background: rgba(215,180,74,.2); color: #e8c766; }
+body.light #btn-select-mode[aria-pressed="true"] { color: #8a6a10; }
+#btn-select-mode:focus-visible, .jg-bar button:focus-visible, .jg-tray button:focus-visible, .jr-more:focus-visible, .jg-hint-x:focus-visible { outline: 2px solid #d7b44a; outline-offset: 2px; }
+
+body.jg-select #journal-list .jr { cursor: pointer; padding-left: 56px; }
+body.jg-select #journal-list .jr .jr-act { visibility: hidden; pointer-events: none; }
+body.jg-select .jr-day-add { opacity: .35; pointer-events: none; }
+body.jg-select #btn-new-journal-fab { display: none !important; }
+body.jg-select #journal-list .jr .jr-check { display: inline-flex; position: absolute; left: 16px; top: 50%; transform: translateY(-50%); width: 24px; height: 24px; border-radius: 50%;
+  align-items: center; justify-content: center; border: 2px solid rgba(235,235,245,.4); color: transparent; transition: background-color .16s ease, border-color .16s ease, color .16s ease; }
+body.light.jg-select #journal-list .jr .jr-check { border-color: rgba(0,0,0,.35); }
+#journal-list .jr.jg-sel { background: rgba(215,180,74,.1); box-shadow: inset 0 0 0 1.5px rgba(215,180,74,.45); }
+body.jg-select #journal-list .jr.jg-sel .jr-check { background: #d7b44a; border-color: #d7b44a; color: #1c1608; }
+body.light.jg-select #journal-list .jr.jg-sel .jr-check { color: #fff; background: #8a6a10; border-color: #8a6a10; }
+.jr-check svg { width: 14px; height: 14px; }
+
+/* ---------- Bilah aksi pilihan ---------- */
+.jg-bar { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); z-index: 60; transform: translateX(-50%); box-sizing: border-box;
+  display: flex; align-items: center; gap: 4px; max-width: min(520px, calc(100vw - 24px)); width: max-content; padding: 6px; border-radius: 24px;
+  background: linear-gradient(165deg, rgba(255,255,255,.14), rgba(20,20,22,.92)); border: 1px solid rgba(215,180,74,.4);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 14px 34px -12px rgba(0,0,0,.6); -webkit-backdrop-filter: blur(24px) saturate(170%); backdrop-filter: blur(24px) saturate(170%);
+  color: #f0cf70; font-size: 13px; font-weight: 600; animation: jgBarIn .22s cubic-bezier(.2,.8,.2,1); }
+.jg-bar[hidden] { display: none; }
+body.light .jg-bar { background: rgba(255,255,255,.88); color: #7a5c0c; border-color: rgba(138,106,16,.35); box-shadow: 0 14px 34px -14px rgba(0,0,0,.3); }
+.jg-bar button { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; border: 0; border-radius: 18px; background: transparent; color: inherit; font: inherit; cursor: pointer; white-space: nowrap; }
+.jg-bar button:hover:not(:disabled) { background: rgba(215,180,74,.16); }
+.jg-bar .jg-count { flex: 1; min-width: 70px; padding: 0 6px; text-align: center; font-variant-numeric: tabular-nums; }
+.jg-bar .jg-del { color: #ff7a68; }
+body.light .jg-bar .jg-del { color: #b83526; }
+.jg-bar .jg-del:hover:not(:disabled) { background: rgba(255,122,104,.16); }
+.jg-bar button:disabled { opacity: .4; cursor: default; }
+@keyframes jgBarIn { from { opacity: 0; transform: translateX(-50%) translateY(14px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+/* ---------- Layar kecil: geser untuk tindakan ---------- */
+@media (max-width: 720px) {
+  .jg-bar { bottom: calc(var(--mnav-h, 64px) + var(--mnav-gap, 12px) + 16px + env(safe-area-inset-bottom, 0px)); width: calc(100vw - 24px); }
+
+  /* Edit/Hapus inline diganti satu tombol ⋯ (tombol alternatif untuk geser) */
+  #journal-list .jr .jr-act .jr-btn { display: none; }
+  #journal-list .jr .jr-act .jr-more { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 0; border-radius: 12px; background: transparent; color: var(--text-tertiary, rgba(235,235,245,.6)); cursor: pointer; }
+  #journal-list .jr .jr-more:hover, #journal-list .jr .jr-more[aria-expanded="true"] { background: rgba(255,255,255,.08); color: #d7b44a; }
+  body.light #journal-list .jr .jr-more:hover, body.light #journal-list .jr .jr-more[aria-expanded="true"] { background: rgba(0,0,0,.06); color: #8a6a10; }
+
+  #journal-list .jr { touch-action: pan-y; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+  #journal-list .jr.jg-drag .jr-main, #journal-list .jr.jg-open .jr-main, #journal-list .jr.jg-snap .jr-main { transform: translate3d(var(--jg-x, 0px), 0, 0); }
+  #journal-list .jr.jg-snap .jr-main { transition: transform .24s cubic-bezier(.2,.8,.2,1); }
+
+  /* Baki di belakang kartu: lebarnya mengikuti jarak geser; isi tetap berukuran penuh dan "terbuka" dari kanan */
+  .jg-tray { display: block; position: absolute; top: 0; right: 0; bottom: 0; width: calc(var(--jg-w, 0px) + 16px); overflow: hidden; visibility: hidden; border-radius: 0 20px 20px 0; }
+  #journal-list .jr.jg-drag .jg-tray, #journal-list .jr.jg-open .jg-tray, #journal-list .jr.jg-snap .jg-tray { visibility: visible; }
+  #journal-list .jr.jg-snap .jg-tray { transition: width .24s cubic-bezier(.2,.8,.2,1); }
+  .jg-tray-in { position: absolute; top: 0; right: 0; bottom: 0; width: 208px; display: flex; }
+  .jg-tray button { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 0 0 0 0; border: 0; border-radius: 0;
+    font-size: 12px; font-weight: 600; cursor: pointer; background: rgba(255,255,255,.07); color: var(--text-secondary, rgba(235,235,245,.78)); }
+  .jg-tray button[data-jg="edit"] { background: rgba(215,180,74,.2); color: #e8c766; }
+  .jg-tray button[data-jg="del"] { background: rgba(255,122,104,.22); color: #ff7a68; padding-right: 16px; }
+  .jg-tray button svg { width: 20px; height: 20px; }
+  body.light .jg-tray button { background: rgba(0,0,0,.06); color: #3f3f46; }
+  body.light .jg-tray button[data-jg="edit"] { background: rgba(138,106,16,.14); color: #8a6a10; }
+  body.light .jg-tray button[data-jg="del"] { background: rgba(184,53,38,.14); color: #b83526; }
+  .jg-tray button:active { filter: brightness(1.25); }
+
+  .jg-hint { display: flex; align-items: center; gap: 12px; margin: 0 0 12px; padding: 8px 8px 8px 16px; border-radius: 16px; font-size: 13px; background: rgba(215,180,74,.1); border: 1px solid rgba(215,180,74,.24); color: #e8c766; }
+  body.light .jg-hint { color: #7a5c0c; }
+  .jg-hint-t { flex: 1; min-width: 0; }
+  .jg-hint-x { flex: none; width: 44px; height: 44px; margin: -4px 0; border: 0; border-radius: 12px; background: transparent; color: inherit; font-size: 20px; line-height: 1; cursor: pointer; }
+}
+@media (min-width: 721px) { .jg-hint { display: none; } }
+@media (prefers-reduced-motion: reduce) {
+  #journal-list .jr.jg-snap .jr-main, #journal-list .jr.jg-snap .jg-tray, .jg-bar, body.jg-select #journal-list .jr .jr-check { transition: none !important; animation: none !important; }
+}
+@media (forced-colors: active) {
+  #journal-list .jr.jg-sel { outline: 2px solid Highlight; }
+  .jg-bar { border-color: CanvasText; }
+}

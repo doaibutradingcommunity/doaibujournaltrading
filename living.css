@@ -1,0 +1,77 @@
+/* v16.69 · Living Components
+   Respons kecil terhadap tindakan pengguna. Tidak ada animasi yang berjalan terus.
+   Hanya transform + opacity + warna, memakai token gerak dari motion-system.css (--mo-*).
+   Semua dikunci ke html.lc-on (dipasang oleh living.js). Hapus tautan ini + living.js untuk membatalkan. */
+
+:root {
+  --lc-ease: var(--mo-ease, cubic-bezier(.22, .61, .36, 1));
+  --lc-spring: cubic-bezier(.34, 1.4, .5, 1);
+  --lc-gold: #d4af37;
+}
+
+/* 1. Angka: lebar angka tetap selama menghitung, tanpa goyang */
+html.lc-on .lc-counting { font-variant-numeric: tabular-nums; }
+
+/* 2. Chip & segmen: status aktif jelas, berpindah dengan transisi */
+html.lc-on :is(.px-chip, .ps-chip, .ef-chip, .sp-chip, .v26-chip, .jw-chip, .v5-fchip, .calx-chip, .rc-chip,
+                .jr-seg button, .v23-seg button, .sp-seg button, .ps-seg button, .ef-seg button, .ms-seg button) {
+  transition: background-color var(--mo-base, 200ms) var(--lc-ease), border-color var(--mo-base, 200ms) var(--lc-ease),
+              color var(--mo-base, 200ms) var(--lc-ease), box-shadow var(--mo-base, 200ms) var(--lc-ease),
+              transform var(--mo-fast, 120ms) var(--lc-ease);
+}
+html.lc-on :is(.px-chip, .ps-chip, .ef-chip, .sp-chip, .v26-chip, .jw-chip, .v5-fchip, .calx-chip,
+                .jr-seg button, .v23-seg button, .sp-seg button, .ps-seg button, .ef-seg button, .ms-seg button):active {
+  transform: scale(.96);
+}
+/* status aktif: cincin tipis yang konsisten di semua keluarga chip */
+html.lc-on :is(.px-chip.on, .ps-chip.on, .ef-chip.on, .sp-chip.on, .v26-chip.on, .jw-chip.on,
+                .jr-seg button.on, .v23-seg button.on, .sp-seg button.on, .ps-seg button.on, .ef-seg button.on, .ms-seg button.on),
+html.lc-on :is(.px-chip, .ps-chip, .ef-chip, .sp-chip, .jr-seg button, .v23-seg button)[aria-pressed="true"] {
+  box-shadow: 0 0 0 1px rgba(212, 175, 55, .45);
+}
+@keyframes lc-pop { 0% { transform: scale(.92); } 55% { transform: scale(1.04); } 100% { transform: none; } }
+html.lc-on .lc-pop { animation: lc-pop 280ms var(--lc-ease) both; }
+
+/* 3. Toggle (switch): kenop melebar saat ditekan, memantul ke posisi baru */
+html.lc-on .rem-switch .track { transition: background-color var(--mo-base, 200ms) var(--lc-ease); }
+html.lc-on .rem-switch .track::after {
+  transition: transform 260ms var(--lc-spring), width var(--mo-fast, 120ms) var(--lc-ease), background-color var(--mo-base, 200ms);
+}
+html.lc-on .rem-switch input:active + .track::after { width: 26px; }
+html.lc-on .rem-switch input:checked:active + .track::after { transform: translateX(14px); }
+html.lc-on .rem-switch input:focus-visible + .track { outline: 2px solid var(--lc-gold); outline-offset: 2px; }
+
+/* 4. Filter: lencana jumlah, kolom terisi, tombol saat panel terbuka */
+html.lc-on #btn-filter-toggle { position: relative; transition: background-color var(--mo-base, 200ms) var(--lc-ease), border-color var(--mo-base, 200ms) var(--lc-ease), color var(--mo-base, 200ms) var(--lc-ease); }
+html.lc-on #btn-filter-toggle.lc-open { border-color: rgba(212, 175, 55, .5); color: #e0b94a; }
+html.lc-on #btn-filter-toggle.lc-filtered { border-color: rgba(212, 175, 55, .55); }
+html.lc-on .lc-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px;
+  font-size: 12px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums;
+  color: #16130a; background: linear-gradient(135deg, #f0cf70, #d4af37 55%, #b8942a);
+}
+html.lc-on .lc-badge[hidden] { display: none; }
+html.lc-on #filter-panel .diary-input { transition: border-color var(--mo-base, 200ms) var(--lc-ease), box-shadow var(--mo-base, 200ms) var(--lc-ease); }
+html.lc-on #filter-panel [data-lc-set="1"] { border-color: rgba(212, 175, 55, .65); box-shadow: 0 0 0 1px rgba(212, 175, 55, .22); }
+
+/* 5. Panel: semua panel yang terbuka di tempat memakai satu gerak masuk */
+@keyframes lc-panel-in { from { opacity: 0; transform: translate3d(0, -6px, 0); } to { opacity: 1; transform: none; } }
+html.lc-on #filter-panel:not(.hidden),
+html.lc-on #jr-active:not([hidden]),
+html.lc-on details[open] > :not(summary) {
+  animation: lc-panel-in var(--mo-base, 200ms) var(--lc-ease) both;
+}
+html.lc-on details > summary { transition: color var(--mo-base, 200ms) var(--lc-ease); }
+
+/* 6. Grafik: sentuhan geser horizontal membaca grafik */
+html.lc-on #pnl-chart { touch-action: pan-y; -webkit-tap-highlight-color: transparent; }
+
+/* Kurangi gerak / perangkat hemat: status tetap berubah, gerak hilang */
+@media (prefers-reduced-motion: reduce) {
+  html.lc-on .lc-pop,
+  html.lc-on #filter-panel:not(.hidden), html.lc-on #jr-active:not([hidden]), html.lc-on details[open] > :not(summary) { animation: none !important; }
+  html.lc-on .rem-switch .track::after { transition-duration: .01ms !important; }
+}
+html.mo-lite.lc-on .lc-pop,
+html.mo-lite.lc-on #filter-panel:not(.hidden), html.mo-lite.lc-on #jr-active:not([hidden]), html.mo-lite.lc-on details[open] > :not(summary) { animation: none !important; }

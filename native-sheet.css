@@ -1,0 +1,124 @@
+/* v16.87 · Native Sheet 2.0 — tampilan
+   Menggantikan native-sheet.css v16.86. Melengkapi sheet-system.css (v16.71): satu kurva dan satu durasi untuk semua sheet,
+   Detail trade / Filter / Trade 360 / editor Strategi disamakan dengan sheet lain, dua mode tinggi (isi / tetap),
+   dialog "buang perubahan" yang sama, dan keadaan saat ditarik.
+   Lapisan tampilan saja; dikunci ke html.ns-on (dipasang native-sheet.js). HP ≤640px; tablet/desktop tidak diubah.
+   Membatalkan: hapus <link href="native-sheet.css"> dan <script src="native-sheet.js">. */
+
+/* ============ 1. Token gerak: satu sumber untuk semua sheet ============ */
+html.ns-on {
+  --ns-r: var(--ss-r, 28px);                                         /* satu sudut atas */
+  --ns-max: var(--ss-max, calc(100dvh - 32px - env(safe-area-inset-top, 0px)));
+  --ns-fixed: var(--ns-max);                                         /* tinggi sheet "tetap": formulir panjang / bertab */
+  --ns-ease: cubic-bezier(.32, .72, 0, 1);                           /* kurva sheet iOS: cepat di awal, mendarat lembut */
+  --ns-in: .30s;                                                     /* masuk */
+  --ns-out: .22s;                                                    /* keluar lebih singkat dari masuk: terasa responsif */
+  --ss-ease: var(--ns-ease);                                         /* sheet-system.css (ssRise) memakai token ini */
+  --ss-in: var(--ns-in);
+}
+
+@keyframes nsRise { from { transform: translateY(100%); } to { transform: none; } }
+
+/* ============ 2. Tirai: satu takaran untuk semua overlay yang belum ikut aturan ambient ============ */
+html body[data-amb] :is(.sl-ov, .tsum-ov, .jf-dlg-ov) {
+  background: var(--amb-scrim, rgba(0, 0, 0, .46)) !important;
+  -webkit-backdrop-filter: blur(var(--amb-blur-scrim, 6px)) !important;
+          backdrop-filter: blur(var(--amb-blur-scrim, 6px)) !important;
+}
+
+@media (max-width: 640px) {
+  /* ============ 3. Handle yang bisa ditarik (Trade 360, editor Strategi) ============ */
+  html.ns-on .ns-grab { display: block; touch-action: none; cursor: grab; -webkit-tap-highlight-color: transparent; }
+  html.ns-on .ns-grab::before {
+    content: ""; position: absolute; top: 9px; left: 50%; width: 40px; height: 5px; margin-left: -20px; border-radius: 999px;
+    background: var(--ss-grab, rgba(255, 255, 255, .28)); transition: width .2s var(--ns-ease), margin-left .2s var(--ns-ease);
+  }
+  html.ns-on body.light .ns-grab::before { background: var(--ss-grab, rgba(0, 0, 0, .22)); }
+  html.ns-on .ns-dragging > .ns-grab::before { width: 52px; margin-left: -26px; }
+  html.ns-on .t3 > .ns-grab { position: absolute; z-index: 8; top: 0; left: 50%; width: 96px; height: 30px; margin-left: -48px; }
+  html.ns-on .sl-sheet > .ns-grab { position: relative; width: 96px; height: 28px; margin: -20px auto -8px; }
+
+  /* ============ 4. Masuk dari bawah dengan kurva yang sama, keluar lebih cepat ============ */
+  /* Trade 360 */
+  html.ns-on .t3 {
+    border-radius: var(--ns-r) var(--ns-r) 0 0;
+    height: min(calc(100% - env(safe-area-inset-top, 0px) - 8px), var(--ns-fixed));
+    transform: translateY(100%); transition: transform var(--ns-out) var(--ns-ease);
+  }
+  html.ns-on .t3-ov.on .t3 { transform: none; transition-duration: var(--ns-in); }
+  html.ns-on .t3-ov { transition-duration: var(--ns-out); }
+  html.ns-on .t3-ov.on { transition-duration: var(--ns-in); }
+  /* Editor Strategy Library */
+  html.ns-on .sl-sheet {
+    border-radius: var(--ns-r) var(--ns-r) 0 0; max-height: var(--ns-max);
+    transform: translateY(100%); transition: transform var(--ns-out) var(--ns-ease);
+  }
+  html.ns-on .sl-ov.on .sl-sheet { transform: none; transition-duration: var(--ns-in); }
+  html.ns-on .sl-ov { transition-duration: var(--ns-out); }
+  html.ns-on .sl-ov.on { transition-duration: var(--ns-in); }
+  /* Filter */
+  html.ns-on #filter-panel:not(.hidden) { animation: nsRise var(--ns-in) var(--ns-ease) both; }
+  html.ns-on .mf-scrim { transition-duration: var(--ns-out), 0s; }
+
+  /* ============ 5. Dua mode tinggi ============
+     fit="content": tinggi mengikuti isi sampai batas --ns-max (bawaan semua sheet; perubahan tinggi dianimasikan oleh JS).
+     fit="fixed"  : formulir panjang / bertab: satu tinggi, tidak melompat saat isi atau tab berganti. */
+  html.ns-on #form-section:not(.jw-kb) > #jw-card[data-ns-fit="fixed"] { height: var(--ns-fixed); }
+  html.ns-on .sl-sheet[data-ns-fit="fixed"] { height: var(--ns-fixed); }
+
+  /* ============ 6. Saat ditarik / mendarat: tidak ada transisi atau animasi CSS yang bersaing ============ */
+  html.ns-on .ns-dragging, html.ns-on .ns-settling { transition: none !important; animation: none !important; will-change: transform; }
+  html.ns-on .ns-dragging { overscroll-behavior: none; }
+}
+
+/* Detail trade: sheet bawah sampai 720px. Dulu hanya naik 40px sambil memudar dan keluarnya tidak terlihat (visibility langsung hidden). */
+@media (max-width: 720px) {
+  html.ns-on .jd-panel { transform: translateY(100%); opacity: 1; transition: transform var(--ns-out) var(--ns-ease), visibility 0s linear var(--ns-out); }
+  html.ns-on .jd-panel.on { transform: none; transition: transform var(--ns-in) var(--ns-ease), visibility 0s; }
+  html.ns-on .jd-ov { transition: opacity var(--ns-out) ease; }
+  html.ns-on .jd-ov.on { transition-duration: var(--ns-in); }
+}
+
+/* ============ 7. Dialog "buang perubahan?": satu bentuk untuk semua sheet ============ */
+.ns-dlg-ov {
+  position: fixed; inset: 0; z-index: 5000; display: flex; align-items: center; justify-content: center; padding: 16px;
+  background: var(--amb-scrim, rgba(0, 0, 0, .55));
+  -webkit-backdrop-filter: blur(var(--amb-blur-scrim, 6px)); backdrop-filter: blur(var(--amb-blur-scrim, 6px));
+  opacity: 0; transition: opacity .16s ease;
+}
+.ns-dlg-ov[hidden] { display: none; }
+.ns-dlg-ov.on { opacity: 1; }
+.ns-dlg {
+  width: min(420px, 100%); border-radius: 24px; padding: 24px 20px 20px; background: #1d1e22; color: #f3f4f6;
+  border: 1px solid rgba(255, 255, 255, .12); box-shadow: 0 24px 64px -16px rgba(0, 0, 0, .7);
+  transform: scale(.96); transition: transform .24s var(--ns-ease, cubic-bezier(.32, .72, 0, 1));
+}
+.ns-dlg-ov.on .ns-dlg { transform: none; }
+body.light .ns-dlg { background: #fffdf7; color: #1f1b0d; border-color: rgba(0, 0, 0, .1); }
+.ns-dlg h3 { margin: 0; font-size: 17px; font-weight: 600; }
+.ns-dlg p { margin: 8px 0 0; font-size: 13px; line-height: 1.5; color: #9ca3af; }
+body.light .ns-dlg p { color: #6b7280; }
+.ns-dlg-act { display: flex; flex-direction: column; gap: 8px; margin-top: 20px; }
+.ns-dlg-act button {
+  appearance: none; min-height: 48px; padding: 0 16px; border-radius: 16px; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer;
+  border: 1px solid transparent; touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+}
+.ns-dlg-act .is-primary { background: linear-gradient(165deg, #f6dc80, #d6b13a 55%, #b08a20); color: #1a1405; }
+.ns-dlg-act .is-destructive { background: transparent; color: #fb7185; border-color: color-mix(in srgb, currentColor 40%, transparent); }
+body.light .ns-dlg-act .is-destructive { color: #be123c; }
+.ns-dlg-act button:active { transform: scale(.98); }
+.ns-dlg-act button:focus-visible { outline: 2px solid rgba(212, 175, 55, .9); outline-offset: 2px; }
+
+/* ============ 8. Fokus papan ketik: sheet sendiri bukan target visual ============ */
+html.ns-on [role="dialog"][tabindex="-1"]:focus { outline: none; }
+
+/* ============ 9. Preferensi perangkat ============ */
+@media (prefers-reduced-motion: reduce) {
+  html.ns-on .t3, html.ns-on .sl-sheet, html.ns-on .ns-grab::before, html.ns-on .jd-panel { transition: none !important; }
+  html.ns-on #filter-panel:not(.hidden) { animation: none !important; }
+  .ns-dlg-ov, .ns-dlg { transition: none; }
+}
+@media (forced-colors: active) {
+  html.ns-on .ns-grab::before { background: CanvasText; }
+  .ns-dlg { border-color: CanvasText; }
+}

@@ -1,0 +1,134 @@
+/* DOA IBU Journal Trading v16.97 — Calm Glass Navigation (perbaikan v16.96)
+   Visual-only. Tidak mengubah markup, perilaku navigasi, autentikasi, Firebase, atau data.
+
+   Kenapa v16.96 tidak terlihat: glassy-v4.css / glass-tiers.css memakai pemilih [data-amb] x6-x10
+   dengan !important, sehingga aturan v16.96 selalu kalah. Di sini pemilih diulang x12 dan file ini
+   dimuat PALING AKHIR. Temuan lain: di tablet/desktop header::before disembunyikan (display:none)
+   dan header diberi backdrop-filter:none, jadi konten yang tergulir di bawah header tampak tajam
+   menembus pil navigasi. Sekarang header memakai lapisan kabut blur yang memudar ke bawah.
+
+   Tweak cepat: blok TOKEN di bawah. Membatalkan: hapus <link href="navigation-refinement-v16.97.css">. */
+
+/* ========================= TOKEN ========================= */
+html body.authed {
+  --nv-blur-band: 26px;                       /* blur lapisan di belakang header */
+  --nv-blur-pill: 34px;                       /* blur pil navigasi */
+  --nv-scrim: 24, 18, 10;                     /* warna kabut header (gelap) */
+  --nv-pill-a: rgba(30, 24, 15, .40);         /* isi pil navigasi */
+  --nv-pill-edge: rgba(236, 218, 172, .11);   /* cincin tipis pil */
+  --nv-act-a: rgba(224, 203, 150, .19);       /* kapsul aktif: champagne, bukan emas pekat */
+  --nv-act-b: rgba(200, 169, 106, .09);
+  --nv-act-ring: rgba(228, 206, 154, .20);
+  --nv-act-ink: #eddfba;                      /* teks/ikon aktif */
+}
+html body.light.authed {
+  --nv-scrim: 244, 240, 230;
+  --nv-pill-a: rgba(252, 249, 242, .52);
+  --nv-pill-edge: rgba(104, 84, 42, .13);
+  --nv-act-a: rgba(176, 140, 62, .17);
+  --nv-act-b: rgba(176, 140, 62, .08);
+  --nv-act-ring: rgba(150, 118, 48, .22);
+  --nv-act-ink: #6a5224;
+}
+
+/* ===================== TABLET / DESKTOP ===================== */
+@media (min-width: 641px) {
+  /* 1. Header: tanpa blok/garis keras; kaca ada di lapisan ::before yang memudar */
+  html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > header.app-header {
+    background: transparent !important; border-color: transparent !important; box-shadow: none !important;
+    -webkit-backdrop-filter: none !important; backdrop-filter: none !important;   /* tetap none: agar tidak jadi containing block */
+  }
+  html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > header.app-header::before {
+    display: block !important; content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background-color: transparent !important;
+    background-image: linear-gradient(to bottom, rgba(var(--nv-scrim), .66), rgba(var(--nv-scrim), .44) 66%, rgba(var(--nv-scrim), .16)) !important;
+    -webkit-backdrop-filter: blur(var(--nv-blur-band)) saturate(125%) !important;
+            backdrop-filter: blur(var(--nv-blur-band)) saturate(125%) !important;
+    -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent) !important;
+            mask-image: linear-gradient(to bottom, #000 70%, transparent) !important;
+    box-shadow: none !important; border: 0 !important;
+  }
+
+  /* 2. Pil navigasi: kaca bening berblur, tepi tipis */
+  html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > header.app-header .glass-pill.nav-wrap {
+    background-color: var(--nv-pill-a) !important;
+    background-image: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.01)) !important;
+    -webkit-backdrop-filter: blur(var(--nv-blur-pill)) saturate(125%) !important;
+            backdrop-filter: blur(var(--nv-blur-pill)) saturate(125%) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.08), inset 0 0 0 1px var(--nv-pill-edge), 0 10px 26px -20px rgba(0,0,0,.6) !important;
+  }
+  /* pil profil & lonceng ikut material yang sama (lebih tenang, tidak berbingkai tebal) */
+  html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] :is(#header-left-block, #header-right-block) {
+    background-color: var(--nv-pill-a) !important;
+    background-image: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.01)) !important;
+    -webkit-backdrop-filter: blur(var(--nv-blur-pill)) saturate(125%) !important;
+            backdrop-filter: blur(var(--nv-blur-pill)) saturate(125%) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.08), inset 0 0 0 1px var(--nv-pill-edge), 0 10px 26px -20px rgba(0,0,0,.6) !important;
+  }
+
+  /* 3. Item aktif: wash champagne redup (tanpa gradasi emas, tanpa glow) */
+  html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > header.app-header .glass-pill.nav-wrap .nav-pill-btn.active,
+  html body.light.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > header.app-header .glass-pill.nav-wrap .nav-pill-btn.active {
+    background: linear-gradient(180deg, var(--nv-act-a), var(--nv-act-b)) !important;
+    color: var(--nv-act-ink) !important; font-weight: 600; text-shadow: none !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.12), inset 0 0 0 1px var(--nv-act-ring), 0 4px 12px -9px rgba(0,0,0,.55) !important;
+  }
+  html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > header.app-header .glass-pill.nav-wrap .nav-pill-btn.active::before { background-color: var(--nv-act-ink) !important; filter: none !important; opacity: .92 !important; }
+  html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > header.app-header .glass-pill.nav-wrap .nav-pill-btn.active::after { opacity: 0 !important; box-shadow: none !important; }
+  html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > header.app-header .glass-pill.nav-wrap .nav-pill-btn:not(.active):hover { background: rgba(255,255,255,.06) !important; }
+  html body.light.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > header.app-header .glass-pill.nav-wrap .nav-pill-btn:not(.active):hover { background: rgba(255,255,255,.55) !important; }
+
+  /* Bila kapsul morph (.mg-ind) aktif, kapsul itulah yang berwarna; tombolnya transparan agar tidak dobel */
+  html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > header.app-header .glass-pill.nav-wrap.mg-on .nav-pill-btn.active {
+    background: transparent !important; box-shadow: none !important;
+  }
+  html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > header.app-header .glass-pill.nav-wrap > .mg-ind {
+    background: linear-gradient(180deg, var(--nv-act-a), var(--nv-act-b)) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.12), inset 0 0 0 1px var(--nv-act-ring), 0 4px 12px -9px rgba(0,0,0,.55) !important;
+  }
+  html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > header.app-header .glass-pill.nav-wrap > .mg-ind::after { opacity: .25 !important; }
+}
+
+/* ===================== HP (dock bawah) ===================== */
+@media (max-width: 640px) {
+  html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] .npv-dock {
+    --nt-bg: rgba(24, 20, 14, .46);
+    --nt-blur: 30px; --nt-sat: 130%; --nt-bright: .9;
+    --nt-cap: rgba(224, 203, 150, .15);
+    --nt-cap-sheen: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,0));
+    --nt-cap-rim: inset 0 .5px 0 rgba(255,255,255,.16), inset 0 0 0 1px var(--nv-act-ring);
+    --nt-tint: var(--nv-act-ink);
+    --nt-label-on: var(--nv-act-ink);
+  }
+  html body.light.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] .npv-dock { --nt-bg: rgba(250, 247, 240, .56); --nt-bright: 1.04; --nt-cap: rgba(176,140,62,.14); --nt-cap-sheen: linear-gradient(180deg, rgba(255,255,255,.5), rgba(255,255,255,0)); }
+  html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] .npv-dock .npv-item[aria-current="page"] svg { fill-opacity: .16 !important; filter: none !important; }
+  html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] .npv-dock .npv-ind::after { display: none !important; }
+}
+
+/* ===================== FALLBACK ===================== */
+@media (prefers-reduced-transparency: reduce) {
+  html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > header.app-header::before { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; background-image: linear-gradient(rgba(var(--nv-scrim), .96), rgba(var(--nv-scrim), .90)) !important; }
+  html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > header.app-header .glass-pill.nav-wrap,
+  html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] :is(#header-left-block, #header-right-block) { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; background-color: rgba(34, 28, 18, .96) !important; }
+  html body.light.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > header.app-header .glass-pill.nav-wrap,
+  html body.light.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] :is(#header-left-block, #header-right-block) { background-color: rgba(250, 247, 240, .97) !important; }
+}
+/* Mode hemat (mo-lite / efek rendah): tanpa blur sama sekali, jadi kabut dibuat lebih pekat agar konten
+   di belakang header tidak menembus pil navigasi. */
+html.mo-lite body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > header.app-header::before,
+html[data-ui-effects="low"] body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > header.app-header::before {
+  -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+  background-image: linear-gradient(to bottom, rgba(var(--nv-scrim), .94), rgba(var(--nv-scrim), .88) 70%, rgba(var(--nv-scrim), .70)) !important;
+}
+html.mo-lite body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > header.app-header .glass-pill.nav-wrap,
+html.mo-lite body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] :is(#header-left-block, #header-right-block),
+html[data-ui-effects="low"] body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > header.app-header .glass-pill.nav-wrap,
+html[data-ui-effects="low"] body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] :is(#header-left-block, #header-right-block) {
+  -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+  background-color: rgba(34, 28, 18, .92) !important;
+}
+html.mo-lite body.light.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > header.app-header .glass-pill.nav-wrap,
+html.mo-lite body.light.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] :is(#header-left-block, #header-right-block) { background-color: rgba(250, 247, 240, .94) !important; }
+html.mo-lite body.light.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > header.app-header::before {
+  background-image: linear-gradient(to bottom, rgba(var(--nv-scrim), .95), rgba(var(--nv-scrim), .90) 70%, rgba(var(--nv-scrim), .72)) !important;
+}

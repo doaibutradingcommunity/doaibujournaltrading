@@ -1,0 +1,315 @@
+/* ==========================================================================
+   DOA IBU — v16.89  LIQUID GLASS · TIGA TINGKAT MATERIAL
+   --------------------------------------------------------------------------
+   Satu efek kaca untuk semua elemen membuat layar rata: dock sama beratnya dengan
+   tabel. Berkas ini menyusun SEMUA permukaan ke tiga tingkat, masing-masing dengan
+   transparansi, blur, dan tepi sendiri yang naik-turun secara konsisten:
+
+     Level 1  CLEAR GLASS    paling bening   dock, tombol tambah (FAB), pil navigasi desktop
+     Level 2  SOFT GLASS     berkabut        header, sheet, menu, popover, toast, modal bacaan
+     Level 3  SOLID SURFACE  hampir padat    kartu statistik/KPI, tabel, form, filter
+
+                       L1 Clear     L2 Soft      L3 Solid
+     alpha (gelap)     .44–.62      .66–.86      .97–.99      (mengikuti slider --lg)
+     alpha (terang)    .56–.76      .74–.88      .97–.99
+     blur              16px         30px         0
+     saturate          190%         160%         100%
+     brightness        .56 / 1.04   .76 / 1.04   —            (gelap / terang: peredam latar agar teks terbaca)
+     tepi atas (hi)    .42          .20          .085         makin padat → makin tipis
+     cincin 1px        .16          .10          .07
+     bayangan          melayang     sedang       rendah       (token lama, tidak diubah)
+
+   Logika: makin bening permukaannya, makin tebal tepinya (tepi yang menjelaskan bentuk
+   saat isi tak bisa dipercaya), dan makin kuat latar di belakangnya diredupkan.
+   Blur tidak menurun satu arah: L1 sengaja lebih tajam dari L2 (kaca bening, bukan kabut).
+
+   Cara kerja — aditif, dimuat paling akhir (setelah dash-editorial.css):
+     1. token --gt1-* / --gt2-* / --gt3-* (satu-satunya tempat menyetel angka)
+     2. token lama yang sudah dibaca lapisan sebelumnya diarahkan ke tingkat yang benar
+        (--nt-* dock/FAB, --gn-* pil, --sgt-* smart-glass, --amb-rim / --amb-solid-edge)
+     3. beberapa pemilih langsung untuk elemen yang tidak membaca token
+   Tidak ada markup / JS / data baru. Arah cahaya 128° dan umber hangat v16.84 dipertahankan;
+   hanya kekuatan tepi tiap tingkat yang dirapikan.
+   Fallback tanpa blur memakai rangkaian yang sama dengan smart-glass.css (bagian 6).
+   Membatalkan: hapus <link href="glass-tiers.css">. Tampilan kembali persis v16.88.
+   ========================================================================== */
+
+
+/* ==========================================================================
+   1. TOKEN — tema gelap
+      Spesifisitas sengaja sama dengan smart-glass.css (html body.authed): menang karena
+      urutan muat, dan KALAH dari blok fallback smart-glass (×3 .authed).
+   ========================================================================== */
+html body.authed {
+  --gt-hi-rgb: 255, 255, 255;
+
+  /* ---- Level 1 · Clear Glass ---- */
+  --gt1-a:      calc(.44 + var(--lg, .55) * .18);
+  --gt1-blur:   16px;
+  --gt1-sat:    190%;
+  --gt1-bright: .56;
+  --gt1-bf:     blur(var(--gt1-blur)) saturate(var(--gt1-sat)) brightness(var(--gt1-bright));
+  --gt1-hi:     .42;
+  --gt1-line:   rgba(255, 255, 255, .16);
+  --gt1-rim-b:  .10;                       /* pantulan tepi bawah */
+  --gt1-rim-g:  .14;                       /* kilau dalam di bawah tepi atas */
+
+  /* ---- Level 2 · Soft Glass ---- */
+  --gt2-a:      calc(.66 + var(--lg, .55) * .20);
+  --gt2-blur:   30px;
+  --gt2-sat:    160%;
+  --gt2-bright: .76;
+  --gt2-bf:     blur(var(--gt2-blur)) saturate(var(--gt2-sat)) brightness(var(--gt2-bright));
+  --gt2-hi:     .20;
+  --gt2-line:   rgba(255, 255, 255, .10);
+
+  /* ---- Level 3 · Solid Surface ---- */
+  --gt3-rgb:    23, 24, 27;                /* = --amb-solid (#17181B) */
+  --gt3-a:      calc(.97 + var(--lg, .55) * .02);
+  --gt3-bf:     none;
+  --gt3-hi:     .085;
+  --gt3-line:   rgba(255, 255, 255, .07);
+}
+
+/* ==========================================================================
+   1b. TOKEN — tema terang
+       Latar di belakang kaca lebih terang, jadi brightness() naik sedikit dan tepi memakai
+       tinta hangat (bukan putih). Tangga tetap sama: bening → tepi paling tegas.
+   ========================================================================== */
+html body.light.authed {
+  --gt-hi-rgb: 255, 255, 255;
+
+  --gt1-a:      calc(.56 + var(--lg, .55) * .20);
+  --gt1-bright: 1.04;
+  --gt1-hi:     1;
+  --gt1-line:   rgba(34, 31, 24, .11);
+
+  --gt2-a:      calc(.74 + var(--lg, .55) * .14);
+  --gt2-bright: 1.04;
+  --gt2-hi:     .90;
+  --gt2-line:   rgba(34, 31, 24, .09);
+
+  --gt3-hi:     .70;
+  --gt3-line:   rgba(34, 31, 24, .08);
+  --gt1-rim-b:  .70;
+  --gt1-rim-g:  .80;
+  --gt3-rgb:    255, 253, 248;             /* = --amb-solid terang (#FFFDF8) */
+}
+
+
+/* ==========================================================================
+   1c. PEMETAAN KE TOKEN LAMA — satu aturan untuk gelap DAN terang
+       smart-glass.css punya blok terang sendiri (html body.light.authed, ±(0,2,2)); pemetaan hanya di
+       blok gelap akan kalah di tema terang. Daftar dua pemilih di bawah: yang pertama menang atas
+       native-tabbar.css (body.light), yang kedua atas smart-glass.css terang (sama kuat, dimuat lebih akhir).
+       Tetap KALAH dari blok fallback smart-glass (×3 .authed) — itu disengaja.
+   ========================================================================== */
+html body.authed,
+html body.light.authed {
+  /* Level 1 → dock + FAB (native-tabbar.css) */
+  --nt-bg:     rgba(var(--amb-glass-rgb, 22, 23, 26), var(--gt1-a));
+  --nt-blur:   var(--gt1-blur);
+  --nt-sat:    var(--gt1-sat);
+  --nt-bright: var(--gt1-bright);
+  --nt-rim:
+    inset 0 .5px 0 rgba(var(--gt-hi-rgb), var(--gt1-hi)),
+    inset 0 0 0 1px var(--gt1-line),
+    inset 0 -.5px 0 rgba(var(--gt-hi-rgb), var(--gt1-rim-b)),
+    inset 0 10px 18px -12px rgba(var(--gt-hi-rgb), var(--gt1-rim-g));
+
+  /* Level 1 → pil navigasi desktop (glass-nav.css) */
+  --gn-bar-bg:   rgba(var(--amb-glass-rgb, 22, 23, 26), var(--gt1-a));
+  --gn-bar-top:  rgba(var(--gt-hi-rgb), var(--gt1-hi));
+  --gn-bar-ring: var(--gt1-line);
+
+  /* Level 2 → header + semua kaca melayang (smart-glass.css membaca token --sgt-*) */
+  --sgt-nav-a:    var(--gt2-a);
+  --sgt-nav-bf:   var(--gt2-bf);
+  --sgt-float-a:  var(--gt2-a);
+  --sgt-float-bf: var(--gt2-bf);
+
+  /* Level 2 → modal tanpa form (liquid-modal.css, tema gelap): alpha, blur, dan peredam latar mengikuti L2.
+     Nada grafit netral (--lm-rgb) dan saturate rendah (--lm-sat) tetap milik liquid-modal. */
+  --lm-a:    var(--gt2-a);
+  --lm-blur: var(--gt2-blur);
+  --lm-dim:  var(--gt2-bright);
+
+  /* Level 3 → form + kartu data */
+  --sgt-form-a:  var(--gt3-a);
+  --sgt-form-bf: var(--gt3-bf);
+  --sgt-data-a:  var(--gt3-a);
+  --sgt-data-bf: var(--gt3-bf);
+}
+
+
+/* ==========================================================================
+   2. TEPI — Level 2 dan Level 3 (bayangan dalam dari signature-glass.css)
+      signature-glass.css mendefinisikan --amb-rim (kaca melayang) dan --amb-solid-edge (panel padat)
+      dengan cincin 1px hampir tak terlihat (.022 / .014) dan kekuatan atas tak seragam.
+      Di sini susunannya sama (sorot kiri-atas 128°, umber kanan-bawah); hanya "tepi atas"
+      dan "cincin 1px" yang diambil dari tangga tingkat. Spesifisitas di atas signature-glass.
+   ========================================================================== */
+html body.authed[data-amb][data-amb]:not(.light) {
+  --amb-rim:
+    inset 0 1px 0 rgba(var(--dg-sheen-rgb, 255, 246, 222), var(--gt2-hi)),
+    inset 1px 0 0 rgba(var(--dg-sheen-rgb, 255, 246, 222), calc(var(--gt2-hi) * .35)),
+    inset 0 0 0 1px var(--gt2-line),
+    inset -1px -1px 0 rgba(var(--dg-umber, 22, 14, 2), .34),
+    inset 0 18px 20px -20px rgba(var(--dg-sheen-rgb, 255, 246, 222), calc(var(--gt2-hi) * .65)),
+    inset -14px -16px 24px -18px rgba(var(--dg-umber, 22, 14, 2), .46);
+
+  --amb-solid-edge:
+    inset 0 1px 0 rgba(var(--dg-sheen-rgb, 255, 246, 222), var(--gt3-hi)),
+    inset 1px 0 0 rgba(var(--dg-sheen-rgb, 255, 246, 222), calc(var(--gt3-hi) * .35)),
+    inset 0 0 0 1px var(--gt3-line),
+    inset -1px -1px 0 rgba(var(--dg-umber, 22, 14, 2), calc(.34 * var(--dg-sep, 1))),
+    inset -10px -12px 20px -14px rgba(var(--dg-umber, 22, 14, 2), calc(.42 * var(--dg-sep, 1)));
+}
+/* tema terang: umber lebih tipis (sama dengan signature-glass.css) */
+html body.light.authed[data-amb][data-amb] {
+  --amb-rim:
+    inset 0 1px 0 rgba(var(--gt-hi-rgb), var(--gt2-hi)),
+    inset 1px 0 0 rgba(var(--gt-hi-rgb), calc(var(--gt2-hi) * .9)),
+    inset 0 0 0 1px var(--gt2-line),
+    inset -1px -1px 0 rgba(var(--dg-umber, 70, 50, 14), .16),
+    inset 0 18px 20px -20px rgba(var(--gt-hi-rgb), .95),
+    inset -14px -16px 24px -18px rgba(var(--dg-umber, 70, 50, 14), .12);
+
+  --amb-solid-edge:
+    inset 0 1px 0 rgba(var(--gt-hi-rgb), var(--gt3-hi)),
+    inset 1px 0 0 rgba(var(--gt-hi-rgb), calc(var(--gt3-hi) * .8)),
+    inset 0 0 0 1px var(--gt3-line),
+    inset -1px -1px 0 rgba(var(--dg-umber, 70, 50, 14), calc(.13 * var(--dg-sep, 1))),
+    inset -10px -12px 20px -14px rgba(var(--dg-umber, 70, 50, 14), calc(.11 * var(--dg-sep, 1)));
+}
+
+
+/* ==========================================================================
+   3. LEVEL 1 — pil navigasi desktop (bening, tepi tegas)
+      Dock dan FAB HP sudah membaca --nt-* (bagian 1). Pil desktop membaca blur tetap
+      di smart-glass.css (--sgt-nav-bf, kini L2), jadi di sini diganti ke L1.
+   ========================================================================== */
+@media (min-width: 641px) {
+  html body.authed.authed.authed.authed #app > header.app-header .glass-pill.nav-wrap {
+    -webkit-backdrop-filter: var(--gt1-bf); backdrop-filter: var(--gt1-bf);
+  }
+}
+
+
+/* ==========================================================================
+   4. LEVEL 2 — header (kabut lembut, garis pemisah dari tangga L2)
+      ambient-glass.css menulis tepi header dengan angka tetap (.075 / .06 / .09);
+      di sini diganti token L2 agar header, sheet, dan menu memakai tepi yang sama.
+      Hanya tepi header; warna, alpha, dan blur sudah mengikuti --gt2-* lewat --sgt-nav-*.
+   ========================================================================== */
+@media (min-width: 641px) {
+  html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > header.app-header {
+    box-shadow:
+      inset 0 -1px 0 var(--gt2-line),
+      inset 0 1px 0 rgba(var(--gt-hi-rgb), calc(var(--gt2-hi) * .30));
+  }
+}
+@media (max-width: 640px) {
+  html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #app > header.app-header::before {
+    box-shadow:
+      inset 0 -1px 0 var(--gt2-line),
+      inset 0 1px 0 rgba(var(--gt-hi-rgb), calc(var(--gt2-hi) * .30));
+  }
+}
+
+
+/* ==========================================================================
+   5. LEVEL 3 — form padat, filter global, header tabel, modal berisi form
+      a) .v5-fbar (form filter global) tadinya diperlakukan sebagai kaca melayang. Isinya
+         kolom input; latar harus tenang → padat. :not(#gt-…) menaikkan spesifisitas
+         di atas aturan float ambient-glass.css (daftar pemilihnya memuat id).
+      b) header tabel lengket: padat penuh + garis bawah L3 (tadinya 94% + abu).
+   ========================================================================== */
+html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] .v5-fbar:not(#gt-1):not(#gt-2) {
+  --amb-float-a: var(--sgt-form-a);
+  -webkit-backdrop-filter: var(--gt3-bf); backdrop-filter: var(--gt3-bf);
+  box-shadow: var(--amb-solid-edge), var(--amb-solid-drop);
+}
+
+/* c) permukaan form Journal: latar utama = L3 (tadinya --di-surface-1 .88 + blur 24px).
+      Hanya latar luar; kotak isian di dalamnya tetap memakai --di-surface-*. */
+html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] :is(#form-section > .glass, #jw-card) {
+  background-color: rgba(var(--gt3-rgb), var(--gt3-a));
+}
+
+/* c2) sheet Profil (semua tema): aturan float smart-glass.css (daftar pemilihnya memuat id) lebih kuat dari
+       aturan form, jadi token blur-nya diset langsung pada elemen. Tema gelap ditangani di (d). */
+html body.authed[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #sp-modal .sp-sheet {
+  --sgt-float-bf: var(--gt3-bf);
+}
+
+/* d) modal berisi form (tema gelap): liquid-modal.css membuat SEMUA modal kaca grafit (--lm-a, --lm-bf).
+      Modal yang memuat input / select / textarea dan sheet Profil kembali ke L3; modal tanpa form
+      (konfirmasi, info) tetap kaca L2 milik liquid-modal. Prefiks dan jumlah [data-amb] sama dengan
+      liquid-modal.css; spesifisitas isi :is() dinaikkan (:not(#gt-1) / :has) supaya menang. */
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  html:not(.mo-lite):not([data-ui-effects="low"]) body.authed:not(.light)[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] #sp-modal .sp-sheet:not(#gt-1) {
+    --amb-glass-rgb: var(--gt3-rgb);
+    --amb-float-a:   var(--gt3-a);
+    --sgt-float-bf:  var(--gt3-bf);
+    --sgt-form-bf:   var(--gt3-bf);
+    --amb-rim:       var(--amb-solid-edge);
+  }
+}
+@supports selector(:has(a)) {
+  html:not(.mo-lite):not([data-ui-effects="low"]) body.authed:not(.light)[data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb][data-amb] .modal-overlay:not(#image-zoom-modal):has(input:not([type="hidden"]), select, textarea) > .glass {
+    --amb-glass-rgb: var(--gt3-rgb);
+    --amb-float-a:   var(--gt3-a);
+    --sgt-float-bf:  var(--gt3-bf);
+    --sgt-form-bf:   var(--gt3-bf);
+    --amb-rim:       var(--amb-solid-edge);
+  }
+}
+
+html body.authed table :is(thead.sticky, th.sticky, thead.sticky th) {
+  background-color: var(--amb-solid, #17181B);
+  box-shadow: inset 0 -1px 0 var(--gt3-line);
+}
+
+
+/* ==========================================================================
+   6. FALLBACK TANPA BLUR
+      smart-glass.css sudah menangani token --sgt-*. Di sini hanya token --gt* yang dibaca
+      langsung (pil desktop, .v5-fbar). Rangkaian kondisi sama; selektor ×3 .authed agar menang
+      atas blok tema di bagian 1.
+   ========================================================================== */
+@media (prefers-reduced-transparency: reduce) {
+  html body.authed.authed.authed {
+    --gt1-a: .96; --gt2-a: .97; --gt3-a: 1;
+    --gt1-bf: none; --gt2-bf: none;
+  }
+}
+html.mo-lite body.authed.authed.authed,
+html[data-ui-effects="low"] body.authed.authed.authed {
+  --gt1-a: .95; --gt2-a: .96; --gt3-a: 1;
+  --gt1-bf: none; --gt2-bf: none;
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  html body.authed.authed.authed {
+    --gt1-a: .95; --gt2-a: .96; --gt3-a: 1;
+    --gt1-bf: none; --gt2-bf: none;
+  }
+}
+/* kontras tinggi: lantai alpha naik, tepi dua kali lebih tegas */
+@media (prefers-contrast: more) {
+  html body.authed.authed.authed {
+    --gt1-a: .90; --gt2-a: .93; --gt3-a: 1;
+    --gt1-line: rgba(255, 255, 255, .34);
+    --gt2-line: rgba(255, 255, 255, .26);
+    --gt3-line: rgba(255, 255, 255, .20);
+  }
+  html body.light.authed.authed.authed {
+    --gt1-line: rgba(34, 31, 24, .42);
+    --gt2-line: rgba(34, 31, 24, .34);
+    --gt3-line: rgba(34, 31, 24, .28);
+  }
+}
+/* warna paksa: sistem yang memegang warna */
+@media (forced-colors: active) {
+  html body.authed.authed.authed { --gt1-bf: none; --gt2-bf: none; }
+}

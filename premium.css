@@ -1,0 +1,442 @@
+/* ==========================================================================
+   DOA IBU Journal v16.27 — PREMIUM EXPERIENCE
+   Lapisan tampilan ADITIF. Dimuat paling akhir, semua aturan di bawah `body.px`.
+   Tidak mengubah logika, data, atau perhitungan. Hapus <link> + <script> premium
+   untuk kembali persis ke v16.26.
+
+   Isi
+     1. Token (dark luxury gold, kaca, profit/loss, gerak, skala teks)
+     2. Material Liquid Glass
+     3. Tipografi: lantai ukuran teks & angka tabular
+     4. Dashboard: hierarki informasi (hero > kartu > detail)
+     5. Grafik interaktif: kepala nilai, rentang waktu, fokus keyboard
+     6. State kit: skeleton, empty, error (satu bahasa visual)
+     7. Toast
+     8. Navigasi mobile & FAB
+     9. Formulir
+    10. Kalender
+    11. Perpindahan halaman
+    12. Pengaturan: ukuran teks
+    13. Fallback aksesibilitas (reduced motion / transparency / contrast)
+   ========================================================================== */
+
+
+/* ==========================================================================
+   1. TOKEN
+   ========================================================================== */
+:root {
+  /* emas: tiga tingkat, dipakai hemat (aksi utama, state aktif, fokus) */
+  --px-gold-hi:     #F2D98F;
+  --px-gold:        #D8B45E;
+  --px-gold-lo:     #A9822E;
+  --px-gold-soft:   rgba(216, 180, 94, .12);
+  --px-gold-line:   rgba(216, 180, 94, .34);
+  --px-on-gold:     #1A1405;
+
+  /* profit / loss: hanya untuk angka & status hasil */
+  --px-profit:      #2DD4BF;
+  --px-profit-soft: rgba(45, 212, 191, .13);
+  --px-profit-line: rgba(45, 212, 191, .32);
+  --px-loss:        #FF7A68;
+  --px-loss-soft:   rgba(255, 122, 104, .13);
+  --px-loss-line:   rgba(255, 122, 104, .32);
+
+  /* teks: tiga tingkat, putih hangat */
+  --px-tx:          #F4F0E6;
+  --px-tx2:         rgba(244, 240, 230, .72);
+  --px-tx3:         rgba(244, 240, 230, .52);
+
+  /* kaca */
+  --px-glass-a:     rgba(255, 255, 255, .090);
+  --px-glass-b:     rgba(255, 255, 255, .030);
+  --px-glass-solid: #1A1B1E;
+  --px-edge:        rgba(255, 255, 255, .10);
+  --px-spec:        rgba(255, 255, 255, .24);
+  --px-shadow:      0 14px 34px -14px rgba(0, 0, 0, .70);
+  --px-blur:        blur(26px) saturate(175%);
+
+  --px-r-card:      24px;
+  --px-r-inner:     16px;
+
+  /* gerak */
+  --px-ease:        cubic-bezier(.22, .61, .36, 1);
+  --px-dur-fast:    160ms;
+  --px-dur:         240ms;
+  --px-dur-slow:    420ms;
+
+  /* skala teks (Pengaturan > Ukuran teks) */
+  --px-scale:       1;
+  --px-fs-cap:      calc(12px * var(--px-scale));
+  --px-fs-label:    calc(13px * var(--px-scale));
+  --px-fs-body:     calc(15px * var(--px-scale));
+}
+body.light {
+  --px-gold-hi:     #A8801A;
+  --px-gold:        #8A6A10;
+  --px-gold-lo:     #6E530B;
+  --px-gold-soft:   rgba(138, 106, 16, .10);
+  --px-gold-line:   rgba(138, 106, 16, .34);
+  --px-on-gold:     #FFFFFF;
+  --px-profit:      #0F766E;
+  --px-profit-soft: rgba(15, 118, 110, .10);
+  --px-profit-line: rgba(15, 118, 110, .30);
+  --px-loss:        #B83526;
+  --px-loss-soft:   rgba(184, 53, 38, .09);
+  --px-loss-line:   rgba(184, 53, 38, .30);
+  --px-tx:          #27272A;
+  --px-tx2:         rgba(39, 39, 42, .74);
+  --px-tx3:         rgba(39, 39, 42, .54);
+  --px-glass-a:     rgba(255, 255, 255, .78);
+  --px-glass-b:     rgba(255, 255, 255, .56);
+  --px-glass-solid: #FFFDF6;
+  --px-edge:        rgba(0, 0, 0, .09);
+  --px-spec:        rgba(255, 255, 255, .95);
+  --px-shadow:      0 14px 30px -14px rgba(60, 48, 20, .32);
+}
+html[data-px-text="lg"] { --px-scale: 1.12; font-size: 112.5%; }
+
+
+/* ==========================================================================
+   2. MATERIAL LIQUID GLASS
+   Dipakai pada elemen yang melayang di atas konten (dock, toast, chip rentang,
+   tooltip). Kartu biasa tetap memakai sistem .glass bawaan + slider transparansi.
+   ========================================================================== */
+.px-glass,
+body.px .px-range,
+body.px .toast {
+  background:
+    linear-gradient(180deg, var(--px-glass-a), var(--px-glass-b) 55%, var(--px-glass-a)),
+    rgba(18, 19, 22, .46);
+  -webkit-backdrop-filter: var(--px-blur);
+          backdrop-filter: var(--px-blur);
+  box-shadow:
+    inset 0 1px 0 var(--px-spec),
+    inset 0 0 0 1px var(--px-edge),
+    inset 0 -1px 0 rgba(0, 0, 0, .22),
+    var(--px-shadow);
+}
+body.light.px .px-range,
+body.light.px .toast,
+body.light .px-glass {
+  background: linear-gradient(180deg, var(--px-glass-a), var(--px-glass-b)), rgba(255, 255, 255, .5);
+}
+body.px .v5 .v5-tip {
+  background: linear-gradient(180deg, var(--px-glass-a), var(--px-glass-b)), rgba(18, 19, 22, .55);
+  -webkit-backdrop-filter: var(--px-blur); backdrop-filter: var(--px-blur);
+  box-shadow: inset 0 1px 0 var(--px-spec), inset 0 0 0 1px var(--px-edge), var(--px-shadow);
+}
+
+/* tepi atas kartu seperti pantulan cahaya pada kaca */
+body.px .glass { box-shadow: inset 0 0 0 1px var(--card-ring-1, var(--px-edge)), inset 0 1px 0 rgba(255, 255, 255, .09), inset 0 -18px 30px -26px rgba(216, 180, 94, .10), 0 10px 30px -16px rgba(0, 0, 0, .55); }
+body.light.px .glass { box-shadow: inset 0 0 0 1px var(--px-edge), inset 0 1px 0 #fff, 0 10px 26px -14px rgba(60, 48, 20, .26); }
+
+
+/* ==========================================================================
+   3. TIPOGRAFI
+   ========================================================================== */
+body.px { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
+body.px .tnum, body.px [data-money], body.px .v5-t-pl, body.px .v5-kpi .v, body.px .calx-sub strong,
+body.px .px-eqv { font-variant-numeric: tabular-nums lining-nums; }
+
+/* lantai ukuran: tidak ada teks fungsional di bawah 12px */
+body.px .text-\[10px\], body.px .text-\[11px\] { font-size: var(--px-fs-cap) !important; line-height: 1.35; }
+body.px .calx-todaybtn, body.px .calx-tools { font-size: var(--px-fs-cap); }
+body.px .v5 .v5-tip .d, body.px .v5 .v5-tip .p { font-size: var(--px-fs-cap); }
+body.px .v5 .v5-eq svg text.v5-ax { font-size: 12px; fill-opacity: .6; }
+body.px .v5 .v5-ch p, body.px .v5 .v5-kpi .l, body.px .v5 .v5-kpi .s { font-size: var(--px-fs-label); color: var(--px-tx2); }
+
+
+/* ==========================================================================
+   4. DASHBOARD: HIERARKI
+   Urutan baca: judul > Fokus Hari Ini (satu-satunya kartu bercahaya) > kartu
+   analisis > detail. Emas tidak lagi mewarnai setiap judul; ia menandai aksi.
+   ========================================================================== */
+body.px .v5 { --g: var(--px-gold); --g2: var(--px-gold-hi); }
+body.px .v5 .v5-h { align-items: center; flex-wrap: nowrap; margin-bottom: 20px; }
+body.px .v5 .v5-h .v23-open { flex: none; min-height: 44px; padding: 0 16px; font-size: calc(13px * var(--px-scale)); }
+@media (max-width: 480px) { body.px .v5 h2.v5-title { font-size: calc(28px * var(--px-scale)); } }
+body.px .v5 h2.v5-title { font-size: calc(28px * var(--px-scale)); font-weight: 600; letter-spacing: -.025em; line-height: 1.12; color: var(--px-tx); }
+body.px .v5 h3.v5-ct { font-size: calc(17px * var(--px-scale)); font-weight: 600; letter-spacing: -.012em; color: var(--px-tx); }
+/* lapisan lama memberi judul gradien emas (!important). Emas dicadangkan untuk aksi, jadi judul kembali ke teks utama. */
+body.px .v5 h2.v5-title, body.px .v5 h3.v5-ct {
+  background: none !important; background-image: none !important; filter: none !important; animation: none !important;
+  -webkit-background-clip: border-box !important; background-clip: border-box !important;
+  -webkit-text-fill-color: var(--px-tx) !important; color: var(--px-tx) !important;
+}
+body.px .v5 .v5-card { padding: 24px; border-radius: var(--px-r-card); }
+body.px .v5 .v5-grid { gap: 16px; }
+
+/* hero */
+body.px .v5 .v5-today {
+  padding: 24px 24px 20px; border-radius: 28px;
+  background:
+    radial-gradient(120% 80% at 0% 0%, rgba(216, 180, 94, .11), transparent 58%),
+    linear-gradient(180deg, var(--px-glass-a), var(--px-glass-b));
+  box-shadow: inset 0 1px 0 var(--px-spec), inset 0 0 0 1px rgba(216, 180, 94, .22), 0 22px 48px -22px rgba(0, 0, 0, .75);
+}
+body.light.px .v5 .v5-today { background: radial-gradient(120% 80% at 0% 0%, rgba(138, 106, 16, .08), transparent 58%), linear-gradient(180deg, #fff, rgba(255, 253, 246, .9)); box-shadow: inset 0 1px 0 #fff, inset 0 0 0 1px rgba(138, 106, 16, .22), 0 18px 40px -22px rgba(60, 48, 20, .35); }
+body.px .v5 .v5-t-date { font-size: var(--px-fs-label); font-weight: 600; color: var(--px-tx2); }
+body.px .v5 .v5-t-l { font-size: var(--px-fs-label); color: var(--px-tx2); }
+body.px .v5 .v5-t-pl { font-size: clamp(44px, 12vw, 68px); font-weight: 600; letter-spacing: -.035em; }
+body.px .v5 .v5-t-pl.pos { color: var(--px-profit); text-shadow: 0 0 34px var(--px-profit-soft); }
+body.px .v5 .v5-t-pl.neg { color: var(--px-loss);   text-shadow: 0 0 34px var(--px-loss-soft); }
+body.px .v5 .v5-t-pl.zero { color: var(--px-tx3); }
+body.px .v5 .v5-t-sub { font-size: var(--px-fs-label); color: var(--px-tx2); }
+body.px .v5 .v5-t-do { margin-top: 20px; font-size: calc(17px * var(--px-scale)); font-weight: 600; }
+body.px .v5 .v5-pill { font-size: var(--px-fs-cap); padding: 8px 12px; }
+body.px .v5 .v5-steps li { font-size: var(--px-fs-cap); }
+
+/* aksi: utama di kiri melebar, sekunder ringkas di kanan (tidak lagi dua tombol setinggi layar) */
+body.px .v5 .v5-t-cta { margin-top: 20px; gap: 12px; justify-content: flex-start; flex-direction: row; flex-wrap: nowrap; align-items: stretch; }
+body.px .v5 .v5-t-cta .v5-btn.v5-cta { flex: 0 1 auto; min-width: min(280px, 100%); width: auto; min-height: 50px; padding: 0 24px; font-size: calc(17px * var(--px-scale)); border-radius: 16px; background: linear-gradient(180deg, var(--px-gold-hi), var(--px-gold) 55%, var(--px-gold-lo)); color: var(--px-on-gold); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), 0 10px 26px -10px rgba(216, 180, 94, .65); }
+body.light.px .v5 .v5-t-cta .v5-btn.v5-cta { background: linear-gradient(180deg, #A8801A, #8A6A10 60%, #6E530B); color: #fff; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), 0 10px 22px -10px rgba(110, 83, 11, .55); }
+body.px .v5 .v5-t-cta .v5-btn.ghost { flex: 0 0 auto; width: auto; min-height: 50px; padding: 0 16px; font-size: calc(15px * var(--px-scale)); border-radius: 16px; color: var(--px-tx2); }
+body.px .v5 .v5-t-cta .v5-btn.ghost:hover { color: var(--px-tx); border-color: var(--px-gold-line); }
+body.px .v5 .v5-t-sec { margin-top: 20px; padding-top: 16px; }
+body.px .v5 .v5-t-cta .v5-btn.v5-cta { white-space: nowrap; }
+/* layar sempit: aksi utama penuh, aksi sekunder menjadi tombol teks (tidak berebut ruang) */
+@media (max-width: 440px) {
+  body.px .v5 .v5-t-cta { flex-direction: column; gap: 8px; }
+  body.px .v5 .v5-t-cta .v5-btn.v5-cta { width: 100%; flex: none; }
+  body.px .v5 .v5-t-cta .v5-btn.ghost { width: 100%; flex: none; min-height: 44px; border-color: transparent !important; background: transparent !important; }
+}
+
+/* tombol dashboard: satu bahasa */
+body.px .v5 .v5-btn { transition: transform var(--px-dur-fast) var(--px-ease), background var(--px-dur) var(--px-ease), border-color var(--px-dur) var(--px-ease), color var(--px-dur) var(--px-ease); }
+body.px .v5 .v5-btn:active:not(:disabled) { transform: scale(.972); }
+body.px .v5 .v5-btn:focus-visible, body.px .px-chip:focus-visible { outline: 2px solid var(--px-gold); outline-offset: 2px; }
+
+/* lipatan "Analisis lengkap" */
+body.px .v5 .v5-more > summary { border-radius: 20px; min-height: 56px; }
+body.px .v5 .v5-more > summary:focus-visible { outline: 2px solid var(--px-gold); outline-offset: 2px; }
+
+
+/* ==========================================================================
+   5. GRAFIK INTERAKTIF
+   ========================================================================== */
+body.px .px-eqhead { display: flex; flex-direction: column; gap: 2px; margin: -2px 0 12px; min-width: 0; }
+body.px .px-eqv { font-size: clamp(28px, 7.4vw, 38px); font-weight: 600; letter-spacing: -.03em; line-height: 1.1; color: var(--px-tx); overflow-wrap: anywhere; transition: color var(--px-dur) var(--px-ease); }
+body.px .px-eqv.pos { color: var(--px-profit); }
+body.px .px-eqv.neg { color: var(--px-loss); }
+body.px .px-eql { font-size: var(--px-fs-label); color: var(--px-tx2); min-height: 1.4em; font-variant-numeric: tabular-nums; }
+
+body.px .px-range { display: inline-flex; gap: 2px; padding: 4px; margin: 0 0 12px; max-width: 100%; overflow-x: auto; scrollbar-width: none; border-radius: 999px; }
+body.px .px-range::-webkit-scrollbar { display: none; }
+body.px .px-chip { flex: 0 0 auto; min-width: 46px; height: 34px; padding: 0 12px; border: 0; border-radius: 999px; background: transparent; color: var(--px-tx2); font: 600 13px/1 inherit; font-family: inherit; font-variant-numeric: tabular-nums; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; transition: background var(--px-dur) var(--px-ease), color var(--px-dur) var(--px-ease), transform var(--px-dur-fast) var(--px-ease); }
+body.px .px-chip:hover { color: var(--px-tx); }
+body.px .px-chip:active { transform: scale(.95); }
+body.px .px-chip.on { color: var(--px-gold-hi); background: linear-gradient(180deg, rgba(255, 255, 255, .17), rgba(255, 255, 255, .07)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .24), 0 4px 12px -6px rgba(0, 0, 0, .6); }
+body.light.px .px-chip.on { color: var(--px-gold); background: #fff; box-shadow: 0 1px 3px rgba(60, 48, 20, .22); }
+@media (pointer: coarse) { body.px .px-chip { height: 40px; min-width: 50px; } }
+
+body.px .v5 .v5-eq svg path[stroke] { stroke-width: 2.25; }
+body.px .v5 #v5-hit:focus { outline: none; }
+body.px .v5 #v5-hit:focus-visible { outline: 2px solid var(--px-gold); outline-offset: -2px; }
+body.px .v5 .v5-eq svg.px-draw { animation: pxReveal 640ms var(--px-ease) both; }
+@keyframes pxReveal { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+
+
+/* ==========================================================================
+   6. STATE KIT — skeleton, empty, error
+   Satu komponen visual untuk semua halaman. Kelas lama (.di-empty, .v5-empty,
+   .v5-mini, .v5-skel) ikut memakai bahasa yang sama tanpa mengubah markup-nya.
+   ========================================================================== */
+@keyframes pxShimmer { from { background-position: 130% 0; } to { background-position: -130% 0; } }
+body.px .px-skel, body.px .v5-skel {
+  border-radius: 16px; min-height: 14px;
+  background: linear-gradient(100deg, rgba(255, 255, 255, .045) 30%, rgba(255, 255, 255, .11) 50%, rgba(255, 255, 255, .045) 70%);
+  background-size: 220% 100%; animation: pxShimmer 1.6s linear infinite;
+}
+body.light.px .px-skel, body.light.px .v5-skel { background-image: linear-gradient(100deg, rgba(0, 0, 0, .045) 30%, rgba(0, 0, 0, .09) 50%, rgba(0, 0, 0, .045) 70%); }
+body.px .px-skel.line { height: 14px; border-radius: 8px; }
+body.px .px-skel.title { height: 22px; width: 42%; border-radius: 8px; }
+body.px .px-skel.num { height: 44px; width: 62%; border-radius: 12px; }
+body.px .px-skel.card { height: 150px; border-radius: var(--px-r-card); }
+body.px .px-skel.chart { height: 220px; border-radius: var(--px-r-card); }
+body.px .px-skel.cell { height: 58px; border-radius: 16px; }
+body.px .px-skel.row { height: 64px; border-radius: 16px; }
+
+body.px .px-sk-view { display: none; flex-direction: column; gap: 16px; padding: 4px 0 8px; }
+body.px.px-loading .px-sk-view { display: flex; }
+body.px.px-loading #calendar-section > :not(.px-sk-view),
+body.px.px-loading #statistik-section > :not(.px-sk-view),
+body.px.px-loading #gallery-section > :not(.px-sk-view) { display: none !important; }
+body.px .px-sk-cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+body.px .px-sk-kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (min-width: 900px) { body.px .px-sk-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+body.px .px-state, body.px .di-empty, body.px .v5-empty, body.px .v5-mini {
+  display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px;
+  padding: 32px 20px; color: var(--px-tx2); font-size: var(--px-fs-body); line-height: 1.55;
+}
+body.px .v5-mini { padding: 20px 16px; }
+body.px .di-empty.sm { padding: 20px 12px; }
+body.px .px-state-ico, body.px .di-empty-ico {
+  width: 52px; height: 52px; margin: 0 0 8px; display: grid; place-items: center; border-radius: 16px;
+  color: var(--px-gold); background: var(--px-gold-soft); border: 1px solid var(--px-gold-line);
+}
+body.px .px-state-ico svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+body.px .px-state-t, body.px .di-empty-t, body.px .v5-empty > b, body.px .v5-mini > b {
+  display: block; margin: 0; font-size: calc(17px * var(--px-scale)); font-weight: 600; letter-spacing: -.01em; color: var(--px-tx);
+}
+body.px .px-state-b, body.px .di-empty-b { max-width: 38ch; margin: 0; }
+body.px .px-state-act { margin-top: 16px; min-height: 46px; padding: 0 24px; border: 0; border-radius: 16px; font: 700 14px/1 inherit; font-family: inherit; cursor: pointer; color: var(--px-on-gold); background: linear-gradient(180deg, var(--px-gold-hi), var(--px-gold) 60%, var(--px-gold-lo)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45); transition: transform var(--px-dur-fast) var(--px-ease), filter var(--px-dur) var(--px-ease); }
+body.px .px-state-act:hover { filter: brightness(1.07); }
+body.px .px-state-act:active { transform: scale(.97); }
+body.px .px-state-act:focus-visible { outline: 2px solid var(--px-gold-hi); outline-offset: 3px; }
+body.px .px-state-act.quiet { background: transparent; color: var(--px-tx2); box-shadow: inset 0 0 0 1px var(--px-edge); }
+body.px .px-state--error .px-state-ico, body.px .v5-empty[role="alert"] > b::before { color: var(--px-loss); }
+body.px .px-state--error .px-state-ico { background: var(--px-loss-soft); border-color: var(--px-loss-line); }
+body.px .px-state--offline .px-state-ico { color: var(--px-tx2); background: rgba(255, 255, 255, .06); border-color: var(--px-edge); }
+
+
+/* ==========================================================================
+   7. TOAST — satu gaya, tiga makna (info = emas, berhasil = profit, gagal = loss)
+   ========================================================================== */
+body.px .toast {
+  display: flex; align-items: center; gap: 12px; padding: 12px 20px 12px 16px; border-radius: 20px;
+  color: var(--px-tx); font-size: calc(15px * var(--px-scale)); font-weight: 600; line-height: 1.35; text-align: left;
+  width: max-content; max-width: min(92vw, 460px);
+}
+body.px .toast .px-t-ico { flex: none; width: 22px; height: 22px; display: grid; place-items: center; border-radius: 50%; color: var(--px-gold); background: var(--px-gold-soft); }
+body.px .toast .px-t-ico svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+body.px .toast.px-ok  .px-t-ico { color: var(--px-profit); background: var(--px-profit-soft); }
+body.px .toast.px-err .px-t-ico { color: var(--px-loss);   background: var(--px-loss-soft); }
+body.px .toast.px-err { box-shadow: inset 0 1px 0 var(--px-spec), inset 0 0 0 1px var(--px-loss-line), var(--px-shadow); }
+body.px .toast.px-ok  { box-shadow: inset 0 1px 0 var(--px-spec), inset 0 0 0 1px var(--px-profit-line), var(--px-shadow); }
+body.px .toast .px-t-msg { min-width: 0; overflow-wrap: anywhere; }
+
+
+/* ==========================================================================
+   8. NAVIGASI MOBILE & FAB
+   ========================================================================== */
+@media (max-width: 640px) {
+  body.px.npv.authed .npv-dock {
+    background: linear-gradient(180deg, var(--px-glass-a), var(--px-glass-b) 55%, var(--px-glass-a)), rgba(18, 19, 22, .66);
+    -webkit-backdrop-filter: var(--px-blur); backdrop-filter: var(--px-blur);
+    box-shadow: inset 0 1px 0 var(--px-spec), inset 0 0 0 1px var(--px-edge), 0 20px 44px -14px rgba(0, 0, 0, .8);
+  }
+  body.light.px.npv.authed .npv-dock { background: linear-gradient(180deg, rgba(255, 255, 255, .94), rgba(255, 255, 255, .78)); box-shadow: inset 0 1px 0 #fff, inset 0 0 0 1px rgba(0, 0, 0, .07), 0 16px 34px -14px rgba(60, 48, 20, .32); }
+  body.px .npv-item { font-size: 12px; font-weight: 500; min-height: 56px; gap: 4px; }
+  body.px .npv-item svg { transition: transform var(--px-dur) var(--px-ease); }
+  body.px .npv-item[aria-current="page"] svg { transform: translateY(-1px) scale(1.06); }
+  body.px .npv-item:active { opacity: 1; transform: scale(.94); }
+  body.px .npv-row { min-height: 54px; font-size: calc(17px * var(--px-scale)); }
+}
+@media (max-width: 350px) { body.px .npv-item { font-size: 12px; } }
+
+/* FAB: pindah ke kanan (tidak menutup angka di kolom kiri), tersembunyi saat menggulir turun */
+body.px #btn-new-journal-fab {
+  left: auto; right: max(18px, env(safe-area-inset-right, 0px));
+  width: 56px; height: 56px;
+  background: linear-gradient(180deg, var(--px-gold-hi), var(--px-gold) 55%, var(--px-gold-lo));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), 0 0 0 1px rgba(255, 255, 255, .10), 0 16px 32px -10px rgba(216, 180, 94, .7), 0 6px 14px -6px rgba(0, 0, 0, .6);
+  transition: transform var(--px-dur-slow) var(--px-ease), opacity var(--px-dur) var(--px-ease), box-shadow var(--px-dur) var(--px-ease);
+}
+body.px #btn-new-journal-fab:hover { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), 0 0 0 1px rgba(255, 255, 255, .14), 0 20px 38px -10px rgba(216, 180, 94, .85), 0 6px 14px -6px rgba(0, 0, 0, .6); }
+body.px #btn-new-journal-fab:focus-visible { outline: 2px solid var(--px-gold-hi); outline-offset: 3px; }
+body.px #btn-new-journal-fab.px-hide { transform: translateY(150%) scale(.8); opacity: 0; pointer-events: none; }
+@media (min-width: 641px) { body.px #btn-new-journal-fab { right: 28px; bottom: calc(28px + env(safe-area-inset-bottom, 0px)); } }
+
+/* header desktop: tab aktif lebih tenang */
+body.px .nav-pill-btn { font-size: calc(15px * var(--px-scale)); }
+
+
+/* ==========================================================================
+   9. FORMULIR
+   Target sentuh ≥ 48px, font 16px (iOS tidak zoom), fokus emas yang jelas.
+   ========================================================================== */
+body.px #form-section input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]),
+body.px #form-section select,
+body.px #form-section textarea,
+body.px .v5 .v5-in {
+  min-height: 48px; border-radius: 16px; font-size: calc(17px * var(--px-scale));
+  background-color: rgba(255, 255, 255, .055); border: 1px solid var(--px-edge);
+  transition: border-color var(--px-dur) var(--px-ease), box-shadow var(--px-dur) var(--px-ease), background-color var(--px-dur) var(--px-ease);
+}
+body.px #form-section textarea { min-height: 112px; line-height: 1.55; }
+body.px #form-section input:hover:not(:disabled):not(:focus), body.px #form-section select:hover:not(:disabled):not(:focus), body.px #form-section textarea:hover:not(:disabled):not(:focus) { border-color: rgba(255, 255, 255, .22); background-color: rgba(255, 255, 255, .075); }
+body.px #form-section input:focus, body.px #form-section select:focus, body.px #form-section textarea:focus, body.px .v5 .v5-in:focus {
+  outline: none; border-color: var(--px-gold); background-color: rgba(255, 255, 255, .075);
+  box-shadow: 0 0 0 4px var(--px-gold-soft);
+}
+body.px #form-section [aria-invalid="true"] { border-color: var(--px-loss-line); background-color: var(--px-loss-soft); }
+body.px #form-section [aria-invalid="true"]:focus { border-color: var(--px-loss); box-shadow: 0 0 0 4px var(--px-loss-soft); }
+body.px #form-section label { font-size: var(--px-fs-label); font-weight: 600; color: var(--px-tx2); letter-spacing: -.004em; }
+body.px #form-section ::placeholder { color: var(--px-tx3); }
+body.light.px #form-section input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]),
+body.light.px #form-section select, body.light.px #form-section textarea, body.light.px .v5 .v5-in { background-color: rgba(255, 255, 255, .85); }
+
+/* langkah wizard: tombol bawah selalu terjangkau ibu jari */
+body.px .jw-count { font-size: var(--px-fs-cap); }
+body.px .jw-chip b { font-size: var(--px-fs-cap); }
+body.px .jw-chip::before { height: 5px; }
+body.px #jw-back, body.px #jw-next, body.px #btn-save, body.px #jw-pre-save, body.px #jw-rev-save { min-height: 50px; border-radius: 16px; font-size: calc(15px * var(--px-scale)); }
+@media (max-width: 640px) {
+  body.px .jw-body { scroll-padding-bottom: 120px; }
+}
+
+
+/* ==========================================================================
+   10. KALENDER
+   ========================================================================== */
+body.px #calendar-section .calx-hero { border-radius: 24px; background: linear-gradient(180deg, var(--px-glass-a), var(--px-glass-b)); box-shadow: inset 0 1px 0 var(--px-spec), inset 0 0 0 1px var(--px-edge); border: 0; }
+body.light.px #calendar-section .calx-hero { box-shadow: inset 0 1px 0 #fff, inset 0 0 0 1px var(--px-edge); }
+body.px #calendar-section .calx-nav { width: 46px; height: 46px; border-radius: 16px; transition: transform var(--px-dur-fast) var(--px-ease), background var(--px-dur) var(--px-ease), border-color var(--px-dur) var(--px-ease); }
+body.px #calendar-section .calx-nav:active { transform: scale(.93); }
+body.px #calendar-section .calx-title { letter-spacing: -.02em; }
+body.px #calendar-section .calx-head span { font-size: var(--px-fs-cap); letter-spacing: .01em; font-weight: 600; color: var(--px-tx2); }
+body.px #calendar-section .calx-main { border-radius: 20px; transition: transform var(--px-dur-fast) var(--px-ease), border-color var(--px-dur) var(--px-ease), background var(--px-dur) var(--px-ease); }
+body.px #calendar-section .calx-main:active { transform: scale(.965); }
+body.px #calendar-section .calx-today .calx-main { border-width: 2px; box-shadow: 0 0 0 4px var(--px-gold-soft); }
+body.px #calendar-section .calx-num { font-size: calc(15px * var(--px-scale)); }
+body.px #calendar-section .calx-todaybtn { min-height: 34px; padding: 0 16px; border-radius: 999px; font-weight: 600; }
+@media (pointer: coarse) and (max-width: 640px) {
+  body.px #calendar-section .calx-todaybtn { min-height: 40px; }
+  body.px #calendar-section .calx-grid, body.px #calendar-section .calx-head { gap: 8px; }
+}
+
+
+/* ==========================================================================
+   11. PERPINDAHAN HALAMAN
+   Animasi dijalankan premium.js (Web Animations API) pada bagian yang baru tampil.
+   Di sini hanya persiapan: tidak ada transform permanen yang memengaruhi layout.
+   ========================================================================== */
+body.px [data-px-view] { will-change: auto; }
+
+
+/* ==========================================================================
+   12. PENGATURAN: UKURAN TEKS
+   ========================================================================== */
+body.px .px-seg { display: inline-flex; padding: 4px; gap: 2px; border-radius: 16px; background: rgba(255, 255, 255, .06); box-shadow: inset 0 0 0 1px var(--px-edge); }
+body.light.px .px-seg { background: rgba(0, 0, 0, .04); }
+body.px .px-seg button { min-width: 84px; min-height: 40px; padding: 0 16px; border: 0; border-radius: 12px; background: transparent; color: var(--px-tx2); font: 600 14px/1 inherit; font-family: inherit; cursor: pointer; transition: background var(--px-dur) var(--px-ease), color var(--px-dur) var(--px-ease); }
+body.px .px-seg button[aria-pressed="true"] { background: linear-gradient(180deg, rgba(255, 255, 255, .17), rgba(255, 255, 255, .07)); color: var(--px-gold-hi); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22); }
+body.light.px .px-seg button[aria-pressed="true"] { background: #fff; color: var(--px-gold); box-shadow: 0 1px 3px rgba(60, 48, 20, .2); }
+body.px .px-seg button:focus-visible { outline: 2px solid var(--px-gold); outline-offset: 2px; }
+body.px .px-set-h { flex-wrap: wrap; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
+body.px .px-set-t { font-size: calc(15px * var(--px-scale)); font-weight: 600; color: var(--px-tx); }
+body.px .px-set-d { font-size: var(--px-fs-cap); color: var(--px-tx2); margin: 0 0 12px; line-height: 1.5; }
+body.px .px-set-sample { margin-top: 12px; padding: 12px 16px; border-radius: 16px; font-size: var(--px-fs-body); line-height: 1.5; color: var(--px-tx2); background: rgba(255, 255, 255, .04); box-shadow: inset 0 0 0 1px var(--px-edge); }
+
+
+/* ==========================================================================
+   13. FALLBACK AKSESIBILITAS
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  body.px .px-skel, body.px .v5-skel { animation: none; }
+  body.px .v5 .v5-eq svg.px-draw { animation: none; }
+  body.px #btn-new-journal-fab, body.px .px-chip, body.px .px-state-act, body.px .npv-item svg { transition: none; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .px-glass, body.px .px-range, body.px .toast, body.px .v5 .v5-tip,
+  body.px.npv.authed .npv-dock { background: var(--px-glass-solid); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+@media (prefers-contrast: more) {
+  :root { --px-edge: rgba(255, 255, 255, .34); --px-tx2: rgba(244, 240, 230, .88); --px-tx3: rgba(244, 240, 230, .74); }
+  body.light { --px-edge: rgba(0, 0, 0, .36); --px-tx2: rgba(39, 39, 42, .9); --px-tx3: rgba(39, 39, 42, .78); }
+}
+@media (forced-colors: active) {
+  body.px .px-chip.on, body.px .px-seg button[aria-pressed="true"] { outline: 2px solid Highlight; }
+  body.px .px-state-act { border: 1px solid ButtonText; }
+}
