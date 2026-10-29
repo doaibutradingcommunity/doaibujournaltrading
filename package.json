@@ -1,0 +1,14 @@
+{
+  "name": "doa-ibu-functions",
+  "description": "Cloud Functions for Doa Ibu Journal MT4/MT5 Sync",
+  "version": "17.03.0",
+  "main": "index.js",
+  "engines": {
+    "node": "18"
+  },
+  "dependencies": {
+    "firebase-admin": "^11.8.0",
+    "firebase-functions": "^4.3.1"
+  },
+  "private": true
+}

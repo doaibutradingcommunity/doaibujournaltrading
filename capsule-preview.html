@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Status Capsule — Preview</title>
+<link rel="stylesheet" href="../ds.css">
+<link rel="stylesheet" href="../status-capsule.css">
+<style>
+  body { margin: 0; background: var(--bg); color: var(--text-primary); font-family: var(--font-sans); }
+  main { max-width: 560px; margin: 0 auto; padding: 72px 20px 80px; display: grid; gap: 14px; }
+  h1 { font-size: 22px; margin: 0 0 4px; } p { margin: 0; color: var(--text-secondary); font-size: 14px; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; }
+  button { min-height: 44px; padding: 0 16px; border-radius: 14px; border: 1px solid var(--border-strong); background: var(--surface); color: inherit; font: 600 14px var(--font-sans); cursor: pointer; }
+</style>
+</head>
+<body>
+<main>
+  <div><h1>Live Activity Status Capsule</h1><p>Komponen web (bukan Live Activity native iOS). Memuat CSS/JS asli aplikasi.</p></div>
+  <div class="row">
+    <button id="b-save">Simpan journal</button>
+    <button id="b-up">Simpan + upload 2 chart</button>
+    <button id="b-fail">Simpan gagal</button>
+  </div>
+  <div class="row">
+    <button id="b-off">Offline</button>
+    <button id="b-on">Online + sinkron</button>
+    <button id="b-exp">Ekspor PDF</button>
+    <button id="b-multi">Beberapa sekaligus</button>
+  </div>
+  <div class="row">
+    <button id="b-theme">Tema terang/gelap</button>
+    <button id="b-lang">Bahasa: id → en → ms → es</button>
+  </div>
+</main>
+<script src="../status-capsule.js"></script>
+<script>
+  var S = window.StatusCapsule, $ = function (i) { return document.getElementById(i); }, wait = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+  $('b-save').onclick = function () { S.save.begin(); S.save.writing(); wait(1200).then(S.save.ok); };
+  $('b-up').onclick = function () { S.save.begin(); S.save.upload(1, 2); wait(1100).then(function () { S.save.upload(2, 2); return wait(1100); }).then(function () { S.save.writing(); return wait(900); }).then(S.save.ok); };
+  $('b-fail').onclick = function () { S.save.begin(); wait(1000).then(function () { S.save.fail(new Error('Missing or insufficient permissions')); }); };
+  $('b-off').onclick = function () { window.dispatchEvent(new Event('offline')); };
+  $('b-on').onclick = function () { window.dispatchEvent(new Event('online')); };
+  $('b-exp').onclick = function () { S.exportRun('PDF', function () { var t = Date.now(); while (Date.now() - t < 400); return 'journal-report-2026-10-27.pdf'; }); };
+  $('b-multi').onclick = function () { S.begin('a', { label: 'Menyimpan journal…' }); S.begin('b', { kind: 'export', label: 'Menyiapkan PDF…', immediate: true }); wait(2000).then(function () { S.ok('a', { label: 'Journal tersimpan' }); return wait(1500); }).then(function () { S.ok('b', { label: 'PDF siap' }); }); };
+  $('b-theme').onclick = function () { document.body.classList.toggle('light'); };
+  $('b-lang').onclick = function () { var L = ['id', 'en', 'ms', 'es'], c = localStorage.getItem('journalLanguage') || 'id'; localStorage.setItem('journalLanguage', L[(L.indexOf(c) + 1) % 4]); S.save.begin(); wait(900).then(S.save.ok); };
+</script>
+</body>
+</html>

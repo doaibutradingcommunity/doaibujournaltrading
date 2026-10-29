@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Personal Trading Rhythm — Preview</title>
+<link rel="stylesheet" href="../ds.css">
+<link rel="stylesheet" href="../trading-rhythm.css">
+<style>
+  body { margin: 0; background: var(--bg, #0e0d0a); color: var(--text-primary, #eee8d6); font-family: var(--font-sans, system-ui, sans-serif); }
+  /* token Beranda (di aplikasi didefinisikan di index.html) */
+  #view-home{--g:#d7b44a;--gr:215,180,74;--ln:rgba(255,255,255,.10);--soft:rgba(255,255,255,.045);--tx:#eee8d6;--mu:#a8a18f;--hm-glass:rgba(32,29,21,.55);--hm-ink:#1a1405;color:var(--tx);padding:16px}
+  body.light{background:#f6f3ea}
+  body.light #view-home{--g:#8a6a10;--gr:138,106,16;--ln:rgba(0,0,0,.11);--soft:rgba(0,0,0,.035);--tx:#27272a;--mu:#6b6b72;--hm-glass:rgba(255,253,246,.74);--hm-ink:#fff}
+  .hm{max-width:64rem;margin:0 auto;padding:4px 0 112px}
+  .stub{padding:20px;border-radius:24px;background:var(--hm-glass);box-shadow:inset 0 0 0 1px var(--ln);font-size:14px;color:var(--mu)}
+</style>
+</head>
+<body>
+<section id="view-home"><div id="hm-root" class="hm"><div class="stub">(Kartu Beranda bawaan berada di sini)</div></div></section>
+<script>
+  /* Hari ini = Selasa 2026-10-27 (tetap, supaya uji deterministik). Tidak ada Firebase: review dibaca dari localStorage. */
+  window.DoaIbuReminder = { localDate: function () { return '2026-10-27'; } };
+  var q = new URLSearchParams(location.search);
+  if (q.get('light')) document.body.classList.add('light');
+  if (q.get('lang')) localStorage.setItem('journalLanguage', q.get('lang'));
+  var J = function (d, t) { return { id: d, date: d, trades: t || 1, pl: -999 /* sengaja: P/L tidak boleh memengaruhi kartu */ }; };
+  var allJournals = q.get('empty') ? [] : [J('2026-10-26', 2), J('2026-10-23'), J('2026-10-22', 3), J('2026-10-21'), J('2026-10-20'), J('2026-10-16'), J('2026-10-15'), J('2026-10-14'), J('2026-10-09'), J('2026-10-08'), J('2026-10-02')];
+  var allOutlooks = q.get('empty') ? {} : {
+    '2026-10-26': { bias: 'Bullish', reason: 'Break high', after: { happened: 'Naik sesuai rencana' } },
+    '2026-10-23': { bias: 'Bearish', reason: 'Rejection', after: { reflect: 'Terlalu cepat entry' } },
+    '2026-10-22': { bias: 'Bullish', reason: 'Support' },
+    '2026-10-19': { bias: 'Sideways', reason: 'Range' },
+    '2026-10-15': { bias: 'Bullish', reason: 'Trend', after: { actual: 'Bullish' } }
+  };
+  if (!q.get('empty')) {
+    localStorage.setItem('v2rev:d:2026-10-26', JSON.stringify({ w: 'Sabar', x: 'Entry awal', i: 'Tunggu konfirmasi' }));
+    localStorage.setItem('v2rev:d:2026-10-23', JSON.stringify({ w: 'Disiplin', x: 'FOMO', i: 'Checklist' }));
+    localStorage.setItem('v2rev:d:2026-10-21', JSON.stringify({ w: 'Hanya satu kolom' }));
+    localStorage.setItem('v2rev:d:2026-10-15', JSON.stringify({ w: 'a', x: 'b', i: 'c' }));
+    localStorage.setItem('v21ck:2026-10-27', JSON.stringify(['d0', 'd1', 'd2']));
+  }
+  window.__calls = [];
+  function openNewJournalForm(d) { window.__calls.push(['form', d]); }
+  window.openReviewForm = function (o) { window.__calls.push(['review', o.date, o.period]); };
+  function editJournal(id) { window.__calls.push(['edit', id]); }
+</script>
+<script src="../trading-rhythm.js"></script>
+<script>window.dispatchEvent(new CustomEvent('journals-loaded'));</script>
+</body>
+</html>
