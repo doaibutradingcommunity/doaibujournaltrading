@@ -1,0 +1,141 @@
+/* v16.68 · Navigasi yang lebih tenang
+   Lapisan tampilan di atas dock adaptif (v16.63/v16.65) dan header adaptif (v16.41). Dimuat paling akhir.
+   Tidak ada markup nav baru selain satu blok judul di header (dibuat calm-nav.js). Semua aturan dikunci ke body.cn-on,
+   jadi tanpa calm-nav.js tampilan kembali persis v16.67.
+
+   1. Judul halaman aktif: HP = bilah judul di header; desktop = judul di bawah nama merek
+   2. Header HP: transparan di puncak halaman, kaca + garis tipis hanya setelah digulir
+   3. Dock: indikator aktif berupa pil lembut di belakang ikon (bukan garis + cahaya), tekan terasa seperti tombol native
+   4. Pindah halaman: satu transisi pendek (190 ms), scroll langsung ke atas
+   5. Kontekstual: tombol Pengaturan menandai halamannya; judul ganda di dalam konten disembunyikan di HP */
+
+/* ---------- 0. Dasar ---------- */
+.cn-bar, .cn-brand-title { display: none; }
+.cn-sr {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+
+/* ---------- 1a. Desktop / tablet: judul di bawah nama merek ---------- */
+@media (min-width: 641px) {
+  /* h1 tetap ada untuk pembaca layar, tidak terlihat */
+  body.cn-on .cn-bar {
+    display: block; position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+    clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0; pointer-events: none;
+  }
+  body.cn-on .app-brand-sub { display: none; }
+  body.cn-on .cn-brand-title {
+    display: block; max-width: 260px; max-height: 20px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font-size: 12px; font-weight: 600; letter-spacing: .004em; line-height: 1.3;
+    color: var(--accent-text, #C8A96A);
+    transition: max-height var(--ah-dur, 240ms) var(--ah-ease, ease), opacity .16s ease;
+  }
+  body.light.cn-on .cn-brand-title { color: var(--accent-text, #7E5F17); }
+  body.cn-on .cn-brand-title.cn-swap { animation: cn-title-in .2s cubic-bezier(.22, .61, .36, 1) both; }
+  #app > header.app-header.is-compact .cn-brand-title {
+    max-height: 0; opacity: 0; visibility: hidden; pointer-events: none;
+  }
+}
+
+/* ---------- 1b / 2. HP: bilah judul + header yang menyatu dengan halaman ---------- */
+@media (max-width: 640px) {
+  body.cn-on .app-brand { display: none; }
+
+  body.cn-on.npv.authed .cn-bar {
+    display: flex; flex-direction: column; justify-content: center; flex: 1 1 0; min-width: 0; padding: 0 4px 0 2px;
+    -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
+  }
+  body.cn-on .cn-title {
+    margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font-size: 17px; font-weight: 600; line-height: 1.2; letter-spacing: -.018em;
+    color: var(--text-primary, rgba(255, 255, 255, .94));
+    transition: font-size var(--ah-dur, 240ms) var(--ah-ease, ease);
+  }
+  body.light.cn-on .cn-title { color: rgba(0, 0, 0, .9); }
+  body.cn-on .cn-title.cn-swap { animation: cn-title-in .2s cubic-bezier(.22, .61, .36, 1) both; }
+  body.cn-on .cn-sub {
+    display: block; max-height: 16px; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font-size: 12px; font-weight: 400; line-height: 1.3; letter-spacing: .002em;
+    color: var(--text-secondary, rgba(235, 235, 245, .56));
+    transition: max-height var(--ah-dur, 240ms) var(--ah-ease, ease), opacity .16s ease;
+  }
+  body.light.cn-on .cn-sub { color: rgba(0, 0, 0, .5); }
+
+  /* header mengecil saat digulir: judul tetap, nama menyingkir */
+  #app > header.app-header.is-compact .cn-title { font-size: 15px; }
+  #app > header.app-header.is-compact .cn-sub { max-height: 0; opacity: 0; margin-top: 0; }
+
+  /* kiri: avatar saja (nama pindah ke baris kecil di bawah judul) */
+  body.cn-on.npv #header-left-block > .min-w-0 { display: none; }
+  body.cn-on.npv #app > header.app-header .glass#header-left-block { padding: 4px !important; gap: 0 !important; flex: 0 0 auto; }
+
+  /* permukaan header: menyatu dengan halaman di puncak, kaca + garis tipis setelah digulir */
+  body.cn-on.npv.authed #app > header.app-header::before { opacity: 0; transition: opacity .22s ease; }
+  body.cn-on.npv.authed.cn-scrolled #app > header.app-header::before { opacity: 1; }
+  body.cn-on.npv.authed #app > header.app-header { box-shadow: none; }
+  /* tema terang: aturan body.light lama (background !important) menang atas aturan HP dan membuat kotak datar di belakang header */
+  body.light.cn-on.npv.authed #app > header.app-header { background: transparent !important; }
+  body.cn-on.npv.authed.cn-scrolled #app > header.app-header.is-compact { box-shadow: none; }
+
+  /* judul ganda di dalam konten (header sudah menyebutnya) */
+  body.cn-on #statistik-section .stx-title,
+  body.cn-on #settings-section h2[data-i18n="settingsTitle"] { display: none; }
+
+  /* ---------- 3. Dock: indikator aktif yang halus ----------
+     Pil lembut di belakang ikon (gaya navigasi Android modern). Garis emas di tepi atas dan cahaya radial v16.63 dihapus.
+     Posisi: ikon aktif selalu punya label di bawahnya; pusat ikon = tengah dock - 8px (dock penuh) atau - 4px (memadat). */
+  body.cn-on.npv.authed .npv-ind::after { display: none; }
+  body.cn-on.npv.authed .npv-ind::before {
+    inset: auto; left: 50%; width: 56px; height: 30px; margin-left: -28px; top: calc(50% - 23px);
+    border-radius: 16px; box-shadow: none;
+    background: rgba(var(--an-gold-rgb), .15);
+  }
+  body.light.cn-on.npv.authed .npv-ind::before { background: rgba(var(--an-gold-rgb), .13); }
+  /* dock memadat (v16.65): jarak ikon-label jadi 0, ikon aktif bergeser 4px ke bawah; pil mengikuti */
+  body.an-compact.cn-on.npv.authed .npv-ind::before { top: calc(50% - 19px); transition: top .3s cubic-bezier(.3, .8, .3, 1); }
+
+  body.cn-on .npv-item { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  body.cn-on .npv-item[aria-current="page"] svg { transform: none; stroke-width: 2; }
+  body.cn-on .npv-item:active { opacity: 1; }
+  body.cn-on .npv-item:active svg,
+  body.cn-on .npv-item[aria-current="page"]:active svg { transform: scale(.88); transition-duration: .1s; }
+  body.cn-on .npv-row, body.cn-on .npv-tile { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+}
+
+/* ---------- 5. Pengaturan: tombol header menandai halamannya ---------- */
+body.cn-on #btn-settings { transition: color .2s ease, background-color .2s ease; }
+body.cn-on #btn-settings[aria-current="page"] { color: var(--accent-text, #C8A96A); background-color: rgba(var(--an-gold-rgb, 200, 169, 106), .13); }
+body.light.cn-on #btn-settings[aria-current="page"] { color: var(--accent-text, #7E5F17); }
+
+/* ---------- 4. Pindah halaman: satu transisi pendek ----------
+   Sebelumnya beberapa lapis berebut (fadeUp .5 dtk, mo-view-in, di-view-in dengan blur, slide horizontal WAAPI 320 ms).
+   Di sini semuanya dimatikan untuk kontainer halaman dan diganti satu fade + naik 6px. */
+@keyframes cn-view-in { from { opacity: 0; transform: translate3d(0, 6px, 0); } to { opacity: 1; transform: none; } }
+@keyframes cn-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes cn-title-in { from { opacity: 0; transform: translate3d(0, 3px, 0); } to { opacity: 1; transform: none; } }
+
+body.cn-on :is(#view-home, #view-dashboard, #calendar-section, #statistik-section, #monthly-section, #strategy-section,
+               #coach-section, #wrapped-section, #gallery-section, #diary-section, #settings-section, #web-section):not(.cn-enter) {
+  animation: none !important;
+}
+body.cn-on #dashboard-section.enter { animation: none !important; }
+body.cn-on :is(#view-home, #view-dashboard, #calendar-section, #statistik-section, #monthly-section, #strategy-section,
+               #coach-section, #wrapped-section, #gallery-section, #diary-section, #settings-section, #web-section).cn-enter {
+  animation: cn-view-in 190ms cubic-bezier(.22, .61, .36, 1) both !important;
+}
+/* HP hemat: hanya fade */
+html.mo-lite body.cn-on :is(#view-home, #view-dashboard, #calendar-section, #statistik-section, #monthly-section, #strategy-section,
+               #coach-section, #wrapped-section, #gallery-section, #diary-section, #settings-section, #web-section).cn-enter {
+  animation-name: cn-fade-in !important; animation-duration: 120ms !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* dua selektor: yang kedua menyamai spesifisitas aturan html.mo-lite di atas, supaya reduce-motion tetap menang di HP hemat */
+  body.cn-on :is(#view-home, #view-dashboard, #calendar-section, #statistik-section, #monthly-section, #strategy-section,
+                 #coach-section, #wrapped-section, #gallery-section, #diary-section, #settings-section, #web-section).cn-enter,
+  html.mo-lite body.cn-on :is(#view-home, #view-dashboard, #calendar-section, #statistik-section, #monthly-section, #strategy-section,
+                 #coach-section, #wrapped-section, #gallery-section, #diary-section, #settings-section, #web-section).cn-enter { animation: none !important; }
+  body.cn-on .cn-title, body.cn-on .cn-sub, body.cn-on .cn-brand-title, body.cn-on #btn-settings,
+  body.cn-on.npv.authed #app > header.app-header::before { transition: none !important; animation: none !important; }
+  body.cn-on .npv-item:active svg { transition: none !important; }
+}

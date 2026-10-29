@@ -1,0 +1,90 @@
+/* v16.41 · Adaptive Header
+   Header mengecil saat menggulir turun, membesar lagi saat menggulir naik / kembali ke atas.
+   Yang tetap terlihat: foto + nama profil, lonceng pengingat (titik merah), tema, pengaturan, dan navigasi.
+   Yang menyingkir sementara: teks "Edit profil", bahasa, logout, pasang aplikasi, subjudul brand.
+   Kelas .is-compact dipasang oleh adaptive-header.js pada <header class="app-header">. */
+
+#app > header.app-header {
+  --ah-dur: 240ms;
+  --ah-ease: cubic-bezier(.2, .8, .2, 1);
+  box-sizing: border-box;
+  transition:
+    height var(--ah-dur) var(--ah-ease),
+    margin-bottom var(--ah-dur) var(--ah-ease),
+    padding var(--ah-dur) var(--ah-ease),
+    box-shadow var(--ah-dur) var(--ah-ease);
+}
+/* Tinggi eksplisit (diukur JS): height dan margin-bottom bertransisi dengan durasi & easing yang sama,
+   jadi jumlahnya selalu konstan -> isi halaman tidak bergeser sedikit pun selama animasi. */
+#app > header.app-header.ah-ready { height: var(--ah-h0); overflow: hidden; }
+#app > header.app-header.ah-ready.is-compact {
+  height: var(--ah-h1);
+  margin-bottom: calc(var(--ah-h0) - var(--ah-h1));
+}
+
+/* ---------- Baris atas: profil + aksi ---------- */
+#app > header.app-header #header-avatar,
+#app > header.app-header #profile-sub-header,
+#app > header.app-header #header-left-block,
+#app > header.app-header #header-right-block,
+#app > header.app-header .app-brand-sub,
+#app > header.app-header #app-language,
+#app > header.app-header #btn-logout,
+#app > header.app-header #btn-install {
+  transition:
+    width var(--ah-dur) var(--ah-ease), height var(--ah-dur) var(--ah-ease),
+    max-width var(--ah-dur) var(--ah-ease), max-height var(--ah-dur) var(--ah-ease),
+    padding var(--ah-dur) var(--ah-ease), margin var(--ah-dur) var(--ah-ease),
+    opacity calc(var(--ah-dur) * .7) ease, visibility 0s;
+}
+#app > header.app-header #profile-sub-header { max-height: 24px; overflow: hidden; }
+#app > header.app-header #app-language { max-width: 120px; }
+#app > header.app-header #btn-logout   { max-width: 120px; overflow: hidden; }
+#app > header.app-header #btn-install  { max-width: 60px; }
+#app > header.app-header .app-brand-sub { max-height: 20px; overflow: hidden; }
+
+#app > header.app-header.is-compact { padding-top: calc(8px + env(safe-area-inset-top, 0px)); padding-bottom: 8px; }
+#app > header.app-header.is-compact #header-avatar { width: 28px; height: 28px; }
+#app > header.app-header.is-compact #profile-initial-header { font-size: 12px; }
+#app > header.app-header.is-compact #header-left-block { padding-top: 4px; padding-bottom: 4px; }
+#app > header.app-header.is-compact #header-right-block { padding-top: 2px; padding-bottom: 2px; }
+#app > header.app-header.is-compact #profile-name-header { font-size: 13px; }
+
+/* elemen yang menyingkir: lipat, pudarkan, keluarkan dari urutan Tab */
+#app > header.app-header.is-compact #profile-sub-header,
+#app > header.app-header.is-compact .app-brand-sub {
+  max-height: 0; opacity: 0; visibility: hidden; pointer-events: none;
+  transition-delay: 0s, 0s, 0s, 0s, 0s, 0s, 0s, var(--ah-dur);
+}
+#app > header.app-header.is-compact #app-language,
+#app > header.app-header.is-compact #btn-logout,
+#app > header.app-header.is-compact #btn-install {
+  max-width: 0; opacity: 0; visibility: hidden; pointer-events: none;
+  padding-left: 0; padding-right: 0; margin: 0; border-width: 0;
+  transition-delay: 0s, 0s, 0s, 0s, 0s, 0s, 0s, var(--ah-dur);
+}
+
+/* ---------- Baris navigasi (desktop/tablet; di HP nav sudah bar bawah mengambang) ---------- */
+@media (min-width: 641px) {
+  #app > header.app-header > div:nth-child(2) { transition: margin-top var(--ah-dur) var(--ah-ease); }
+  #app > header.app-header .nav-pill-btn {
+    transition: padding var(--ah-dur) var(--ah-ease), color var(--dur, 200ms) ease, background var(--dur, 200ms) ease;
+  }
+  #app > header.app-header.is-compact > div:nth-child(2) { margin-top: 8px; }
+  #app > header.app-header.is-compact .nav-pill-btn { padding-top: 4px; padding-bottom: 4px; }
+}
+
+/* ---------- Penanda "melayang": bayangan halus saat mengecil ---------- */
+#app > header.app-header.is-compact { box-shadow: 0 6px 22px -12px rgba(0, 0, 0, .6); }
+body.light #app > header.app-header.is-compact { box-shadow: 0 6px 20px -12px rgba(60, 48, 20, .35); }
+
+/* ---------- Saat mengukur: matikan transisi agar hasil ukur seketika ---------- */
+#app > header.app-header.is-measuring,
+#app > header.app-header.is-measuring * { transition: none !important; }
+
+/* ---------- Aksesibilitas ---------- */
+@media (prefers-reduced-motion: reduce) {
+  #app > header.app-header,
+  #app > header.app-header *,
+  #app > header.app-header::before { transition: none !important; }
+}

@@ -1,0 +1,77 @@
+/* ==========================================================================
+   DOA IBU — v16.81  CONTEXTUAL AMBIENT LIGHTING
+   --------------------------------------------------------------------------
+   Cahaya latar menyesuaikan KONTEKS halaman, bukan animasi acak.
+   Tiap halaman punya "fokus" sendiri; identitas visual tetap satu.
+
+   Apa yang BERBEDA per halaman (hanya ini):
+     --cl-a / --cl-b / --cl-c   bobot (0–1) tiga lampu #sg-light  → lampu mana yang memimpin
+   Apa yang TIDAK berbeda per halaman (itulah yang menjaga identitas):
+     warna cahaya (--sg-c1..3, nada jam dari signature.js), bentuk, ukuran, ritme napas,
+     intensitas dasar per konteks (--amb-gold dari v16.66), titik cahaya (--sg-x/--sg-y, v16.70).
+
+   Prinsip
+     1. Satu-satunya hal yang bergerak antar-halaman adalah OPACITY (filter: opacity) → compositor,
+        tanpa repaint, tanpa blur.
+     2. Bobot tidak pernah di bawah .30 → tidak ada lampu yang "mati" di satu halaman, jadi
+        perpindahan halaman selalu terasa satu ruangan yang sama dengan lampu diarahkan lain.
+     3. LARANGAN: cahaya tidak boleh berubah warna/kekuatan menurut profit atau loss.
+        File ini tidak memuat satu pun literal warna, dan tidak membaca data apa pun.
+        Penjaganya: scripts/ambient_guard.py (gagal bila ada token P/L atau warna hijau/merah
+        di berkas ambient). Hari merah tidak boleh membuat layar jadi merah.
+
+   Nama halaman → label di aplikasi
+     home Beranda · dashboard "Journal" · calendar Kalender · statistik Statistik · monthly Review Bulanan
+     strategy Strategy Playbook · coach AI Coach · wrapped Trading Wrapped · gallery Galeri
+     diary Diary & Review · settings Pengaturan · web Tentang Kami · form (modal form journal)
+
+   Letak lampu (signature.css):  a = kiri-atas besar · b = kanan-bawah besar · c = tengah kecil
+   Fallback: tanpa skrip / reduced-motion / mo-lite / effects low → bobot tetap berlaku, tapi berganti
+   seketika (tanpa transisi). forced-colors: #sg-light memang disembunyikan (signature.css).
+   Membatalkan: hapus <link href="contextual-ambient.css"> dan <script src="contextual-ambient.js">.
+   ========================================================================== */
+
+/* ---------- 1. TOKEN PER HALAMAN ---------- */
+body.authed {
+  --cl-a: 1;
+  --cl-b: .65;
+  --cl-c: .55;
+}
+
+/* Hangat & menyambut: lampu kiri-atas memimpin, di atas hero P/L. */
+body.authed[data-cl="home"]      { --cl-a: 1;   --cl-b: .65; --cl-c: .55; }
+/* Journal (daftar entri): rata dan terpusat, seperti lampu baca; tidak menarik mata ke sudut. */
+body.authed[data-cl="dashboard"] { --cl-a: .60; --cl-b: .60; --cl-c: 1;   }
+/* Data padat: cahaya dijauhkan dari grid/tabel, condong ke tepi bawah-kanan. */
+body.authed[data-cl="calendar"]  { --cl-a: .45; --cl-b: .90; --cl-c: .35; }
+body.authed[data-cl="statistik"] { --cl-a: .80; --cl-b: .40; --cl-c: .40; }   /* garis cahaya di atas deretan KPI */
+body.authed[data-cl="monthly"]   { --cl-a: .40; --cl-b: .80; --cl-c: .50; }
+body.authed[data-cl="strategy"]  { --cl-a: .50; --cl-b: .50; --cl-c: .85; }
+body.authed[data-cl="coach"]     { --cl-a: .35; --cl-b: .85; --cl-c: .60; }   /* percakapan: terang di bawah, dekat kolom input */
+/* Reflektif & tenang. */
+body.authed[data-cl="diary"]     { --cl-a: .60; --cl-b: .40; --cl-c: .30; }
+body.authed[data-cl="settings"]  { --cl-a: .40; --cl-b: .40; --cl-c: .30; }
+/* Perayaan & galeri: boleh sedikit lebih hidup, tetap emas yang sama. */
+body.authed[data-cl="wrapped"]   { --cl-a: .90; --cl-b: .90; --cl-c: .70; }
+body.authed[data-cl="gallery"]   { --cl-a: .55; --cl-b: .95; --cl-c: .65; }
+body.authed[data-cl="web"]       { --cl-a: .70; --cl-b: .60; --cl-c: .50; }
+/* Modal form journal (bisa dibuka dari halaman mana pun): redup, fokus ke isian. */
+body.authed[data-cl="form"]      { --cl-a: .50; --cl-b: .35; --cl-c: .30; }
+
+
+/* ---------- 2. PENERAPAN: opacity saja ---------- */
+html.sg-on body.authed[data-cl] #sg-light b {
+  filter: opacity(var(--cl-w, 1));
+  transition: filter .9s cubic-bezier(.33, 0, .2, 1);
+}
+html.sg-on body.authed[data-cl] #sg-light .a { --cl-w: var(--cl-a); }
+html.sg-on body.authed[data-cl] #sg-light .b { --cl-w: var(--cl-b); }
+html.sg-on body.authed[data-cl] #sg-light .c { --cl-w: var(--cl-c); }
+
+
+/* ---------- 3. FALLBACK: bobot tetap, transisi mati ---------- */
+@media (prefers-reduced-motion: reduce) {
+  html.sg-on body.authed[data-cl] #sg-light b { transition: none; }
+}
+html.mo-lite body.authed[data-cl] #sg-light b,
+html[data-ui-effects="low"] body.authed[data-cl] #sg-light b { transition: none; }

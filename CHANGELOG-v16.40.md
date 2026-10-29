@@ -1,0 +1,13 @@
+# v16.40 — Personal Trading Command Center
+- Dashboard berganti judul menjadi **Personal Trading Command Center**. Kartu diurutkan menurut kepentingan: Fokus Hari Ini → Target & Progres → Equity Curve → Drawdown Curve → Perbandingan Periode → (Statistik Utama) → Kalender → Trade Terbaru; analisis (KPI, Setup, Edge, Psikologi) tetap dilipat di "Analisis lengkap".
+- **Dashboard terpisah per akun**: tab Semua · Live · Demo · Funded CFD · Futures · Saham (+ "Lainnya" bila ada journal tanpa jenis akun / nama tak dikenali). Semua kartu, grafik, dan Fokus Hari Ini mengikuti akun yang dipilih. Tab menampilkan Net P/L tiap akun.
+- "Semua" tidak menyertakan akun Demo (konstanta `ALL_EXCLUDES_DEMO` di skrip dashboard) agar angka latihan tidak bercampur dengan uang sungguhan.
+- Form journal: opsi akun **Demo** ditambahkan. Input akun di Kalender kini punya saran nama baku (teks bebas tetap boleh). "Funded Futures" ditampilkan sebagai "Futures"; nilai tersimpan tidak berubah.
+- **Perbaikan bug lama**: mengedit journal tidak mengisi ulang jenis akun, sehingga akun hilang saat disimpan. Kini terisi.
+- **Target & Progres** (per akun): target profit bulanan dengan penanda jadwal linear, plus batas drawdown (opsional "hitung sejak" tanggal). Disimpan di perangkat dan di `users/{uid}.ccPrefs`.
+- **Drawdown Curve**: kurva jarak dari puncak P/L, drawdown saat ini/terdalam, garis batas; rentang waktu mengikuti Equity Curve.
+- **Perbandingan Periode**: Minggu ini / Bulan ini / 7H / 30H / 90H vs periode sebelumnya dengan jumlah hari yang sama; selisih nominal dan persen untuk Net P/L, Win Rate, Profit Factor, Expectancy, Max Drawdown, Total Trade, Hari Trading.
+- Preset baru **Funded**; preset lama menyertakan kartu baru. Pengguna yang masih memakai susunan standar lama otomatis pindah ke urutan baru; susunan yang sudah diubah sendiri tidak disentuh (kartu baru ditambahkan di akhir).
+- `v16-stats.js`: `acct` pada tiap unit, filter `acct`, `drawdownInfo`, `periodWindows`, `comparePeriods`, `dd` pada titik equity. Hitungan P/L yang ada tidak diubah. Monthly Review tetap mencakup semua akun.
+- Catatan: journal hasil import CSV broker belum punya jenis akun, jadi masuk tab "Lainnya" sampai diedit.
+- `sw.js`: cache v16-40-0-command-center.

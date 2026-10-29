@@ -1,0 +1,6 @@
+# v16.62 — Viewer screenshot di HP + Riwayat Journal portrait
+
+- **Tombol tutup viewer gambar:** sebelumnya hilang di HP/portrait karena `.glass-pill{position:relative}` menimpa kelas `absolute`, jadi tombol tertutup gambar. Sekarang tombol ✕ 48px selalu terlihat (fixed, mengikuti safe-area), kontrol zoom pindah ke bawah. Ditambah: tombol Back HP menutup viewer (kembali ke halaman sebelumnya), ketuk area gelap menutup, pinch-zoom 2 jari, geser saat diperbesar, ketuk 2x untuk zoom, Esc di desktop.
+- **Riwayat Journal:** susunan kartu kini dipakai hingga lebar 900px (tablet portrait & HP). Sebelumnya lebar 721–900px memakai grid tabel sehingga badge "Live/Profit" bertumpuk dan tombol edit terpotong. Kartu: baris 1 nomor/tanggal + P/L, baris 2 pair + arah + status, baris 3 statistik, lalu sesi, indikator & tombol aksi. Header tanggal membungkus rapi di layar sempit. Layar >900px tidak berubah (kolom status 901–1100px dilebarkan).
+- Diubah: `index.html` (markup & JS viewer), `journal-ux.css`, `sw.js` (cache v16-62-0-viewer-list).
+- Perbaikan lanjutan: header tanggal di HP kini grid (judul 1 baris, '1 trade' + total di bawahnya, tombol '+ Trade' di kanan); sebelumnya judul terhimpit dan menimpa total.

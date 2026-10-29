@@ -1,0 +1,187 @@
+/* ==========================================================================
+   v17.00 · Contextual Action Surface + angka PnL native
+   --------------------------------------------------------------------------
+   1. ACTION SHEET  Menu kontekstual bergaya iOS: kartu bergrup di dasar layar, tombol Batal terpisah,
+                    aksi destruktif merah. Isinya berbeda untuk trade dan untuk chart (lihat action-surface.js).
+   2. ANGKA PnL     Semua angka profit/loss memakai huruf sistem (SF Pro di iPhone, Roboto di Android,
+                    Segoe UI di Windows), bukan Newsreader/Inter. Bobot semibold, angka tabular.
+
+   Dimuat PALING AKHIR (setelah identity.css). Tanpa dependensi.
+   Membatalkan: hapus <link action-surface.css> dan <script action-surface.js>.
+   ========================================================================== */
+
+:root {
+  /* tumpukan huruf sistem. "ui-rounded" sengaja tidak dipakai: angka keuangan lebih terbaca dengan SF biasa. */
+  --num-native: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --as-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --as-z: 2147483400;
+  --as-radius: 14px;
+  --as-gap: 8px;
+  --as-row: 54px;
+  --as-ease: cubic-bezier(.32, .72, 0, 1);
+
+  /* gelap */
+  --as-scrim: rgba(0, 0, 0, .42);
+  --as-mat: rgba(44, 44, 46, .78);
+  --as-mat-solid: #2c2c2e;
+  --as-sep: rgba(255, 255, 255, .12);
+  --as-press: rgba(255, 255, 255, .10);
+  --as-tx: #f2f2f7;
+  --as-tx2: rgba(235, 235, 245, .60);
+  --as-accent: #0a84ff;
+  --as-danger: #ff453a;
+  --as-win: #30d158;
+  --as-loss: #ff453a;
+}
+body.light {
+  --as-scrim: rgba(0, 0, 0, .28);
+  --as-mat: rgba(249, 249, 249, .82);
+  --as-mat-solid: #f9f9f9;
+  --as-sep: rgba(60, 60, 67, .22);
+  --as-press: rgba(60, 60, 67, .12);
+  --as-tx: #1c1c1e;
+  --as-tx2: rgba(60, 60, 67, .62);
+  --as-accent: #007aff;
+  --as-danger: #ff3b30;
+  --as-win: #1a8f3c;
+  --as-loss: #d70015;
+}
+
+
+/* ---------- 1. ANGKA PnL: SF Pro Display (besar) + SF Pro Text (kecil), tabular ---------- */
+/* Di perangkat Apple "-apple-system" memilih Display/Text otomatis menurut ukuran; nama SF Pro ditaruh di depan untuk
+   perangkat yang memasangnya. Di Android/Windows jatuh ke Roboto/Segoe UI. */
+:root {
+  --num-display: "SF Pro Display", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --num-text: "SF Pro Text", -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --num-native: var(--num-display);
+  --id-num: var(--num-display);
+}
+
+/* BESAR (≥ 20px): saldo utama, P/L hari ini, P/L bulanan, angka hero dashboard → SF Pro Display */
+html:root body :is(
+  .pf-val, .de-fig, .ed-fig, .hm-pl, .v5-t-pl, .jd-pl, .tcc-big, .tcc-hv, .stx-big, .mag-big, .mag-chg .d, .sp-net, .calx-amt, .t3-score b, .as-pl
+), html:root.id-on body :is(.pf-val, .de-fig, .ed-fig, .hm-pl) {
+  font-family: var(--num-display) !important;
+  font-weight: 600;
+  letter-spacing: -.028em;
+}
+/* KECIL (daftar, tile, KPI, kalender, tabel): SF Pro Text */
+html:root body :is(
+  .jr-pl, .jr-day-pl, .jr-pick-pl, .t3-pl, .stx-val, .v5-kpi .v, .pf-tv, .pf-td, .pf-cb, .tnum
+) {
+  font-family: var(--num-text) !important;
+  font-weight: 600;
+  letter-spacing: -.012em;
+}
+/* SEMUA angka PnL: digit sejajar (tabular-nums). Mengalahkan "pnum" proporsional di type-system.css. */
+html:root body :is(
+  .pf-val, .de-fig, .ed-fig, .hm-pl, .v5-t-pl, .jd-pl, .tcc-big, .tcc-hv, .stx-big, .mag-big, .mag-chg .d, .sp-net, .calx-amt, .t3-score b, .as-pl,
+  .jr-pl, .jr-day-pl, .jr-pick-pl, .t3-pl, .stx-val, .v5-kpi .v, .pf-tv, .pf-td, .pf-cb, .tnum
+), html:root.id-on body :is(.pf-val, .de-fig, .ed-fig, .hm-pl) {
+  font-variant-numeric: tabular-nums lining-nums !important;
+  font-feature-settings: "tnum" 1, "lnum" 1 !important;
+  font-optical-sizing: auto;
+  font-synthesis: none;
+}
+
+/* tanda +/− dan mata uang: lebih kecil tapi hampir sebaris (gaya iOS), desimal diredupkan */
+html.id-on .id-s, html.id-on .id-c { font-size: .62em; font-weight: 600; top: -.12em; opacity: .85; }
+html.id-on .id-s { margin-right: .06em; }
+html.id-on .id-c { margin-right: .05em; }
+html.id-on .id-d, html.id-on .id-u { font-size: .66em; font-weight: 600; opacity: .62; }
+
+
+/* ---------- 2. ACTION SHEET ---------- */
+.as-root { position: fixed; inset: 0; z-index: var(--as-z); display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+  padding: 0 max(8px, env(safe-area-inset-right, 0px)) max(8px, env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px));
+  font-family: var(--as-font); color: var(--as-tx); -webkit-font-smoothing: antialiased; touch-action: none; overscroll-behavior: contain; }
+.as-root[hidden] { display: none; }
+.as-scrim { position: absolute; inset: 0; background: var(--as-scrim); opacity: 0; transition: opacity .28s ease; }
+.as-root.on .as-scrim { opacity: 1; }
+
+.as-sheet { position: relative; width: min(100%, 392px); max-height: calc(100% - 24px); display: flex; flex-direction: column; gap: var(--as-gap);
+  transform: translate3d(0, calc(100% + 24px), 0); transition: transform .34s var(--as-ease); will-change: transform; }
+.as-root.on .as-sheet { transform: none; }
+.as-root.out .as-sheet { transition-duration: .22s; transform: translate3d(0, calc(100% + 24px), 0); }
+.as-root.out .as-scrim { transition-duration: .22s; opacity: 0; }
+
+.as-group { border-radius: var(--as-radius); background: var(--as-mat-solid); overflow: hidden; display: flex; flex-direction: column; min-height: 0; }
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .as-group { background: var(--as-mat); -webkit-backdrop-filter: blur(34px) saturate(1.8); backdrop-filter: blur(34px) saturate(1.8); }
+}
+/* tanpa kaca (mode hemat / Reduce Transparency): permukaan solid */
+html.mo-lite .as-group { background: var(--as-mat-solid); -webkit-backdrop-filter: none; backdrop-filter: none; }
+@media (prefers-reduced-transparency: reduce) { .as-group { background: var(--as-mat-solid); -webkit-backdrop-filter: none; backdrop-filter: none; } }
+
+/* kepala: konteks (trade apa / chart apa) */
+.as-head { padding: 14px 18px 12px; text-align: center; border-bottom: .5px solid var(--as-sep); }
+.as-title { margin: 0; font-size: 13px; font-weight: 600; line-height: 1.3; color: var(--as-tx2); }
+.as-sub { margin: 2px 0 0; font-size: 13px; line-height: 1.35; color: var(--as-tx2); }
+.as-pl { display: block; margin-top: 4px; font-size: 22px; line-height: 1.15; letter-spacing: -.02em; font-variant-numeric: lining-nums tabular-nums; }
+.as-pl.pos { color: var(--as-win); } .as-pl.neg { color: var(--as-loss); } .as-pl.zero { color: var(--as-tx); }
+.as-head.plain .as-title { color: var(--as-tx); font-size: 15px; font-weight: 600; }
+
+.as-list { overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; touch-action: pan-y; }
+.as-btn { appearance: none; -webkit-appearance: none; border: 0; margin: 0; width: 100%; min-height: var(--as-row); padding: 0 18px;
+  display: flex; align-items: center; gap: 14px; background: transparent; color: var(--as-tx); font: 400 17px/1.25 var(--as-font); letter-spacing: -.012em;
+  text-align: left; cursor: pointer; position: relative; -webkit-tap-highlight-color: transparent; }
+.as-btn + .as-btn::before { content: ""; position: absolute; left: 0; right: 0; top: 0; border-top: .5px solid var(--as-sep); }
+.as-btn:active, .as-btn.press { background: var(--as-press); }
+@media (hover: hover) { .as-btn:hover:not(:disabled) { background: var(--as-press); } }
+.as-btn:focus-visible { outline: 2px solid var(--as-accent); outline-offset: -2px; border-radius: 6px; }
+.as-btn:disabled, .as-btn[aria-disabled="true"] { opacity: .38; cursor: default; }
+.as-ico { flex: none; width: 24px; height: 24px; color: var(--as-accent); }
+.as-ico svg { display: block; width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.as-lbl { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.as-hint { flex: none; font-size: 15px; color: var(--as-tx2); font-variant-numeric: tabular-nums; }
+.as-btn.danger { color: var(--as-danger); }
+.as-btn.danger .as-ico { color: var(--as-danger); }
+
+/* mode konfirmasi / pesan: tombol di tengah seperti action sheet iOS asli */
+.as-sheet.confirm .as-btn { justify-content: center; text-align: center; padding: 0 18px; }
+.as-sheet.confirm .as-lbl { flex: none; }
+.as-sheet.confirm .as-ico { display: none; }
+.as-msg { margin: 0; padding: 0 18px 14px; font-size: 13px; line-height: 1.4; color: var(--as-tx2); text-align: center; text-wrap: balance; }
+.as-sheet.confirm .as-head { border-bottom: 0; padding-bottom: 6px; }
+.as-sheet.confirm .as-list { border-top: .5px solid var(--as-sep); }
+
+.as-cancel { border-radius: var(--as-radius); }
+.as-cancel .as-btn { justify-content: center; font-weight: 600; color: var(--as-accent); }
+.as-cancel .as-lbl { flex: none; }
+
+/* di layar lebar: tetap bergaya sheet di dasar, tapi sedikit lebih ringkas */
+@media (min-width: 640px) and (pointer: fine) {
+  .as-root { justify-content: center; }
+  .as-sheet { transform: translate3d(0, 14px, 0) scale(.97); opacity: 0; transition: transform .26s var(--as-ease), opacity .2s ease; }
+  .as-root.on .as-sheet { opacity: 1; transform: none; }
+  .as-root.out .as-sheet { opacity: 0; transform: translate3d(0, 8px, 0) scale(.98); }
+  .as-btn { min-height: 46px; font-size: 15px; }
+  .as-pl { font-size: 20px; }
+}
+
+/* tombol "⋯" bergaya iOS di panel detail dan penampil chart */
+.jd-more, #zoom-more {
+  appearance: none; -webkit-appearance: none; border: 0; cursor: pointer; display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 999px;
+  background: color-mix(in srgb, currentColor 12%, transparent); color: inherit; -webkit-tap-highlight-color: transparent;
+}
+.jd-more svg, #zoom-more svg { width: 20px; height: 20px; fill: currentColor; }
+.jd-more:active, #zoom-more:active { transform: scale(.94); }
+.jd-more:focus-visible, #zoom-more:focus-visible { outline: 2px solid var(--as-accent); outline-offset: 2px; }
+.jd-top { align-items: center; }
+.jd-top .jd-more { margin-left: auto; margin-right: 8px; }
+#zoom-more { position: absolute; top: max(14px, env(safe-area-inset-top, 0px)); right: 66px; z-index: 5; width: 40px; height: 40px; color: #fff; background: rgba(60, 60, 67, .55); }
+
+/* baris yang sedang ditahan (long-press) */
+.jr.as-hold { transform: scale(.985); transition: transform .18s var(--as-ease); }
+body.as-lock { overflow: hidden; }
+
+@media (prefers-reduced-motion: reduce) {
+  .as-scrim, .as-sheet, .jr.as-hold { transition: none !important; }
+  .as-sheet { transform: none !important; }
+}
+@media (prefers-contrast: more) {
+  .as-group { background: var(--as-mat-solid); -webkit-backdrop-filter: none; backdrop-filter: none; outline: 1px solid var(--as-sep); }
+  .as-btn + .as-btn::before { border-top-width: 1px; }
+}

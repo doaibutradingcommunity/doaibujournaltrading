@@ -1,0 +1,151 @@
+/* v16.63 · Navigasi Adaptive Glass
+   Lapisan tipis di atas navigasi yang sudah ada (dock bawah NAV PREMIUM v17 + Adaptive Header v16.41).
+   Tidak ada markup baru dan tidak ada sistem navigasi baru. Dimuat paling akhir agar menimpa aturan lama.
+
+   1. Indikator emas halus: HP (cahaya lembut yang meluncur di belakang tab aktif) dan desktop (garis kecil di bawah tab aktif)
+   2. Target sentuh 44px di tablet/layar sentuh (HP sudah 44px+)
+   3. Safe area: ruang bawah untuk fokus keyboard (Tab/scrollIntoView), sisi kiri/kanan saat landscape
+   4. Mode "lite" (html.mo-lite): kaca tanpa blur untuk HP Android berspesifikasi rendah / hemat data
+   5. Sentuhan Android: tanpa kilatan tap, tanpa jeda 300ms */
+
+:root { --an-gold: var(--accent, #C8A96A); --an-gold-rgb: 200, 169, 106; }
+body.light { --an-gold: var(--accent-text, #7E5F17); --an-gold-rgb: 126, 95, 23; }
+
+/* ---------- 5. Sentuhan Android ---------- */
+#app > header.app-header button,
+#app > header.app-header select,
+.nav-pill-btn, .npv-item, .npv-row, .npv-pop-item, #btn-new-journal-fab {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* ---------- 1a. HP: cahaya emas lembut di belakang tab aktif ----------
+   Memakai .npv-ind yang sudah ada (ikut meluncur), jadi tidak ada elemen baru. */
+@media (max-width: 640px) {
+  body.npv.authed .npv-ind { top: 0; height: 100%; }
+  body.npv.authed .npv-ind::before {
+    content: ''; position: absolute; inset: 6px 5px 6px; border-radius: 20px; pointer-events: none;
+    background: radial-gradient(120% 100% at 50% 0%, rgba(var(--an-gold-rgb), .17), rgba(var(--an-gold-rgb), .05) 62%, rgba(var(--an-gold-rgb), 0) 100%);
+    box-shadow: inset 0 0 0 1px rgba(var(--an-gold-rgb), .10);
+  }
+  /* garis emas di tepi atas: sedikit lebih terlihat tapi tetap tipis */
+  body.npv.authed .npv-ind::after {
+    width: 24px; height: 3px; margin-left: -12px; opacity: 1;
+    border-radius: 0 0 4px 4px; background: var(--an-gold);
+    box-shadow: 0 1px 10px rgba(var(--an-gold-rgb), .38);
+  }
+  body.light.npv.authed .npv-ind::before { background: radial-gradient(120% 100% at 50% 0%, rgba(var(--an-gold-rgb), .14), rgba(var(--an-gold-rgb), .04) 62%, rgba(var(--an-gold-rgb), 0) 100%); }
+  body.light.npv.authed .npv-ind::after { box-shadow: 0 1px 6px rgba(var(--an-gold-rgb), .28); }
+
+  /* 3. dock mengambang menutup bagian bawah layar: fokus keyboard & scrollIntoView tidak boleh tertutup */
+  html { scroll-padding-bottom: calc(var(--mnav-h, 64px) + var(--mnav-gap, 12px) + 24px + env(safe-area-inset-bottom, 0px)); }
+}
+
+/* ---------- 1b. Desktop/tablet: garis emas kecil di bawah halaman aktif ---------- */
+@media (min-width: 641px) {
+  #app .glass-pill.nav-wrap .nav-pill-btn { position: relative; }
+  #app .glass-pill.nav-wrap .nav-pill-btn::after {
+    content: ''; position: absolute; left: 50%; bottom: 2px; width: 14px; height: 2px; margin-left: -8px;
+    border-radius: 2px; background: var(--an-gold); pointer-events: none;
+    opacity: 0; transform: scaleX(.3);
+    transition: opacity .2s ease, transform .28s cubic-bezier(.3, .8, .3, 1);
+  }
+  #app .glass-pill.nav-wrap .nav-pill-btn.active::after { opacity: .9; transform: none; }
+}
+
+/* ---------- 2. Target sentuh 44px di layar sentuh ukuran tablet ----------
+   Desktop dengan mouse sengaja tidak diubah (tetap minimal dan rapi). */
+@media (min-width: 641px) and (pointer: coarse) {
+  #app .glass-pill.nav-wrap .nav-pill-btn { min-height: 44px; }
+  #app > header.app-header #header-right-block > button { min-width: 44px; min-height: 44px; }
+  #app > header.app-header #header-right-block > #btn-logout { min-width: 44px; }
+  #app > header.app-header #app-language { min-height: 44px; }
+  .npv-pop-item { min-height: 44px; }
+}
+
+/* ---------- 3. Landscape: jangan tertutup notch / gesture area samping ---------- */
+@media (orientation: landscape) and (max-height: 520px) {
+  #app > header.app-header { padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
+  #app > main { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+}
+
+/* ---------- 4. Mode hemat: kaca tanpa blur (HP Android lemah / hemat data) ----------
+   Memakai html.mo-lite yang sudah dipasang motion-system.js (RAM ≤2 GB, CPU ≤3 inti, Data Saver) — tidak ada detektor baru.
+   Warna tetap kaca gelap/terang yang sama, hanya blur latar yang dimatikan agar scroll tetap lancar. */
+html.mo-lite .npv-dock,
+html.mo-lite .npv-sheet,
+html.mo-lite .npv-scrim,
+html.mo-lite .npv-pop,
+html.mo-lite #app > header.app-header::before,
+html.mo-lite #app > header.app-header > div:nth-child(2) {
+  -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+}
+html.mo-lite body.npv.authed .npv-dock { background: #1a1b1e; }
+html.mo-lite body.light.npv.authed .npv-dock { background: #fff; }
+html.mo-lite body.npv.authed .npv-sheet { background: #1a1b1e; }
+html.mo-lite body.light.npv.authed .npv-sheet { background: #faf9f5; }
+html.mo-lite body.npv.authed .npv-scrim { background: rgba(0, 0, 0, .6); }
+html.mo-lite .npv-pop { background: #1a1b1e; }
+html.mo-lite body.light .npv-pop { background: #fcfbf7; }
+@media (max-width: 640px) {
+  html.mo-lite #app > header.app-header::before { background: rgba(14, 15, 17, .95); }
+  html.mo-lite body.light #app > header.app-header::before { background: rgba(244, 242, 236, .96); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #app .glass-pill.nav-wrap .nav-pill-btn::after { transition: none; }
+}
+
+/* =====================================================================
+   v16.65 · Adaptive Navigation — penyempurnaan
+   1. Tombol tambah journal tidak lagi hilang saat menggulir: ia "beristirahat" (lebih kecil, lebih tenang) dan tetap bisa diketuk
+   2. HP: dock memadat saat menggulir turun (hanya label halaman aktif yang tersisa), kembali penuh saat menggulir naik
+   3. Desktop: tombol tambah melebar menjadi pil berlabel saat disorot, pintasan keyboard N
+   Hanya lapisan tampilan; logika navigasi dan form tidak berubah.
+   ===================================================================== */
+
+/* ---------- 1. Tombol tambah: istirahat, bukan hilang ----------
+   Dua sistem lama menyembunyikannya saat gulir turun (mobile-float: .mf-fab-hide, premium: .px-hide).
+   Di sini keduanya diubah menjadi keadaan istirahat, kecuali saat keyboard / sheet / form terbuka (tetap tersembunyi). */
+body.authed.mf-fab-hide:not(.npv-kb):not(.npv-open):not(.mf-sheet-open):not(.jd-lock):not(:has(#form-section:not(.hidden))) #btn-new-journal-fab,
+body.px.authed:not(.npv-kb):not(.npv-open):not(.mf-sheet-open):not(.jd-lock):not(:has(#form-section:not(.hidden))) #btn-new-journal-fab.px-hide {
+  transform: scale(.84) !important;
+  opacity: .88 !important;
+  pointer-events: auto !important;
+}
+
+/* ---------- 2. HP: dock memadat saat menggulir turun ---------- */
+@media (max-width: 640px) {
+  body.npv.authed .npv-dock {
+    transition: transform .3s var(--ease, ease), opacity .2s var(--ease, ease), height .3s cubic-bezier(.3, .8, .3, 1);
+  }
+  .npv-item { gap: 4px; transition: color var(--dur, 220ms) var(--ease, ease), gap .3s cubic-bezier(.3, .8, .3, 1); }
+  .npv-item span { max-height: 14px; transition: max-height .3s cubic-bezier(.3, .8, .3, 1), opacity .2s ease; }
+
+  body.an-compact.npv.authed .npv-dock { height: 52px; }
+  body.an-compact .npv-item { gap: 0; }
+  body.an-compact .npv-item:not([aria-current="page"]) span { max-height: 0; opacity: 0; }
+
+  /* tombol tambah ikut turun agar jaraknya ke dock tetap sama */
+  body.authed.an-compact #btn-new-journal-fab { bottom: calc(var(--mf-dock, 76px) + 2px) !important; }
+}
+
+/* ---------- 3. Desktop / tablet: pil berlabel saat disorot ---------- */
+@media (min-width: 641px) and (hover: hover) {
+  body.authed #btn-new-journal-fab {
+    width: auto !important; min-width: 60px; padding: 0 20px; overflow: hidden;
+    transition: transform .3s cubic-bezier(.2, .9, .25, 1), opacity .25s ease, box-shadow .2s ease, filter .2s ease;
+  }
+  body.authed #btn-new-journal-fab::after {
+    content: attr(data-label); display: block; max-width: 0; margin-left: 0; opacity: 0;
+    overflow: hidden; white-space: nowrap; font-size: 15px; font-weight: 700; letter-spacing: -.01em; line-height: 1;
+    transition: max-width .32s cubic-bezier(.3, .8, .3, 1), margin-left .32s cubic-bezier(.3, .8, .3, 1), opacity .2s ease;
+  }
+  body.authed #btn-new-journal-fab:hover::after,
+  body.authed #btn-new-journal-fab:focus-visible::after { max-width: 160px; margin-left: 12px; opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.npv.authed .npv-dock, .npv-item, .npv-item span,
+  body.authed #btn-new-journal-fab::after { transition: none !important; }
+}

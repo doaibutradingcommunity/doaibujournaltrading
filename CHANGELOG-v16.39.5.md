@@ -1,0 +1,6 @@
+# v16.39.5 — Kalender: Pekan 2-5 tidak lagi kosong/nge-blank + Input Trade tidak tertutup dock (HP)
+- Penyebab Pekan 2-5 bermasalah: aturan global `button { transform: scale(1) translateZ(0) }` menjadikan tiap tombol tanggal (31) dan bintang (31) layer GPU sendiri. Setiap ketukan memunculkan overlay baru, HP kewalahan menggambar 60+ layer sekaligus: baris atas selesai duluan, baris bawah (Pekan 2-5) tertinggal kosong/hitam. Terukur: 64 layer -> 32 layer.
+- Perbaikan: sel & bintang kalender tidak lagi dipromosikan jadi layer; efek tekan (scale) hanya aktif saat ditekan. Wadah `container-type` per sel dilepas di layar <=900px; blur kartu statistik kalender dimatikan di layar <=900px.
+- Penyebab Input Trade tertutup nav: dock bawah (z-index 50, anak langsung body) selalu menimpa panel detail karena `#app` membentuk stacking context sendiri (position:relative; z-index:1), jadi z-index panel (55) tidak pernah menembus dock.
+- Perbaikan: saat panel detail hari terbuka di HP, dock menyingkir (turun & memudar, seperti saat keyboard terbuka) dan kembali saat panel ditutup. Sheet diberi ruang aman bawah (safe-area). Cadangan untuk browser tanpa `:has()`: panel diberi jarak bawah setinggi dock.
+- Hanya tampilan/interaksi; hitungan P/L dan data tidak diubah.

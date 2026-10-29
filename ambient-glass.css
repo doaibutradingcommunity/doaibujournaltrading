@@ -1,0 +1,361 @@
+/* ==========================================================================
+   v16.66 · Ambient Adaptive UI + Glass yang lebih matang
+   --------------------------------------------------------------------------
+   Lapisan tampilan saja, dimuat PALING AKHIR (setelah login-card.css).
+   Tidak ada markup baru, tidak ada logika data. Untuk membatalkan: hapus
+   <link> ambient-glass.css dan <script> ambient-glass.js dari index.html.
+
+   A. AMBIENT  — latar & aksen mengikuti fungsi halaman (bukan animasi terus-menerus)
+        glow      Beranda, Journal, Wrapped, Galeri, Tentang   → cahaya emas lembut
+        calm      form journal (modal), Diary, Pengaturan       → netral, tanpa emas dekoratif
+        analytic  Kalender, Statistik, Review, Strategy, Coach  → kontras lebih kuat, cahaya dingin tipis
+        auth      Landing & login                               → TIDAK disentuh (tetap minimal)
+      Konteks dipasang sebagai body[data-amb] oleh ambient-glass.js.
+      Perpindahan konteks = satu crossfade 0,6 dtk pada cahaya latar. Setelah itu diam.
+
+   B. KACA     — hanya tiga peran, tiga tingkat blur yang konsisten:
+        bar       header & dock navigasi         blur 20px
+        float     menu, sheet, modal, toast, filter melayang   blur 28px
+        scrim     tirai di belakang modal        blur 6px
+      Semua tepi kaca: garis tepi transparan + pantulan cahaya tipis di sisi atas.
+      Mengikuti slider "Transparansi kaca" (--lg).
+
+   C. SOLID    — kartu angka & data (KPI, hero, grafik, kalender, statistik) tidak lagi
+      berblur: permukaan padat + garis tepi halus, agar angka selalu terbaca dan layar ringan.
+
+   D. FALLBACK — Reduce Transparency, html.mo-lite (HP hemat), html[data-ui-effects="low"],
+      browser tanpa backdrop-filter: semua kaca menjadi padat.
+   ========================================================================== */
+
+
+/* ==========================================================================
+   0. PROPERTI TERDAFTAR — supaya perpindahan konteks bisa di-crossfade
+   ========================================================================== */
+@property --amb-gold { syntax: '<number>'; inherits: true; initial-value: 1; }
+@property --amb-cool { syntax: '<number>'; inherits: true; initial-value: .3; }
+@property --amb-lift { syntax: '<number>'; inherits: true; initial-value: 1; }
+@property --amb-vig  { syntax: '<number>'; inherits: true; initial-value: 1; }
+
+
+/* ==========================================================================
+   1. TOKEN
+   ========================================================================== */
+:root {
+  /* tiga tingkat blur */
+  --amb-blur-bar: 20px;
+  --amb-blur-float: 28px;
+  --amb-blur-scrim: 6px;
+  --amb-sat: 150%;
+
+  /* kaca: warna dasar + alpha mengikuti slider --lg (0 jernih … 1 pekat), tak pernah di bawah batas baca */
+  --amb-glass-rgb: 22, 23, 26;
+  --amb-bar-a:   calc(.48 + var(--lg, .55) * .30);
+  --amb-float-a: calc(.62 + var(--lg, .55) * .30);
+
+  /* tepi kaca: garis transparan + pantulan tipis di atas + kilau halus yang cepat hilang */
+  --amb-rim:
+    inset 0 0 0 1px rgba(255, 255, 255, .075),
+    inset 0 1px 0 rgba(255, 255, 255, .15),
+    inset 0 14px 16px -16px rgba(255, 255, 255, .10);
+  --amb-drop: 0 2px 6px rgba(0, 0, 0, .25), 0 18px 40px -18px rgba(0, 0, 0, .70);
+  --amb-scrim: rgba(0, 0, 0, .46);
+
+  /* permukaan padat untuk angka & data */
+  --amb-solid: #17181B;
+  --amb-solid-sheen: rgba(255, 255, 255, .035);
+  --amb-solid-edge:
+    inset 0 0 0 1px rgba(255, 255, 255, .07),
+    inset 0 1px 0 rgba(255, 255, 255, .045);
+  --amb-solid-drop: 0 1px 1px rgba(0, 0, 0, .32), 0 10px 22px -16px rgba(0, 0, 0, .60);
+
+  /* cahaya latar: warna + pengali alpha (nilai 0–1 per konteks ada di bagian 2) */
+  --amb-gold-rgb: 200, 169, 106;
+  --amb-cool-rgb: 128, 148, 188;
+  --amb-vig-rgb: 0, 0, 0;
+  --amb-gold-a: .15;
+  --amb-cool-a: .09;
+  --amb-lift-a: .03;
+  --amb-vig-a: .34;
+  --amb-hero-gold-a: .11;
+  --amb-hero-cool-a: .09;
+}
+body.light {
+  --amb-glass-rgb: 255, 254, 250;
+  --amb-bar-a:   calc(.60 + var(--lg, .55) * .26);
+  --amb-float-a: calc(.72 + var(--lg, .55) * .22);
+  --amb-rim:
+    inset 0 0 0 1px rgba(34, 31, 24, .08),
+    inset 0 1px 0 rgba(255, 255, 255, .95),
+    inset 0 12px 14px -14px rgba(255, 255, 255, .70);
+  --amb-drop: 0 2px 6px rgba(62, 50, 23, .08), 0 16px 36px -18px rgba(62, 50, 23, .30);
+  --amb-scrim: rgba(24, 20, 10, .30);
+
+  --amb-solid: #FFFDF8;
+  --amb-solid-sheen: rgba(255, 255, 255, .70);
+  --amb-solid-edge:
+    inset 0 0 0 1px rgba(34, 31, 24, .09),
+    inset 0 1px 0 #fff;
+  --amb-solid-drop: 0 1px 1px rgba(62, 50, 23, .07), 0 10px 22px -16px rgba(62, 50, 23, .25);
+
+  --amb-gold-rgb: 190, 148, 52;
+  --amb-cool-rgb: 110, 124, 150;
+  --amb-vig-rgb: 60, 48, 20;
+  --amb-gold-a: .20;
+  --amb-cool-a: .07;
+  --amb-lift-a: .55;
+  --amb-vig-a: .07;
+  --amb-hero-gold-a: .14;
+  --amb-hero-cool-a: .07;
+}
+@media (max-width: 640px) {
+  :root { --amb-blur-bar: 18px; --amb-blur-float: 22px; --amb-blur-scrim: 5px; }
+}
+
+
+/* ==========================================================================
+   2. KONTEKS — nilai per fungsi halaman
+      gold = cahaya emas · cool = cahaya dingin · lift = kilau putih atas · vig = vinyet tepi
+   ========================================================================== */
+body[data-amb="glow"]     { --amb-gold: 1;  --amb-cool: .30; --amb-lift: 1;  --amb-vig: .90; }
+body[data-amb="calm"]     { --amb-gold: 0;  --amb-cool: 0;   --amb-lift: .60; --amb-vig: 1; }
+body[data-amb="analytic"] { --amb-gold: .18; --amb-cool: 1;  --amb-lift: .20; --amb-vig: 1.25; }
+
+/* Calm: aksen emas hanya untuk aksi utama & fokus; hiasan menjadi netral */
+body[data-amb="calm"] {
+  --accent-soft: rgba(255, 255, 255, .055);
+  --accent-border: rgba(255, 255, 255, .15);
+}
+body.light[data-amb="calm"] {
+  --accent-soft: rgba(0, 0, 0, .045);
+  --accent-border: rgba(0, 0, 0, .15);
+}
+
+/* Analytic: pemisah antar-permukaan lebih tegas, teks sekunder lebih terang/gelap */
+body[data-amb="analytic"] {
+  --amb-solid: #1A1C20;
+  --amb-solid-edge: inset 0 0 0 1px rgba(255, 255, 255, .115), inset 0 1px 0 rgba(255, 255, 255, .06);
+  --text-primary: rgba(255, 255, 255, 1);
+  --text-secondary: rgba(235, 235, 245, .76);
+  --text-tertiary: rgba(235, 235, 245, .54);
+  --border: rgba(255, 255, 255, .12);
+  --border-strong: rgba(255, 255, 255, .22);
+  --di-text: #fbf8ef;
+  --di-muted: #c8c5bc;
+  --di-faint: #a3a099;
+  --di-border: rgba(255, 255, 255, .15);
+}
+body.light[data-amb="analytic"] {
+  --amb-solid: #FFFFFF;
+  --amb-solid-edge: inset 0 0 0 1px rgba(34, 31, 24, .15), inset 0 1px 0 #fff;
+  --text-primary: rgba(0, 0, 0, .94);
+  --text-secondary: rgba(30, 28, 22, .72);
+  --text-tertiary: rgba(30, 28, 22, .54);
+  --border: rgba(0, 0, 0, .13);
+  --border-strong: rgba(0, 0, 0, .24);
+  --di-text: #1a1a1d;
+  --di-muted: #4b4a50;
+  --di-faint: #66656b;
+  --di-border: rgba(34, 31, 24, .20);
+}
+
+
+/* ==========================================================================
+   3. LATAR AMBIENT — memakai lapisan statis body::before yang sudah ada (fixed, tanpa blur)
+      Hanya gradien. Alpha mengikuti konteks lewat properti terdaftar → crossfade sekali saja.
+      Tidak berlaku di landing/login (body belum .authed).
+   ========================================================================== */
+html body.authed[data-amb] {
+  transition:
+    --amb-gold .6s ease, --amb-cool .6s ease, --amb-lift .6s ease, --amb-vig .6s ease;
+}
+html body.authed[data-amb]::before {
+  background:
+    radial-gradient(54% 44% at 10% -2%,  rgba(var(--amb-gold-rgb), calc(var(--amb-gold) * var(--amb-gold-a))), transparent 70%),
+    radial-gradient(46% 40% at 96% 4%,   rgba(var(--amb-cool-rgb), calc(var(--amb-cool) * var(--amb-cool-a))), transparent 72%),
+    radial-gradient(60% 45% at 50% 0%,   rgba(255, 255, 255, calc(var(--amb-lift) * var(--amb-lift-a))), transparent 70%),
+    radial-gradient(120% 90% at 50% 50%, transparent 52%, rgba(var(--amb-vig-rgb), calc(var(--amb-vig) * var(--amb-vig-a))) 100%) !important;
+}
+
+
+/* ==========================================================================
+   4. SOLID — kartu angka & data (di dalam #app > main saja)
+      Prefiks html body[data-amb] ×3 menaikkan spesifisitas di atas lapisan lama
+      (body.light.px …) tanpa mengubah file lama.
+   ========================================================================== */
+html body[data-amb][data-amb][data-amb] #app > main :is(
+  .hm-card, .hm-tile, .stat-card, .v5-card, .v5-kpi, .v5-chart, .v5-chart-card, .v5-equity,
+  .stx-card, .calx-shell, .glass.ms-card, .px-range
+),
+html body[data-amb][data-amb][data-amb] #app > main .glass:not(#export-menu):not(#filter-panel):not(.v5-fbar):not(.v5-tip):not(.calx-sheet):not([role="dialog"]):not([role="menu"]):not(.hm-hero):not(.pf-hero):not(.v5-eqcard):not(.stx-hero):not(.calx-shell):not(.modal-overlay > .glass) {
+  background: linear-gradient(180deg, var(--amb-solid-sheen), transparent 38%), var(--amb-solid) !important;
+  -webkit-backdrop-filter: none !important;
+          backdrop-filter: none !important;
+  box-shadow: var(--amb-solid-edge), var(--amb-solid-drop) !important;
+}
+/* hiasan kilau/garis emas di kartu data dimatikan (kartu tampil tenang, angka yang menonjol) */
+html body[data-amb][data-amb][data-amb] #app > main .glass:not(.hm-hero):not(.pf-hero):not(.v5-eqcard):not(.calx-shell):not(.stx-hero):not(#export-menu):not(#filter-panel):not(.v5-fbar):not(.calx-sheet):not(.modal-overlay > .glass)::before,
+html body[data-amb][data-amb][data-amb] #app > main .glass:not(.hm-hero):not(.pf-hero):not(.v5-eqcard):not(.calx-shell):not(.stx-hero):not(#export-menu):not(#filter-panel):not(.v5-fbar):not(.calx-sheet):not(.modal-overlay > .glass)::after {
+  display: none !important;
+}
+
+/* Panel utama (hero): tetap padat, tapi memegang SATU aksen ambient —
+   emas di halaman glow, dingin di halaman analytic, netral di calm. */
+html body[data-amb][data-amb][data-amb] #app > main :is(
+  .hm-hero.hm-card, .v5 .v5-eqcard, .v5 .pf-hero, .calx-shell, .stx-hero
+) {
+  background:
+    radial-gradient(120% 70% at 12% -12%, rgba(var(--amb-gold-rgb), calc(var(--amb-gold) * var(--amb-hero-gold-a))), transparent 62%),
+    radial-gradient(90% 60% at 100% -10%, rgba(var(--amb-cool-rgb), calc(var(--amb-cool) * var(--amb-hero-cool-a))), transparent 64%),
+    linear-gradient(180deg, var(--amb-solid-sheen), transparent 38%),
+    var(--amb-solid) !important;
+}
+/* hero lama punya kaca + cahaya emas dalam: dua-duanya digantikan */
+html body[data-amb][data-amb][data-amb] #app > main :is(.hm-hero.hm-card, .v5 .v5-eqcard.glass, .v5 .pf-hero.glass, .calx-shell, .stx-hero)::after {
+  display: none !important;
+}
+
+/* angka: selalu tabular & tajam di halaman analytic */
+body[data-amb="analytic"] #app > main :is(.tnum, .v5-kpi, .stx-card, .stat-card) {
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* ==========================================================================
+   5. KACA — bar (header & dock)
+   ========================================================================== */
+/* desktop/tablet: header adalah bar kaca; garis bawah transparan + pantulan tipis di tepi atas */
+@media (min-width: 641px) {
+  html body.authed[data-amb][data-amb][data-amb] #app > header.app-header {
+    background: rgba(var(--amb-glass-rgb), var(--amb-bar-a)) !important;
+    -webkit-backdrop-filter: blur(var(--amb-blur-bar)) saturate(var(--amb-sat));
+            backdrop-filter: blur(var(--amb-blur-bar)) saturate(var(--amb-sat));
+    border-bottom: 1px solid transparent;
+    box-shadow: inset 0 -1px 0 rgba(255, 255, 255, .075), inset 0 1px 0 rgba(255, 255, 255, .06);
+  }
+  html body.light.authed[data-amb][data-amb][data-amb] #app > header.app-header {
+    box-shadow: inset 0 -1px 0 rgba(34, 31, 24, .09), inset 0 1px 0 rgba(255, 255, 255, .9);
+  }
+}
+/* HP: kaca header ada di ::before (agar tidak jadi containing block bagi dock fixed) */
+@media (max-width: 640px) {
+  html body.authed[data-amb][data-amb][data-amb] #app > header.app-header::before {
+    background: rgba(var(--amb-glass-rgb), var(--amb-bar-a));
+    -webkit-backdrop-filter: blur(var(--amb-blur-bar)) saturate(var(--amb-sat));
+            backdrop-filter: blur(var(--amb-blur-bar)) saturate(var(--amb-sat));
+    border-bottom: 1px solid transparent;
+    box-shadow: inset 0 -1px 0 rgba(255, 255, 255, .075), inset 0 1px 0 rgba(255, 255, 255, .05);
+  }
+  html body.light.authed[data-amb][data-amb][data-amb] #app > header.app-header::before {
+    box-shadow: inset 0 -1px 0 rgba(34, 31, 24, .09), inset 0 1px 0 rgba(255, 255, 255, .9);
+  }
+}
+/* dock bawah (HP) */
+@media (max-width: 640px) {
+  html body.authed[data-amb][data-amb][data-amb] :is(.npv-dock, #app > header.app-header > div:nth-child(2)) {
+    background: rgba(var(--amb-glass-rgb), var(--amb-bar-a));
+    -webkit-backdrop-filter: blur(var(--amb-blur-bar)) saturate(var(--amb-sat));
+            backdrop-filter: blur(var(--amb-blur-bar)) saturate(var(--amb-sat));
+    box-shadow: var(--amb-rim), var(--amb-drop);
+  }
+}
+
+
+/* ==========================================================================
+   6. KACA — float (menu, sheet, modal, toast, filter) & scrim
+   ========================================================================== */
+html body[data-amb][data-amb][data-amb] :is(
+  .npv-sheet, .npv-pop, .toast, .ur-snack, .px-glass, .v5-tip,
+  #export-menu, #filter-panel:not(.hidden), .v5-fbar,
+  .modal-overlay:not(#image-zoom-modal) > .glass,
+  #sp-modal .sp-sheet, #v22-recap > [role="dialog"]
+) {
+  background: rgba(var(--amb-glass-rgb), var(--amb-float-a));
+  -webkit-backdrop-filter: blur(var(--amb-blur-float)) saturate(var(--amb-sat));
+          backdrop-filter: blur(var(--amb-blur-float)) saturate(var(--amb-sat));
+  box-shadow: var(--amb-rim), var(--amb-drop);
+}
+/* pil toast & snackbar: tepi emas lama diganti pantulan netral yang sama dengan kaca lain */
+html body[data-amb][data-amb][data-amb] :is(.toast, .ur-snack) { border: 0; }
+
+/* tirai di belakang modal & sheet: blur kecil seragam (sebelumnya 3–18px berbeda-beda) */
+html body[data-amb][data-amb][data-amb] :is(
+  .modal-overlay:not(#image-zoom-modal), #sp-modal, #v22-recap, .jd-ov, .jr-pick-ov, .t3-ov, .v23-ov, .mf-scrim, .npv-scrim
+) {
+  background: var(--amb-scrim) !important;
+  -webkit-backdrop-filter: blur(var(--amb-blur-scrim)) !important;
+          backdrop-filter: blur(var(--amb-blur-scrim)) !important;
+}
+/* form journal: lebih fokus — tirai sedikit lebih gelap */
+body[data-amb="calm"] #form-section.modal-overlay { background: rgba(0, 0, 0, .56); }
+body.light[data-amb="calm"] #form-section.modal-overlay { background: rgba(24, 20, 10, .36); }
+
+
+/* ==========================================================================
+   7. FALLBACK — semua kaca menjadi padat
+   ========================================================================== */
+@media (prefers-reduced-transparency: reduce) {
+  html body[data-amb][data-amb][data-amb] :is(
+    .npv-dock, .npv-sheet, .npv-pop, .toast, .ur-snack, .px-glass, .v5-tip,
+    #export-menu, #filter-panel, .v5-fbar,
+    .modal-overlay:not(#image-zoom-modal) > .glass, #sp-modal .sp-sheet, #v22-recap > [role="dialog"],
+    #app > header.app-header
+  ) {
+    background: var(--amb-solid) !important;
+    -webkit-backdrop-filter: none !important;
+            backdrop-filter: none !important;
+  }
+  html body.authed[data-amb] #app > header.app-header::before {
+    background: var(--amb-solid) !important;
+    -webkit-backdrop-filter: none !important;
+            backdrop-filter: none !important;
+  }
+  html body[data-amb][data-amb][data-amb] :is(
+    .modal-overlay:not(#image-zoom-modal), #sp-modal, #v22-recap, .jd-ov, .jr-pick-ov, .t3-ov, .v23-ov, .mf-scrim, .npv-scrim
+  ) {
+    -webkit-backdrop-filter: none !important;
+            backdrop-filter: none !important;
+    background: rgba(0, 0, 0, .62) !important;
+  }
+  html body.authed[data-amb] { transition: none; }
+}
+@media (prefers-reduced-transparency: reduce) and (max-width: 640px) {
+  html body.authed[data-amb][data-amb][data-amb] #app > header.app-header > div:nth-child(2) {
+    background: var(--amb-solid) !important;
+    -webkit-backdrop-filter: none !important;
+            backdrop-filter: none !important;
+  }
+}
+
+/* HP hemat / efek rendah: warna kaca tetap, blur dimatikan; latar berganti tanpa transisi */
+html.mo-lite body[data-amb][data-amb][data-amb] :is(
+  .npv-dock, .npv-sheet, .npv-pop, .toast, .ur-snack, .px-glass, .v5-tip,
+  #export-menu, #filter-panel, .v5-fbar,
+  .modal-overlay:not(#image-zoom-modal), .modal-overlay:not(#image-zoom-modal) > .glass,
+  #sp-modal, #sp-modal .sp-sheet, #v22-recap, #v22-recap > [role="dialog"],
+  .jd-ov, .jr-pick-ov, .t3-ov, .v23-ov, .mf-scrim, .npv-scrim,
+  #app > header.app-header, #app > header.app-header > div:nth-child(2)
+),
+html.mo-lite body.authed[data-amb] #app > header.app-header::before,
+html[data-ui-effects="low"] body[data-amb] :is(.toast, .ur-snack, .px-glass, .v5-tip, #export-menu, #filter-panel, .v5-fbar, .modal-overlay:not(#image-zoom-modal), #sp-modal, #v22-recap) {
+  -webkit-backdrop-filter: none !important;
+          backdrop-filter: none !important;
+}
+html.mo-lite body[data-amb][data-amb][data-amb] :is(.npv-sheet, .npv-pop, .toast, .ur-snack, .px-glass, .v5-tip, #export-menu, #filter-panel, .v5-fbar, .modal-overlay:not(#image-zoom-modal) > .glass, #sp-modal .sp-sheet, #v22-recap > [role="dialog"]) {
+  background: var(--amb-solid);
+}
+html.mo-lite body.authed[data-amb] { transition: none; }
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  html body[data-amb][data-amb][data-amb] :is(
+    .npv-dock, .npv-sheet, .npv-pop, .toast, .ur-snack, .px-glass, .v5-tip,
+    #export-menu, #filter-panel, .v5-fbar,
+    .modal-overlay:not(#image-zoom-modal) > .glass, #sp-modal .sp-sheet, #v22-recap > [role="dialog"]
+  ) { background: var(--amb-solid); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html body.authed[data-amb] { transition: none; }
+}
+@media (forced-colors: active) {
+  html body[data-amb] #app > main :is(.hm-card, .hm-tile, .stat-card, .v5-card, .v5-kpi, .stx-card, .calx-shell, .glass) { border: 1px solid CanvasText; }
+}
